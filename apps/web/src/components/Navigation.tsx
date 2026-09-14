@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 export function Navigation() {
   const { user, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,53 +24,78 @@ export function Navigation() {
   }, []);
 
   return (
-    <header className="site-nav">
-      <Link href="/" className="brand-logo">
-        <span className="brand-dot" aria-hidden="true" />
-        <span>DevForge</span>
-      </Link>
+    <>
+      <header className="site-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            type="button"
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border-hairline)',
+              borderRadius: '8px',
+              color: 'var(--text-primary)',
+              padding: '0.45rem 0.65rem',
+              cursor: 'pointer',
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.1rem',
+            }}
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
 
-      <nav className="nav-links" aria-label="Main Navigation">
-        <Link href="/freelancers">Freelancers</Link>
-        <Link href="/jobs">Open Roles</Link>
-        <Link href="/dashboard/proposals">Proposals</Link>
-        <Link href="/dashboard/contracts">Contracts</Link>
-        <Link href="/escrow">Escrow Protocol</Link>
-        <Link href="/docs">Docs</Link>
-        {user?.role === 'admin' && (
-          <Link href="/admin" style={{ color: '#E6007A' }}>
-            Admin Portal
+          <Link href="/" className="brand-logo" onClick={() => setMobileMenuOpen(false)}>
+            <span className="brand-dot" aria-hidden="true" />
+            <span>DevForge</span>
           </Link>
-        )}
-      </nav>
-
-      <div className="nav-cta-group">
-        <div className="status-pill" title="Network status">
-          <span className="live-indicator" aria-hidden="true" />
-          <span>Sepolia Escrow</span>
         </div>
 
-        <NotificationCenter />
+        <nav className="nav-links desktop-only" aria-label="Main Navigation">
+          <Link href="/freelancers">Freelancers</Link>
+          <Link href="/jobs">Open Roles</Link>
+          <Link href="/dashboard/proposals">Proposals</Link>
+          <Link href="/dashboard/contracts">Contracts</Link>
+          <Link href="/escrow">Escrow Protocol</Link>
+          <Link href="/docs">Docs</Link>
+          {user?.role === 'admin' && (
+            <Link href="/admin" style={{ color: '#E6007A' }}>
+              Admin Portal
+            </Link>
+          )}
+        </nav>
 
-        {user ? (
-          <div style={{ position: 'relative' }} ref={menuRef}>
-            <button
-              type="button"
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.65rem',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '9999px',
-                padding: '0.35rem 0.85rem 0.35rem 0.4rem',
-                cursor: 'pointer',
-                color: 'var(--text-primary)',
-                fontSize: '0.85rem',
-                transition: 'all 0.2s ease',
-              }}
-            >
+        <div className="nav-cta-group">
+          <div className="status-pill desktop-only" title="Network status">
+            <span className="live-indicator" aria-hidden="true" />
+            <span>Sepolia Escrow</span>
+          </div>
+
+          <NotificationCenter />
+
+          {user ? (
+            <div style={{ position: 'relative' }} ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '9999px',
+                  padding: '0.35rem 0.85rem 0.35rem 0.4rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s ease',
+                }}
+              >
               {/* Avatar circle */}
               <div style={{
                 width: '28px',
@@ -245,5 +271,85 @@ export function Navigation() {
         )}
       </div>
     </header>
+
+    {/* Mobile Navigation Drawer */}
+    {mobileMenuOpen && (
+      <div className="mobile-nav-drawer">
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Link
+            href="/freelancers"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Technical Talent</span>
+            <span>→</span>
+          </Link>
+          <Link
+            href="/jobs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Open Bounties & Roles</span>
+            <span>→</span>
+          </Link>
+          <Link
+            href="/dashboard/proposals"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Proposals</span>
+            <span>→</span>
+          </Link>
+          <Link
+            href="/dashboard/contracts"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Contracts Workbench</span>
+            <span>→</span>
+          </Link>
+          <Link
+            href="/escrow"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Escrow Protocol</span>
+            <span>→</span>
+          </Link>
+          <Link
+            href="/docs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Documentation</span>
+            <span>→</span>
+          </Link>
+          {user?.role === 'admin' && (
+            <Link
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{ color: '#E6007A' }}
+            >
+              <span>Admin Portal</span>
+              <span>→</span>
+            </Link>
+          )}
+
+          <div style={{ height: '1px', background: 'var(--border-hairline)', margin: '0.5rem 0' }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              NETWORK
+            </span>
+            <div className="status-pill" style={{ margin: 0 }}>
+              <span className="live-indicator" aria-hidden="true" />
+              <span>Sepolia Escrow</span>
+            </div>
+          </div>
+        </nav>
+      </div>
+    )}
+    </>
   );
 }
