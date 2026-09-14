@@ -8,6 +8,7 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
+    "postinstall": "pnpm --filter @devforge/database generate",
     "build": "pnpm --filter @devforge/web build",
     "dev": "pnpm --filter @devforge/web dev",
     "lint": "pnpm -r lint",
