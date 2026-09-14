@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+.pnpm-store/
+.next/
+dist/
+coverage/
+
+# Local environment and tooling
+.env
+.env.local
+.env.*.local
+!.env.example
+*.log
+.pnpm-install.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,844 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ─── Identity & Authorization ───────────────────────
+
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  email           String     @unique
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  displayName     String     @map("display_name")
+  avatarUrl       String?    @map("avatar_url")
+  passwordHash    String?    @map("password_hash")
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  accounts          Account[]
+  sessions          Session[]
+  userRoles         UserRole[]
+  wallets           Wallet[]
+  walletNonces      WalletNonce[]
+  freelancerProfile FreelancerProfile?
+  clientProfile     ClientProfile?
+  savedJobs         SavedJob[]
+  contractParticipants ContractParticipant[]
+  conversationMembers  ConversationMember[]
+  messages             Message[]
+  notifications        Notification[]
+  notificationPreferences NotificationPreference[]
+  aiRequests           AiRequest[]
+  reviewsGiven         Review[]             @relation("ReviewsGiven")
+  reviewsReceived      Review[]             @relation("ReviewsReceived")
+  reportsFiled         Report[]             @relation("Reporter")
+
+  @@index([status, createdAt])
+  @@map("users")
+}
+
+model Account {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  providerId        String   @map("provider_id")
+  providerAccountId String   @map("provider_account_id")
+  accessToken       String?  @map("access_token")
+  refreshToken      String?  @map("refresh_token")
+  expiresAt         DateTime? @map("expires_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  type      TokenType
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
+
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+
+  permissions RolePermission[]
+  userRoles   UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id  String @id @default(uuid()) @db.Uuid
+  key String @unique
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  grantedBy String?  @map("granted_by") @db.Uuid
+  grantedAt DateTime @default(now()) @map("granted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model Wallet {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  chainId   Int      @map("chain_id")
+  address   String
+  isPrimary Boolean  @default(false) @map("is_primary")
+  label     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chainId, address])
+  @@map("wallets")
+}
+
+model WalletNonce {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  address   String
+  chainId   Int       @map("chain_id")
+  nonce     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("wallet_nonces")
+}
+
+// ─── Sprint 3: Profiles & Taxonomy ───────────────────
+
+enum AvailabilityStatus {
+  AVAILABLE
+  PARTIALLY_AVAILABLE
+  BUSY
+  UNAVAILABLE
+}
+
+enum SkillProficiency {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
+model FreelancerProfile {
+  id           String             @id @default(uuid()) @db.Uuid
+  userId       String             @unique @map("user_id") @db.Uuid
+  handle       String             @unique
+  title        String
+  bio          String
+  hourlyRate   BigInt?            @map("hourly_rate")
+  availability AvailabilityStatus @default(AVAILABLE)
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  skills            FreelancerSkill[]
+  portfolioProjects PortfolioProject[]
+  experiences       Experience[]
+  certifications    Certification[]
+  proposals         Proposal[]
+  contracts         Contract[]
+  deliveries        Delivery[]
+
+  @@map("freelancer_profiles")
+}
+
+model ClientProfile {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  organizationName String   @map("organization_name")
+  slug             String?  @unique
+  description      String?
+  website          String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  jobs      Job[]
+  contracts Contract[]
+
+  @@map("client_profiles")
+}
+
+model Skill {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  category  String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  freelancerSkills FreelancerSkill[]
+  jobSkills        JobSkill[]
+
+  @@map("skills")
+}
+
+model FreelancerSkill {
+  freelancerProfileId String           @map("freelancer_profile_id") @db.Uuid
+  skillId             String           @map("skill_id") @db.Uuid
+  proficiency         SkillProficiency @default(INTERMEDIATE)
+  displayOrder        Int              @default(0) @map("display_order")
+
+  profile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  skill   Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([freelancerProfileId, skillId])
+  @@map("freelancer_skills")
+}
+
+model PortfolioProject {
+  id                  String   @id @default(uuid()) @db.Uuid
+  freelancerProfileId String   @map("freelancer_profile_id") @db.Uuid
+  title               String
+  description         String
+  projectUrl          String?  @map("project_url")
+  repositoryUrl       String?  @map("repository_url")
+  coverImageUrl       String?  @map("cover_image_url")
+  isPublished         Boolean  @default(true) @map("is_published")
+  displayOrder        Int      @default(0) @map("display_order")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  profile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_projects")
+}
+
+model Experience {
+  id                  String    @id @default(uuid()) @db.Uuid
+  freelancerProfileId String    @map("freelancer_profile_id") @db.Uuid
+  company             String
+  role                String
+  startDate           DateTime  @map("start_date")
+  endDate             DateTime? @map("end_date")
+  description         String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  profile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("experiences")
+}
+
+model Certification {
+  id                  String    @id @default(uuid()) @db.Uuid
+  freelancerProfileId String    @map("freelancer_profile_id") @db.Uuid
+  name                String
+  issuer              String
+  issuedAt            DateTime  @map("issued_at")
+  expiresAt           DateTime? @map("expires_at")
+  credentialUrl       String?   @map("credential_url")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  profile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("certifications")
+}
+
+model JobCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String
+  description String?
+  parentId    String?  @map("parent_id") @db.Uuid
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  parent   JobCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children JobCategory[] @relation("CategoryHierarchy")
+  jobs     Job[]
+
+  @@map("job_categories")
+}
+
+// ─── Marketplace ─────────────────────────────────────
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  CLOSED
+  ARCHIVED
+}
+
+enum SkillRequirementLevel {
+  REQUIRED
+  PREFERRED
+}
+
+model Job {
+  id              String    @id @default(uuid()) @db.Uuid
+  clientProfileId String    @map("client_profile_id") @db.Uuid
+  categoryId      String    @map("category_id") @db.Uuid
+  title           String
+  description     String
+  budgetMin       BigInt?   @map("budget_min")
+  budgetMax       BigInt?   @map("budget_max")
+  currency        String    @default("USD")
+  status          JobStatus @default(DRAFT)
+  publishedAt     DateTime? @map("published_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  clientProfile ClientProfile @relation(fields: [clientProfileId], references: [id], onDelete: Restrict)
+  category      JobCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  skills        JobSkill[]
+  savedJobs     SavedJob[]
+  proposals     Proposal[]
+  contracts     Contract[]
+
+  @@index([status, categoryId, publishedAt(sort: Desc)])
+  @@index([clientProfileId, status, updatedAt(sort: Desc)])
+  @@map("jobs")
+}
+
+model JobSkill {
+  jobId            String                @map("job_id") @db.Uuid
+  skillId          String                @map("skill_id") @db.Uuid
+  requirementLevel SkillRequirementLevel @default(REQUIRED) @map("requirement_level")
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, skillId])
+  @@map("job_skills")
+}
+
+model SavedJob {
+  userId    String   @map("user_id") @db.Uuid
+  jobId     String   @map("job_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@id([userId, jobId])
+  @@map("saved_jobs")
+}
+
+// ─── Proposals, Hiring, and Contracts ────────────────
+
+enum ProposalStatus {
+  SUBMITTED
+  WITHDRAWN
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ContractStatus {
+  ACTIVE
+  COMPLETED
+  TERMINATED
+  DISPUTED
+}
+
+enum ParticipantRole {
+  CLIENT
+  FREELANCER
+  ARBITRATOR
+  OBSERVER
+}
+
+enum MilestoneStatus {
+  PENDING
+  FUNDED
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  DISPUTED
+  REFUNDED
+}
+
+enum DeliveryStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+model Proposal {
+  id                  String         @id @default(uuid()) @db.Uuid
+  jobId               String         @map("job_id") @db.Uuid
+  freelancerProfileId String         @map("freelancer_profile_id") @db.Uuid
+  coverLetter         String         @map("cover_letter")
+  bidAmount           BigInt         @map("bid_amount")
+  currency            String         @default("USD")
+  status              ProposalStatus @default(SUBMITTED)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  job               Job                     @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  freelancerProfile FreelancerProfile       @relation(fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+  statusHistory     ProposalStatusHistory[]
+  contract          Contract?
+
+  @@unique([jobId, freelancerProfileId])
+  @@index([jobId, status])
+  @@index([freelancerProfileId, createdAt(sort: Desc)])
+  @@map("proposals")
+}
+
+model ProposalStatusHistory {
+  id         String          @id @default(uuid()) @db.Uuid
+  proposalId String          @map("proposal_id") @db.Uuid
+  fromStatus ProposalStatus? @map("from_status")
+  toStatus   ProposalStatus  @map("to_status")
+  actorId    String          @map("actor_id") @db.Uuid
+  reason     String?
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@map("proposal_status_history")
+}
+
+model Contract {
+  id                  String         @id @default(uuid()) @db.Uuid
+  jobId               String         @map("job_id") @db.Uuid
+  proposalId          String         @unique @map("proposal_id") @db.Uuid
+  clientProfileId     String         @map("client_profile_id") @db.Uuid
+  freelancerProfileId String         @map("freelancer_profile_id") @db.Uuid
+  title               String
+  totalAmount         BigInt         @map("total_amount")
+  currency            String         @default("USD")
+  status              ContractStatus @default(ACTIVE)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  job               Job                   @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  proposal          Proposal              @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  clientProfile     ClientProfile         @relation(fields: [clientProfileId], references: [id], onDelete: Restrict)
+  freelancerProfile FreelancerProfile     @relation(fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+  participants      ContractParticipant[]
+  milestones        Milestone[]
+  conversation      Conversation?
+  escrows           Escrow[]
+  reviews           Review[]
+
+  @@map("contracts")
+}
+
+model ContractParticipant {
+  contractId String          @map("contract_id") @db.Uuid
+  userId     String          @map("user_id") @db.Uuid
+  role       ParticipantRole @default(FREELANCER)
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contractId, userId])
+  @@map("contract_participants")
+}
+
+model Milestone {
+  id          String          @id @default(uuid()) @db.Uuid
+  contractId  String          @map("contract_id") @db.Uuid
+  sequence    Int
+  title       String
+  description String?
+  amount      BigInt
+  dueDate     DateTime?       @map("due_date")
+  status      MilestoneStatus @default(PENDING)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  contract   Contract   @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  deliveries Delivery[]
+  escrow     Escrow?
+
+  @@unique([contractId, sequence])
+  @@map("milestones")
+}
+
+model Delivery {
+  id                  String         @id @default(uuid()) @db.Uuid
+  milestoneId         String         @map("milestone_id") @db.Uuid
+  freelancerProfileId String         @map("freelancer_profile_id") @db.Uuid
+  description         String
+  submittedAt         DateTime       @default(now()) @map("submitted_at")
+  status              DeliveryStatus @default(SUBMITTED)
+  feedback            String?
+  reviewedAt          DateTime?      @map("reviewed_at")
+
+  milestone         Milestone         @relation(fields: [milestoneId], references: [id], onDelete: Restrict)
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+
+  @@map("deliveries")
+}
+
+// ─── Sprint 6: Realtime Collaboration & Notifications ─
+
+enum MessageType {
+  TEXT
+  SYSTEM
+  FILE
+  DELIVERY_SUBMITTED
+  ESCROW_RELEASED
+}
+
+enum NotificationType {
+  PROPOSAL_RECEIVED
+  PROPOSAL_ACCEPTED
+  DELIVERY_SUBMITTED
+  MILESTONE_APPROVED
+  MESSAGE_RECEIVED
+  DISPUTE_OPENED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WEB_PUSH
+}
+
+model Conversation {
+  id         String   @id @default(uuid()) @db.Uuid
+  contractId String?  @unique @map("contract_id") @db.Uuid
+  title      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  contract Contract?            @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  members  ConversationMember[]
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  conversationId    String    @map("conversation_id") @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  lastReadMessageId String?   @map("last_read_message_id") @db.Uuid
+  lastReadAt        DateTime? @map("last_read_at")
+  joinedAt          DateTime  @default(now()) @map("joined_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String      @id @default(uuid()) @db.Uuid
+  conversationId String      @map("conversation_id") @db.Uuid
+  senderId       String      @map("sender_id") @db.Uuid
+  content        String
+  type           MessageType @default(TEXT)
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  attachments  MessageAttachment[]
+
+  @@index([conversationId, createdAt(sort: Asc)])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @map("message_id") @db.Uuid
+  fileKey   String   @map("file_key")
+  fileName  String   @map("file_name")
+  fileSize  Int      @map("file_size")
+  mimeType  String   @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_attachments")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String
+  message   String
+  linkUrl   String?          @map("link_url")
+  isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId    String              @map("user_id") @db.Uuid
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  isEnabled Boolean             @default(true) @map("is_enabled")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type, channel])
+  @@map("notification_preferences")
+}
+
+// ─── Sprint 7: Blockchain Escrow Projection ──────────
+
+enum EscrowStatus {
+  PENDING_DEPOSIT
+  HELD
+  RELEASED
+  DISPUTED
+  REFUNDED
+}
+
+enum EscrowTxStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+model Escrow {
+  id               String       @id @default(uuid()) @db.Uuid
+  milestoneId      String       @unique @map("milestone_id") @db.Uuid
+  contractId       String       @map("contract_id") @db.Uuid
+  chainId          Int          @map("chain_id")
+  contractAddress  String       @map("contract_address")
+  onChainEscrowId  BigInt?      @map("on_chain_escrow_id")
+  amount           BigInt
+  currency         String       @default("USDC")
+  status           EscrowStatus @default(PENDING_DEPOSIT)
+  funderAddress    String?      @map("funder_address")
+  recipientAddress String?      @map("recipient_address")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  milestone    Milestone           @relation(fields: [milestoneId], references: [id], onDelete: Restrict)
+  contract     Contract            @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  transactions EscrowTransaction[]
+  events       EscrowEvent[]
+
+  @@map("escrows")
+}
+
+model EscrowTransaction {
+  id          String         @id @default(uuid()) @db.Uuid
+  escrowId    String         @map("escrow_id") @db.Uuid
+  chainId     Int            @map("chain_id")
+  txHash      String         @unique @map("tx_hash")
+  fromAddress String         @map("from_address")
+  toAddress   String         @map("to_address")
+  action      String
+  status      EscrowTxStatus @default(PENDING)
+  blockNumber BigInt?        @map("block_number")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  escrow Escrow @relation(fields: [escrowId], references: [id], onDelete: Restrict)
+
+  @@map("escrow_transactions")
+}
+
+model EscrowEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  escrowId    String   @map("escrow_id") @db.Uuid
+  chainId     Int      @map("chain_id")
+  txHash      String   @map("tx_hash")
+  logIndex    Int      @map("log_index")
+  eventName   String   @map("event_name")
+  eventData   String   @map("event_data")
+  blockNumber BigInt   @map("block_number")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  escrow Escrow @relation(fields: [escrowId], references: [id], onDelete: Restrict)
+
+  @@unique([chainId, txHash, logIndex])
+  @@map("escrow_events")
+}
+
+// ─── Sprint 8: AI Assistance ─────────────────────────
+
+enum AiFeatureType {
+  JOB_DESCRIPTION
+  PROPOSAL_DRAFT
+  RESUME_REVIEW
+  SKILL_MATCH
+}
+
+enum AiRequestStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model AiRequest {
+  id         String          @id @default(uuid()) @db.Uuid
+  userId     String          @map("user_id") @db.Uuid
+  feature    AiFeatureType
+  status     AiRequestStatus @default(PENDING)
+  prompt     String
+  error      String?
+  tokensUsed Int?            @map("tokens_used")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  output AiOutput?
+
+  @@map("ai_requests")
+}
+
+model AiOutput {
+  id             String   @id @default(uuid()) @db.Uuid
+  requestId      String   @unique @map("request_id") @db.Uuid
+  content        String
+  structuredJson String?  @map("structured_json")
+  isApplied      Boolean  @default(false) @map("is_applied")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  request AiRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("ai_outputs")
+}
+
+// ─── Sprint 9: Trust, Administration & Analytics ──────
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  contractId  String   @map("contract_id") @db.Uuid
+  reviewerId  String   @map("reviewer_id") @db.Uuid
+  revieweeId  String   @map("reviewee_id") @db.Uuid
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  reviewer User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewee User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Restrict)
+
+  @@unique([contractId, reviewerId])
+  @@map("reviews")
+}
+
+model Report {
+  id         String         @id @default(uuid()) @db.Uuid
+  reporterId String         @map("reporter_id") @db.Uuid
+  targetType String         @map("target_type")
+  targetId   String         @map("target_id")
+  reason     String
+  status     ReportStatus   @default(PENDING)
+  severity   ReportSeverity @default(MEDIUM)
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  reporter User               @relation("Reporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  actions  ModerationAction[]
+
+  @@map("reports")
+}
+
+model ModerationAction {
+  id          String   @id @default(uuid()) @db.Uuid
+  reportId    String   @map("report_id") @db.Uuid
+  moderatorId String   @map("moderator_id") @db.Uuid
+  actionTaken String   @map("action_taken")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("moderation_actions")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  metadata   String?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+

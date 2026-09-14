@@ -1,0 +1,31 @@
+{
+  "name": "devforge",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @devforge/web build",
+    "dev": "pnpm --filter @devforge/web dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm --filter @devforge/web test:coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "db:generate": "pnpm --filter @devforge/database generate",
+    "db:migrate:dev": "pnpm --filter @devforge/database migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @devforge/database migrate:deploy",
+    "db:studio": "pnpm --filter @devforge/database studio",
+    "db:seed": "pnpm --filter @devforge/database seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
+
+
