@@ -7,6 +7,7 @@ const environmentSchema = z.object({
   DATABASE_URL: z
     .string()
     .default('postgresql://devforge:devforge@localhost:5432/devforge?schema=public'),
+  DIRECT_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   BETTER_AUTH_SECRET: z.string().default('devforge-dev-secret-change-in-production'),
   GOOGLE_CLIENT_ID: z.string().optional(),
