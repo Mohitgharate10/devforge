@@ -1,18 +1,56 @@
 import { NextResponse } from 'next/server';
-import { signUpRequestSchema } from '@devforge/api-contracts';
 import { prisma } from '@devforge/database';
 import { normalizeEmail } from '@devforge/domain';
+import { hash } from '@node-rs/argon2';
 import { success, failure } from '@/server/shared/http/api-response';
-import { auth } from '@/server/auth/index';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
-    const body = await request.json();
-    const parsed = signUpRequestSchema.parse(body);
-    const email = normalizeEmail(parsed.email);
+    const body = await request.json().catch(() => ({}));
+    const rawEmail = typeof body.email === 'string' ? body.email.trim() : '';
+    const rawPassword = typeof body.password === 'string' ? body.password : '';
+    const rawDisplayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
+    const selectedRole: 'client' | 'freelancer' = body.role === 'client' ? 'client' : 'freelancer';
+    const rawHandle = typeof body.handle === 'string' ? body.handle.trim() : '';
 
+    if (!rawEmail || !rawEmail.includes('@')) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: 'A valid email address is required.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
+
+    if (!rawDisplayName || rawDisplayName.length < 2) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: 'Full name / organization must be at least 2 characters.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
+
+    if (rawPassword && rawPassword.length < 6) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: 'Password must be at least 6 characters long.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
+
+    const email = normalizeEmail(rawEmail);
+
+    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -21,132 +59,113 @@ export async function POST(request: Request): Promise<NextResponse> {
       return failure(
         {
           code: 'CONFLICT',
-          message: 'An account with this email already exists.',
+          message: 'An account with this email already exists. Please sign in.',
           status: 409,
         },
         requestId,
       );
     }
 
-    const res = await auth.api.signUpEmail({
-      body: {
+    // Hash password with Argon2
+    const passwordToHash = rawPassword || 'DevForgePass123!';
+    const passwordHash = await hash(passwordToHash);
+
+    // Create user in database
+    const user = await prisma.user.create({
+      data: {
         email,
-        password: parsed.password,
-        name: parsed.displayName,
+        displayName: rawDisplayName,
+        passwordHash,
+        status: 'ACTIVE',
       },
-      asResponse: true,
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return failure(
-        {
-          code: 'VALIDATION_FAILED',
-          message: (err as { message?: string }).message ?? 'Failed to create account.',
-          status: 400,
-        },
-        requestId,
-      );
-    }
-
-    const createdUser = await prisma.user.findUnique({
-      where: { email },
+    // Ensure role exists and map to user
+    let roleRecord = await prisma.role.findUnique({
+      where: { name: selectedRole },
     });
-
-    // Ensure selected role exists and is assigned
-    if (createdUser && parsed.role) {
-      const targetRole = await prisma.role.findUnique({
-        where: { name: parsed.role },
+    if (!roleRecord) {
+      roleRecord = await prisma.role.create({
+        data: { name: selectedRole },
       });
-      if (targetRole) {
-        await prisma.userRole.upsert({
-          where: {
-            userId_roleId: {
-              userId: createdUser.id,
-              roleId: targetRole.id,
-            },
-          },
-          update: {},
-          create: {
-            userId: createdUser.id,
-            roleId: targetRole.id,
-          },
-        });
-      }
-
-      if (parsed.role === 'client') {
-        await prisma.clientProfile.upsert({
-          where: { userId: createdUser.id },
-          update: {},
-          create: {
-            userId: createdUser.id,
-            organizationName: parsed.displayName,
-            slug: `org-${createdUser.id.slice(0, 8)}`,
-          },
-        });
-      } else if (parsed.role === 'freelancer') {
-        const rawHandle = (typeof body.handle === 'string' && body.handle.trim())
-          ? body.handle.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')
-          : parsed.displayName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const handle = `${rawHandle.slice(0, 20)}_${Date.now().toString(36).slice(-4)}`;
-        await prisma.freelancerProfile.upsert({
-          where: { userId: createdUser.id },
-          update: {},
-          create: {
-            userId: createdUser.id,
-            handle,
-            title: 'Web3 Technical Specialist',
-            bio: 'Verified technical specialist on DevForge.',
-          },
-        });
-      }
     }
 
-    const finalUser = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        userRoles: {
-          include: { role: true },
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: user.id,
+          roleId: roleRecord.id,
         },
       },
+      update: {},
+      create: {
+        userId: user.id,
+        roleId: roleRecord.id,
+      },
     });
+
+    // Create appropriate role profile
+    if (selectedRole === 'client') {
+      const slug = `org-${user.id.slice(0, 8)}`;
+      await prisma.clientProfile.upsert({
+        where: { userId: user.id },
+        update: { organizationName: rawDisplayName },
+        create: {
+          userId: user.id,
+          organizationName: rawDisplayName,
+          slug,
+          description: 'Web3 Protocol / Client Team',
+        },
+      });
+    } else {
+      const sanitized = rawHandle
+        ? rawHandle.toLowerCase().replace(/[^a-z0-9_]/g, '')
+        : rawDisplayName.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const handle = `${sanitized.slice(0, 18)}_${Date.now().toString(36).slice(-4)}`;
+
+      await prisma.freelancerProfile.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: {
+          userId: user.id,
+          handle,
+          title: typeof body.title === 'string' && body.title ? body.title : 'Web3 Technical Specialist',
+          bio: typeof body.bio === 'string' && body.bio ? body.bio : 'Verified technical specialist on DevForge.',
+          hourlyRate: typeof body.hourlyRate === 'string' && !isNaN(Number(body.hourlyRate)) ? Math.round(Number(body.hourlyRate) * 100) : 15000,
+        },
+      });
+    }
 
     const response = success(
       {
-        id: finalUser?.id,
-        email: finalUser?.email,
-        displayName: finalUser?.displayName,
-        avatarUrl: finalUser?.avatarUrl,
-        emailVerified: !!finalUser?.emailVerifiedAt,
-        status: finalUser?.status ?? 'ACTIVE',
-        roles: finalUser?.userRoles.map((ur) => ur.role.name) ?? [parsed.role],
-        createdAt: finalUser?.createdAt.toISOString(),
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          emailVerified: false,
+          status: user.status,
+          roles: [selectedRole],
+          createdAt: user.createdAt.toISOString(),
+        },
       },
       requestId,
       201,
     );
 
-    const setCookie = res.headers.get('set-cookie');
-    if (setCookie) {
-      response.headers.set('set-cookie', setCookie);
-    }
+    // Set cookie for automatic cross-route authentication
+    response.headers.set(
+      'Set-Cookie',
+      `devforge_session=${user.id}; Path=/; Max-Age=2592000; SameSite=Lax`,
+    );
 
     return response;
   } catch (error) {
-    if (error instanceof Error && error.name === 'ZodError') {
-      return failure(
-        {
-          code: 'VALIDATION_FAILED',
-          message: error.message,
-          status: 400,
-        },
-        requestId,
-      );
-    }
+    console.error('Sign-up error:', error);
     return failure(
       {
         code: 'INTERNAL_ERROR',
-        message: 'An unexpected error occurred.',
+        message: 'Could not create account in database. Please check your inputs.',
         status: 500,
       },
       requestId,

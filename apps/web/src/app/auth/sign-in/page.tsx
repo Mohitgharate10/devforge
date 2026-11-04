@@ -75,10 +75,9 @@ function SignInContent() {
       });
 
       if (!res.ok) {
-        // Fallback for offline demo mode
-        signIn(fallbackUser, keepSignedIn);
-        setSuccessMessage(`Authenticated in Demo Mode as ${role.toUpperCase()}. Welcome back!`);
-        setTimeout(() => router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs'), 800);
+        const errJson = await res.json().catch(() => ({}));
+        setErrorMessage(errJson?.error?.message || 'Invalid email or password. Please check your credentials.');
+        setIsSubmitting(false);
         return;
       }
 
@@ -98,11 +97,9 @@ function SignInContent() {
 
       signIn(authedUser, keepSignedIn);
       setSuccessMessage(`Authenticated successfully as ${authedUser.role.toUpperCase()}! Redirecting...`);
-      setTimeout(() => router.push('/dashboard/contracts'), 800);
+      setTimeout(() => router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs'), 800);
     } catch {
-      signIn(fallbackUser, keepSignedIn);
-      setSuccessMessage(`Authenticated in Demo Mode as ${role.toUpperCase()}. Welcome back!`);
-      setTimeout(() => router.push('/dashboard/contracts'), 800);
+      setErrorMessage('Network error during sign-in. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

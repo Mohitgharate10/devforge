@@ -73,72 +73,34 @@ export default function SignUpPage() {
         }
       }
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 500 || res.status === 503) {
-          // In local demo fallback, keep credentials ready for sign in
-          setSuccessMessage(
-            `Profile registered successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`,
-          );
-          setTimeout(() => {
-            router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
-          }, 1200);
-          return;
-        }
         setErrorMessage(data?.error?.message || 'Could not create account. Please check your inputs.');
         setIsSubmitting(false);
         return;
       }
 
-      // Also prime local auth state with the correct selected role
-      signIn({
-        id: 'user-' + userHandle,
-        email: email || `${userHandle}@devforge.network`,
-        displayName: displayName || userHandle,
-        role: role,
-        handle: userHandle,
-        walletAddress: walletAddress || null,
-      }, true);
+      const createdUser = data?.data?.user;
 
-      setSuccessMessage(`Account registered successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`);
-      setTimeout(() => {
-        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
-      }, 1200);
-    } catch {
-      if (role === 'freelancer') {
-        try {
-          const stored = localStorage.getItem('devforge_demo_specialists');
-          const list = stored ? JSON.parse(stored) : [];
-          const newEntry = {
-            handle: userHandle,
-            name: displayName,
-            title: title || 'Fullstack Web3 Engineer',
-            rate: `$${hourlyRate}/hr`,
-            availability: 'AVAILABLE',
-            skills: ['Solidity', 'TypeScript', 'Web3 Escrow'],
-            isLocalNew: true,
-          };
-          localStorage.setItem('devforge_demo_specialists', JSON.stringify([newEntry, ...list]));
-        } catch {
-          // ignore
-        }
-      }
-
+      // Prime auth state with registered user
       signIn({
-        id: 'user-' + userHandle,
-        email: email || `${userHandle}@devforge.network`,
-        displayName: displayName || userHandle,
+        id: createdUser?.id || ('user-' + userHandle),
+        email: createdUser?.email || email,
+        displayName: createdUser?.displayName || displayName || userHandle,
         role: role,
         handle: userHandle,
         walletAddress: walletAddress || null,
       }, true);
 
       setSuccessMessage(
-        `Profile registered as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`,
+        `Account created successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting...`,
       );
       setTimeout(() => {
-        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
-      }, 1200);
+        router.push(role === 'client' ? '/jobs/create' : '/jobs');
+      }, 1000);
+    } catch {
+      setErrorMessage('Network error during account creation. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
