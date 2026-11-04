@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 interface ContractItem {
   id: string;
@@ -28,6 +29,7 @@ interface ContractItem {
 }
 
 export default function ContractsDashboardPage() {
+  const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'DISPUTED'>('ALL');
@@ -106,6 +108,32 @@ export default function ContractsDashboardPage() {
         return null;
     }
   };
+
+  if (!user) {
+    return (
+      <main style={{ padding: '6rem 1.5rem', maxWidth: '36rem', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-hairline)', borderRadius: '16px', padding: '3rem 2rem' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(230, 0, 122, 0.12)', border: '1px solid rgba(230, 0, 122, 0.3)', color: '#E6007A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.25rem' }}>
+            🔒
+          </div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>
+            Authentication Required
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+            You need to be signed in as a client or specialist to access active milestone contracts and settlement vaults.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/auth/sign-in" className="btn-pill-primary" style={{ padding: '0.75rem 1.75rem' }}>
+              Sign In to DevForge →
+            </Link>
+            <Link href="/escrow" className="btn-pill-secondary" style={{ padding: '0.75rem 1.5rem' }}>
+              Explore Escrow Protocol
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main style={{ padding: '3.5rem 2rem', maxWidth: '75rem', margin: '0 auto' }}>

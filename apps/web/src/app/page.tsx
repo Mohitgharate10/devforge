@@ -48,23 +48,23 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Live Protocol Telemetry Rail */}
+        {/* Live Protocol Telemetry Rail (Sepolia Testnet Alpha) */}
         <div className="stats-rail" style={{ marginTop: '3.5rem' }}>
           <div className="stat-item">
-            <span className="stat-number">100%</span>
-            <span className="stat-label">Non-Custodial Escrow</span>
+            <span className="stat-number">Sepolia</span>
+            <span className="stat-label">Testnet Alpha (Zero Real Value)</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">$3.5M+</span>
-            <span className="stat-label">Total Escrow Volume Locked</span>
+            <span className="stat-number">2-of-3</span>
+            <span className="stat-label">Multi-Sig Arbitrated Escrow</span>
           </div>
           <div className="stat-item">
             <span className="stat-number">EIP-4361</span>
             <span className="stat-label">Sign-In with Ethereum</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">★ 4.9 / 5</span>
-            <span className="stat-label">Double-Blind Verified Rating</span>
+            <span className="stat-number">Testnet</span>
+            <span className="stat-label">Interactive Demo Persona Profiles</span>
           </div>
         </div>
       </section>
@@ -75,13 +75,13 @@ export default function HomePage() {
           <div className="hero-meta-strip" style={{ justifyContent: 'center' }}>
             <span>ARCHITECTURE</span>
             <span>•</span>
-            <span>NON-CUSTODIAL GUARANTEE</span>
+            <span>ESCROW SECURITY GUARANTEE</span>
           </div>
           <h2 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.03em', margin: '0.5rem 0' }}>
             How DevForge Milestone Escrow Works
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '42rem', margin: '0 auto', fontSize: '1rem', lineHeight: 1.6 }}>
-            Eliminating upfront payment risk and freelance ghosting. Funds sit in a trustless smart contract vault on Ethereum Sepolia.
+            Eliminating upfront payment risk and freelance ghosting. Funds sit in a deterministic smart contract vault on Ethereum Sepolia with transparent 2-of-3 dispute arbitration.
           </p>
         </div>
 
@@ -197,11 +197,13 @@ export default function HomePage() {
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
                 Client approves deliverable with 1-click on-chain release directly to the specialist&apos;s wallet.
-                In case of disagreement, neutral multi-sig arbitration ensures fair fund distribution.
+                In case of disagreement, transparent 2-of-3 multi-sig arbitration (Client, Freelancer, Protocol Panel) mediates fund distribution.
               </p>
             </div>
             <div style={{ marginTop: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#F59E0B' }}>
-              ★ Double-Blind Reputation Review
+              <Link href="/terms#arbitration" style={{ textDecoration: 'underline', color: 'inherit' }}>
+                View Arbiter Key Transparency →
+              </Link>
             </div>
           </div>
         </div>
@@ -323,7 +325,7 @@ export default function HomePage() {
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>BUDGET RANGE</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>$10K – $16K USDC</div>
               </div>
-              <Link href="/jobs" className="btn-pill-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
+              <Link href="/jobs/job-substrate-pallet" className="btn-pill-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
                 Apply / Scope →
               </Link>
             </div>
@@ -338,11 +340,11 @@ export default function HomePage() {
             <div className="hero-meta-strip">
               <span>SPECIALISTS</span>
               <span>•</span>
-              <span>CRYPTOGRAPHIC REPUTATION</span>
+              <span>DEMO PERSONAS & SEPOLIA PROFILES</span>
             </div>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.25rem 0' }}>Verified Technical Talent</h2>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.25rem 0' }}>Featured Technical Talent</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-              Engineers with verified on-chain audit reports, milestone completions, and peer reviews.
+              Curated Web3 specialists. In testnet alpha mode, these highlight platform capabilities and testnet reputation.
             </p>
           </div>
           <Link href="/freelancers" className="btn-pill-secondary">

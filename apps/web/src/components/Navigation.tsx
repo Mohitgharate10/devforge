@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { NotificationCenter } from './NotificationCenter';
+import { WalletConnectButton } from './WalletConnectButton';
 import { useAuth } from '@/context/AuthContext';
 
 export function Navigation() {
@@ -75,6 +76,7 @@ export function Navigation() {
             <span>Sepolia Escrow</span>
           </div>
 
+          <WalletConnectButton />
           <NotificationCenter />
 
           {user ? (

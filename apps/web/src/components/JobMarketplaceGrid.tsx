@@ -18,6 +18,18 @@ export type JobCard = {
 
 const DEFAULT_JOBS: JobCard[] = [
   {
+    id: 'job-substrate-pallet',
+    title: 'Substrate Parachain Governance Pallet Developer',
+    description:
+      'Design and implement open governance pallets with multi-asset conviction voting and time-locked treasury executions for the Polkadot Fellowship.',
+    category: 'Full Stack Web3',
+    client: 'Polkadot Fellowship',
+    budget: '$10,000 – $16,000',
+    currency: 'USDC',
+    skills: ['Rust', 'Substrate', 'FRAME', 'Polkadot SDK'],
+    publishedAt: '3 hours ago',
+  },
+  {
     id: 'job-bridge-audit',
     title: 'EVM & Substrate Cross-Chain Bridge Security Audit',
     description:
