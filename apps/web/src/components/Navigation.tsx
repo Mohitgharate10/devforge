@@ -47,7 +47,18 @@ export function Navigation() {
               fontSize: '1.1rem',
             }}
           >
-            {mobileMenuOpen ? '✕' : '☰'}
+            {mobileMenuOpen ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
           </button>
 
           <Link href="/" className="brand-logo" onClick={() => setMobileMenuOpen(false)}>
@@ -57,6 +68,7 @@ export function Navigation() {
         </div>
 
         <nav className="nav-links desktop-only" aria-label="Main Navigation">
+          <Link href="/bounties">Bounties</Link>
           <Link href="/freelancers">Freelancers</Link>
           <Link href="/jobs">Open Roles</Link>
           <Link href="/dashboard/proposals">Proposals</Link>
@@ -278,6 +290,14 @@ export function Navigation() {
     {mobileMenuOpen && (
       <div className="mobile-nav-drawer">
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Link
+            href="/bounties"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mobile-nav-link"
+          >
+            <span>Earn Bounties & Grants</span>
+            <span>→</span>
+          </Link>
           <Link
             href="/freelancers"
             onClick={() => setMobileMenuOpen(false)}

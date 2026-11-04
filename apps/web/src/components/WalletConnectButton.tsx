@@ -158,7 +158,10 @@ export function WalletConnectButton() {
           }}
           title="Click to switch wallet to Sepolia"
         >
-          <span>⚠ Switch to Sepolia</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EF4444' }} />
+            Switch to Sepolia
+          </span>
         </button>
       );
     }
@@ -214,7 +217,10 @@ export function WalletConnectButton() {
         fontFamily: 'var(--font-mono)',
       }}
     >
-      <span style={{ fontSize: '0.85rem' }}>⚡</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
+        <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+        <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+      </svg>
       <span>{connecting ? 'Connecting...' : hasProvider ? 'Connect Wallet' : 'Connect Demo Wallet'}</span>
     </button>
   );

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SuperteamBountiesHub } from '@/components/SuperteamBountiesHub';
 
 export default function HomePage() {
   return (
@@ -88,24 +89,26 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.75rem' }}>
           {/* Step 1 */}
           <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-hairline)',
+            background: '#0D0D12',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '16px',
-            padding: '2rem',
+            padding: '2.25rem 2rem',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
           }}>
             <div>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: 'rgba(230, 0, 122, 0.12)',
-                border: '1px solid rgba(230, 0, 122, 0.3)',
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                background: 'rgba(230, 0, 122, 0.1)',
+                border: '1px solid rgba(230, 0, 122, 0.25)',
                 color: '#E6007A',
                 fontFamily: 'var(--font-mono)',
                 fontWeight: 700,
+                fontSize: '0.85rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -113,39 +116,51 @@ export default function HomePage() {
               }}>
                 01
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.75rem' }}>
                 Pre-Fund Milestone Vault
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
-                Client deposits milestone funds into <code style={{ color: '#E6007A' }}>DevForgeEscrow.sol</code>.
-                Deterministic Keccak-256 keys lock funds between client and freelancer addresses. Zero platform custody.
+              <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+                Client deposits milestone funds into <code style={{ color: '#E6007A', fontFamily: 'var(--font-mono)' }}>DevForgeEscrow.sol</code>. Deterministic Keccak-256 keys lock funds between client and freelancer addresses. Zero platform custody.
               </p>
             </div>
-            <div style={{ marginTop: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#10B981' }}>
-              ✓ Verified on Sepolia Testnet
+            <div style={{
+              marginTop: '1.75rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <span>Sepolia Testnet Verified Escrow</span>
             </div>
           </div>
 
           {/* Step 2 */}
           <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-hairline)',
+            background: '#0D0D12',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '16px',
-            padding: '2rem',
+            padding: '2.25rem 2rem',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
           }}>
             <div>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: 'rgba(59, 130, 246, 0.12)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                color: '#3B82F6',
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                background: 'rgba(230, 0, 122, 0.1)',
+                border: '1px solid rgba(230, 0, 122, 0.25)',
+                color: '#E6007A',
                 fontFamily: 'var(--font-mono)',
                 fontWeight: 700,
+                fontSize: '0.85rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -153,38 +168,51 @@ export default function HomePage() {
               }}>
                 02
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.75rem' }}>
                 Deliver in Live Project Rooms
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+              <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
                 Freelancer submits pull requests, formal verification invariant tests, or IPFS artifacts directly into the authenticated contract room with realtime messaging.
               </p>
             </div>
-            <div style={{ marginTop: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#3B82F6' }}>
-              ⚡ Realtime Collaboration & Logs
+            <div style={{
+              marginTop: '1.75rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <span>Realtime Rooms & Delivery Logs</span>
             </div>
           </div>
 
           {/* Step 3 */}
           <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-hairline)',
+            background: '#0D0D12',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '16px',
-            padding: '2rem',
+            padding: '2.25rem 2rem',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
           }}>
             <div>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: 'rgba(16, 185, 129, 0.12)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                color: '#10B981',
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                background: 'rgba(230, 0, 122, 0.1)',
+                border: '1px solid rgba(230, 0, 122, 0.25)',
+                color: '#E6007A',
                 fontFamily: 'var(--font-mono)',
                 fontWeight: 700,
+                fontSize: '0.85rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -192,145 +220,36 @@ export default function HomePage() {
               }}>
                 03
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.75rem' }}>
                 Release Payout or Arbitrate
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
-                Client approves deliverable with 1-click on-chain release directly to the specialist&apos;s wallet.
-                In case of disagreement, transparent 2-of-3 multi-sig arbitration (Client, Freelancer, Protocol Panel) mediates fund distribution.
+              <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+                Client approves deliverable with 1-click on-chain release directly to the specialist&apos;s wallet. In case of disagreement, transparent 2-of-3 multi-sig arbitration mediates fund distribution.
               </p>
             </div>
-            <div style={{ marginTop: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#F59E0B' }}>
-              <Link href="/terms#arbitration" style={{ textDecoration: 'underline', color: 'inherit' }}>
-                View Arbiter Key Transparency →
+            <div style={{
+              marginTop: '1.75rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <Link href="/terms#arbitration" style={{ textDecoration: 'none', color: 'inherit' }}>
+                2-of-3 Arbiter Transparency ↗
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Featured Bounties & Open Roles Preview ───────── */}
+      {/* ─── Superteam Earn-Style Bounties & Grants Section ───────── */}
       <section style={{ padding: '4.5rem 0', borderTop: '1px solid var(--border-hairline)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div className="hero-meta-strip">
-              <span>ACTIVE CONTRACTS</span>
-              <span>•</span>
-              <span>VERIFIED GRANTS</span>
-            </div>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.25rem 0' }}>Featured Bounties & Roles</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-              Pre-funded milestone opportunities from established Web3 protocols and research foundations.
-            </p>
-          </div>
-          <Link href="/jobs" className="btn-pill-secondary">
-            View All Open Roles →
-          </Link>
-        </div>
-
-        <div className="editorial-grid">
-          {/* Job 1 */}
-          <div className="card-editorial">
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span className="client-badge">Parity Ecosystem Fund</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                  ● ESCROW PRE-FUNDED
-                </span>
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.3 }}>
-                EVM & Substrate Cross-Chain Bridge Security Audit
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Formal verification and manual audit on EIP-712 token bridge endpoints, replay mitigations, and emergency pause logic.
-              </p>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                <span className="skill-tag accent">Solidity</span>
-                <span className="skill-tag accent">Foundry</span>
-                <span className="skill-tag">Rust</span>
-                <span className="skill-tag">Halmos</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-hairline)' }}>
-              <div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>BUDGET RANGE</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>$12K – $18K USDC</div>
-              </div>
-              <Link href="/jobs/job-bridge-audit" className="btn-pill-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
-                Apply / Scope →
-              </Link>
-            </div>
-          </div>
-
-          {/* Job 2 */}
-          <div className="card-editorial">
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span className="client-badge">Axiom Research Labs</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                  ● ESCROW PRE-FUNDED
-                </span>
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.3 }}>
-                ZK-Rollup Proof Verifier Circuit Optimization
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Optimize on-chain Groth16 proof verifier smart contracts on Sepolia to minimize Layer 2 verification gas overhead.
-              </p>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                <span className="skill-tag accent">Zero-Knowledge</span>
-                <span className="skill-tag accent">Circom</span>
-                <span className="skill-tag">Halo2</span>
-                <span className="skill-tag">Viem</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-hairline)' }}>
-              <div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>BUDGET RANGE</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>$15K – $25K USDC</div>
-              </div>
-              <Link href="/jobs/job-zk-circuit" className="btn-pill-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
-                Apply / Scope →
-              </Link>
-            </div>
-          </div>
-
-          {/* Job 3 */}
-          <div className="card-editorial">
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span className="client-badge">Polkadot Fellowship</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                  ● ESCROW PRE-FUNDED
-                </span>
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.3 }}>
-                Substrate Parachain Governance Pallet Developer
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Design and implement open governance pallets with multi-asset conviction voting and time-locked treasury executions.
-              </p>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                <span className="skill-tag accent">Rust</span>
-                <span className="skill-tag accent">Substrate</span>
-                <span className="skill-tag">FRAME</span>
-                <span className="skill-tag">Polkadot SDK</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-hairline)' }}>
-              <div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>BUDGET RANGE</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>$10K – $16K USDC</div>
-              </div>
-              <Link href="/jobs/job-substrate-pallet" className="btn-pill-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}>
-                Apply / Scope →
-              </Link>
-            </div>
-          </div>
-        </div>
+        <SuperteamBountiesHub isHomepage={true} />
       </section>
 
       {/* ─── Top Verified Talent Spotlight ───────────────── */}
@@ -377,7 +296,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
-                  ★ 5.0 (14 reviews)
+                  5.0 (14 verified reviews)
                 </span>
               </div>
 
@@ -430,7 +349,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
-                  ★ 4.9 (9 reviews)
+                  4.9 (9 verified reviews)
                 </span>
               </div>
 
