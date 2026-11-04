@@ -73,6 +73,33 @@ export async function POST(request: Request): Promise<NextResponse> {
           },
         });
       }
+
+      if (parsed.role === 'client') {
+        await prisma.clientProfile.upsert({
+          where: { userId: createdUser.id },
+          update: {},
+          create: {
+            userId: createdUser.id,
+            organizationName: parsed.displayName,
+            slug: `org-${createdUser.id.slice(0, 8)}`,
+          },
+        });
+      } else if (parsed.role === 'freelancer') {
+        const rawHandle = (typeof body.handle === 'string' && body.handle.trim())
+          ? body.handle.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')
+          : parsed.displayName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const handle = `${rawHandle.slice(0, 20)}_${Date.now().toString(36).slice(-4)}`;
+        await prisma.freelancerProfile.upsert({
+          where: { userId: createdUser.id },
+          update: {},
+          create: {
+            userId: createdUser.id,
+            handle,
+            title: 'Web3 Technical Specialist',
+            bio: 'Verified technical specialist on DevForge.',
+          },
+        });
+      }
     }
 
     const finalUser = await prisma.user.findUnique({

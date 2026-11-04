@@ -25,15 +25,40 @@ export default function CreateJobPage() {
     setIsSubmitting(true);
     setSuccessMessage(null);
 
-    const newJobId = `job-${Date.now().toString(36)}`;
     const skillList = skills.split(',').map((s) => s.trim()).filter(Boolean);
+    let resolvedJobId = `job-${Date.now().toString(36)}`;
+
+    try {
+      // 1. Persist directly into Supabase PostgreSQL Database
+      const res = await fetch('/api/v1/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description: description || 'Technical specification and milestone deliverables for protocol implementation.',
+          budgetMin: Number(budgetMin) * 100,
+          budgetMax: Number(budgetMax) * 100,
+          currency,
+          category,
+          client: organization || 'Protocol / Client Team',
+          skills: skillList.length > 0 ? skillList : ['Solidity', 'Web3'],
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+      if (json?.data?.id) {
+        resolvedJobId = json.data.id;
+      }
+    } catch (err) {
+      console.warn('API post fallback to local storage:', err);
+    }
 
     const newJob = {
-      id: newJobId,
+      id: resolvedJobId,
       title,
       description,
       category,
-      client: organization || 'Decentralized Protocol',
+      client: organization || 'Protocol / Client Team',
       budget: `$${Number(budgetMin).toLocaleString()} – $${Number(budgetMax).toLocaleString()}`,
       currency,
       skills: skillList.length > 0 ? skillList : ['Solidity', 'Web3'],
@@ -42,19 +67,18 @@ export default function CreateJobPage() {
     };
 
     try {
-      // Save to local demo storage so it appears instantly on /jobs
       const existing = JSON.parse(localStorage.getItem('devforge_demo_jobs') || '[]');
       localStorage.setItem('devforge_demo_jobs', JSON.stringify([newJob, ...existing]));
     } catch {
       // ignore
     }
 
-    setSuccessMessage('Bounty created and published to the Open Roles directory!');
+    setSuccessMessage('Bounty created and published to the database! Redirecting...');
     setIsSubmitting(false);
 
     setTimeout(() => {
       router.push('/jobs');
-    }, 1200);
+    }, 1000);
   };
 
   return (

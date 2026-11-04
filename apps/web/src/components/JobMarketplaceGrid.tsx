@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
 export type JobCard = {
@@ -99,19 +99,72 @@ function getServerSnapshot(): string {
 export function JobMarketplaceGrid() {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [remoteJobs, setRemoteJobs] = useState<JobCard[]>([]);
 
   const rawStored = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  let allJobs = DEFAULT_JOBS;
-  try {
-    const parsed: JobCard[] = JSON.parse(rawStored);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      const combined = [...parsed, ...DEFAULT_JOBS];
-      allJobs = Array.from(new Map(combined.map((j) => [j.id, j])).values());
+  useEffect(() => {
+    let ignore = false;
+    async function loadJobs() {
+      try {
+        const res = await fetch('/api/v1/jobs');
+        const json = await res.json();
+        if (!ignore && json?.data?.items && Array.isArray(json.data.items)) {
+          const mapped: JobCard[] = json.data.items.map((j: {
+            id: string;
+            title: string;
+            description: string;
+            category?: { name: string };
+            client?: { organizationName: string };
+            budgetMin?: number | null;
+            budgetMax?: number | null;
+            currency?: string;
+            skills?: Array<{ name?: string; slug?: string }>;
+            publishedAt?: string | null;
+            isDatabaseRecord?: boolean;
+          }) => ({
+            id: j.id,
+            title: j.title,
+            description: j.description,
+            category: j.category?.name || 'Full Stack Web3',
+            client: j.client?.organizationName || 'Protocol Team',
+            budget: j.budgetMin && j.budgetMax
+              ? `$${(j.budgetMin / 100).toLocaleString()} – $${(j.budgetMax / 100).toLocaleString()}`
+              : `$10,000 – $20,000`,
+            currency: j.currency || 'USDC',
+            skills: j.skills?.map((s) => s.name || s.slug || 'Web3') || ['Solidity', 'Rust'],
+            publishedAt: j.publishedAt ? new Date(j.publishedAt).toLocaleDateString() : 'Just now',
+            isLocalNew: !!j.isDatabaseRecord,
+          }));
+          setRemoteJobs(mapped);
+        }
+      } catch (err) {
+        console.warn('Could not fetch remote jobs:', err);
+      }
     }
-  } catch {
-    // ignore
+    loadJobs();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const parsedLocal: JobCard[] = (() => {
+    try {
+      const p = JSON.parse(rawStored);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const allCombined = [...remoteJobs, ...parsedLocal, ...DEFAULT_JOBS];
+  const uniqueMap = new Map<string, JobCard>();
+  for (const job of allCombined) {
+    if (!uniqueMap.has(job.id)) {
+      uniqueMap.set(job.id, job);
+    }
   }
+  const allJobs = Array.from(uniqueMap.values());
 
   const categories = ['ALL', 'Smart Contract Auditing', 'Zero Knowledge & Cryptography', 'Full Stack Web3', 'Infrastructure & DevOps'];
 

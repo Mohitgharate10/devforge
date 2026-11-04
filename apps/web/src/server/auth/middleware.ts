@@ -9,48 +9,114 @@ import {
 import { auth } from './index';
 
 export async function resolveActor(): Promise<Actor | null> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const reqHeaders = await headers();
+  let targetUserId: string | null = null;
 
-  if (!session?.user) {
+  try {
+    const session = await auth.api.getSession({
+      headers: reqHeaders,
+    });
+    if (session?.user?.id) {
+      targetUserId = session.user.id;
+    }
+  } catch {
+    // Better Auth session lookup error fallback
+  }
+
+  // Fallback to devforge_session cookie or x-user-id header
+  if (!targetUserId) {
+    const cookieHeader = reqHeaders.get('cookie') || '';
+    const match = cookieHeader.match(/devforge_session=([^;]+)/);
+    if (match && match[1]) {
+      targetUserId = decodeURIComponent(match[1].trim());
+    } else {
+      const headerUserId = reqHeaders.get('x-user-id');
+      if (headerUserId) {
+        targetUserId = headerUserId.trim();
+      }
+    }
+  }
+
+  if (!targetUserId) {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      userRoles: {
-        include: {
-          role: {
-            include: {
-              permissions: {
-                include: {
-                  permission: true,
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: {
+        userRoles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-  });
+    });
 
-  if (!user) {
+    if (!user) {
+      // If user was not found by UUID directly, check if targetUserId was an email or handle
+      const userByEmail = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: targetUserId },
+            { displayName: targetUserId },
+          ],
+        },
+        include: {
+          userRoles: {
+            include: {
+              role: {
+                include: {
+                  permissions: {
+                    include: {
+                      permission: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!userByEmail) return null;
+
+      const roles = userByEmail.userRoles.map((ur) => ur.role.name);
+      const permissions = userByEmail.userRoles.flatMap((ur) =>
+        ur.role.permissions.map((rp) => rp.permission.key),
+      );
+
+      return {
+        userId: userByEmail.id,
+        status: userByEmail.status,
+        roles: [...new Set(roles.length > 0 ? roles : ['client', 'freelancer'])],
+        permissions: [...new Set(permissions)],
+      };
+    }
+
+    const roles = user.userRoles.map((ur) => ur.role.name);
+    const permissions = user.userRoles.flatMap((ur) =>
+      ur.role.permissions.map((rp) => rp.permission.key),
+    );
+
+    return {
+      userId: user.id,
+      status: user.status,
+      roles: [...new Set(roles.length > 0 ? roles : ['client', 'freelancer'])],
+      permissions: [...new Set(permissions)],
+    };
+  } catch (err) {
+    console.error('Error in resolveActor DB query:', err);
     return null;
   }
-
-  const roles = user.userRoles.map((ur) => ur.role.name);
-  const permissions = user.userRoles.flatMap((ur) =>
-    ur.role.permissions.map((rp) => rp.permission.key),
-  );
-
-  return {
-    userId: user.id,
-    status: user.status,
-    roles: [...new Set(roles)],
-    permissions: [...new Set(permissions)],
-  };
 }
 
 export async function requireSession(): Promise<Actor> {

@@ -81,7 +81,7 @@ export default function SignUpPage() {
             `Profile registered successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`,
           );
           setTimeout(() => {
-            router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}`);
+            router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
           }, 1200);
           return;
         }
@@ -102,7 +102,7 @@ export default function SignUpPage() {
 
       setSuccessMessage(`Account registered successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`);
       setTimeout(() => {
-        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}`);
+        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
       }, 1200);
     } catch {
       if (role === 'freelancer') {
@@ -137,7 +137,7 @@ export default function SignUpPage() {
         `Profile registered as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting to Sign In...`,
       );
       setTimeout(() => {
-        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}`);
+        router.push(`/auth/sign-in?email=${encodeURIComponent(email)}&role=${role}&registered=true`);
       }, 1200);
     } finally {
       setIsSubmitting(false);

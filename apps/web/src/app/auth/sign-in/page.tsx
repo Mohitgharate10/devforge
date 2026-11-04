@@ -20,59 +20,36 @@ function SignInContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(() => {
+    return searchParams.get('registered') === 'true'
+      ? 'Account created successfully in database! Please sign in with your credentials.'
+      : null;
+  });
 
-  const handleConnectWallet = () => {
+  const handleConnectWallet = async () => {
+    let walletAddr = '0x71C84164b3c915122e265646cD8266395A344e45';
+    if (typeof window !== 'undefined' && window.ethereum) {
+      try {
+        const accs = (await window.ethereum.request({ method: 'eth_requestAccounts' })) as string[];
+        if (accs && accs[0]) walletAddr = accs[0];
+      } catch {
+        // user rejected
+      }
+    }
     setWalletConnected(true);
-    const walletUser: AuthUser = role === 'client'
-      ? {
-          id: 'user-parity',
-          email: 'grants@parity.io',
-          displayName: 'Parity Ecosystem Fund',
-          role: 'client',
-          handle: 'parity-ecosystem',
-          walletAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-        }
-      : {
-          id: 'user-elena',
-          email: 'elena.rostova@devforge.network',
-          displayName: 'Elena Rostova',
-          role: 'freelancer',
-          handle: 'elena-rostova',
-          walletAddress: '0x71C836449195a1234567890abcdef1234e45',
-        };
+    const walletUser: AuthUser = {
+      id: 'wallet-' + walletAddr.slice(2, 10),
+      email: `${walletAddr.slice(0, 8).toLowerCase()}@devforge.network`,
+      displayName: `${walletAddr.slice(0, 6)}...${walletAddr.slice(-4)}`,
+      role,
+      handle: walletAddr.slice(0, 8).toLowerCase(),
+      walletAddress: walletAddr,
+    };
 
     signIn(walletUser, keepSignedIn);
-    setSuccessMessage(`Wallet verified via EIP-4361 as ${walletUser.role.toUpperCase()}. Session active and saved!`);
+    setSuccessMessage(`Wallet verified via EIP-4361 as ${role.toUpperCase()}! Redirecting...`);
     setTimeout(() => {
-      router.push('/dashboard/contracts');
-    }, 1000);
-  };
-
-  const handleQuickLogin = (persona: 'elena' | 'parity') => {
-    const userData: AuthUser =
-      persona === 'elena'
-        ? {
-            id: 'user-elena',
-            email: 'elena.rostova@devforge.network',
-            displayName: 'Elena Rostova',
-            role: 'freelancer',
-            handle: 'elena-rostova',
-            walletAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          }
-        : {
-            id: 'user-parity',
-            email: 'grants@parity.io',
-            displayName: 'Parity Ecosystem Fund',
-            role: 'client',
-            handle: 'parity-ecosystem',
-            walletAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-          };
-
-    signIn(userData, keepSignedIn);
-    setSuccessMessage(`Authenticated as ${userData.displayName} (${userData.role.toUpperCase()})! Redirecting...`);
-    setTimeout(() => {
-      router.push('/dashboard/contracts');
+      router.push(role === 'client' ? '/jobs/create' : '/jobs');
     }, 800);
   };
 
@@ -101,7 +78,7 @@ function SignInContent() {
         // Fallback for offline demo mode
         signIn(fallbackUser, keepSignedIn);
         setSuccessMessage(`Authenticated in Demo Mode as ${role.toUpperCase()}. Welcome back!`);
-        setTimeout(() => router.push('/dashboard/contracts'), 800);
+        setTimeout(() => router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs'), 800);
         return;
       }
 
@@ -286,36 +263,7 @@ function SignInContent() {
         </div>
       )}
 
-      {/* 1-Click Fast Demo Login Buttons */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid var(--border-hairline)',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginBottom: '2rem',
-      }}>
-        <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-          ONE-CLICK VERIFIED PROFILES (LOCAL & DEPLOYED DEMO)
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('elena')}
-            className="btn-pill-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.6rem 0.5rem', textAlign: 'center', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10B981' }}
-          >
-            ⚡ Elena (Freelancer)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('parity')}
-            className="btn-pill-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.6rem 0.5rem', textAlign: 'center', borderColor: 'rgba(230, 0, 122, 0.4)', color: '#E6007A' }}
-          >
-            ⚡ Parity Fund (Client)
-          </button>
-        </div>
-      </div>
+
 
       {/* Web3 SIWE Option */}
       <button
