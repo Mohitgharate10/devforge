@@ -372,13 +372,18 @@ export function findCanonicalBounty(idOrSlug: string): CanonicalBounty | undefin
 }
 
 export function findCanonicalBountyByUuid(uuid: string): CanonicalBounty | undefined {
-  const entry = Object.entries(CANONICAL_JOB_UUIDS).find(([, u]) => u.toLowerCase() === uuid.toLowerCase());
+  const entry = Object.entries(CANONICAL_JOB_UUIDS).find(
+    ([, u]) => u.toLowerCase() === uuid.toLowerCase(),
+  );
   if (!entry) return undefined;
   return findCanonicalBounty(entry[0]);
 }
 
 export function findCanonicalSpecialist(handle: string): CanonicalSpecialist | undefined {
-  const normalized = handle.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  const normalized = handle
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '');
   return CANONICAL_SPECIALISTS.find(
     (s) =>
       s.canonicalHandle.toLowerCase() === normalized ||

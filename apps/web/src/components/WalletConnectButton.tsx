@@ -145,7 +145,7 @@ export function WalletConnectButton() {
         console.error('Failed to switch wallet network:', switchError);
         setConnectionError('Could not switch the wallet to Sepolia.');
       }
-    };
+    }
   };
 
   const isWrongNetwork = chainId && chainId.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX.toLowerCase();

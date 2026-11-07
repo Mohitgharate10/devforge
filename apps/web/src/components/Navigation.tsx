@@ -345,7 +345,10 @@ export function Navigation() {
               )}
             </div>
           ) : (
-            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div
+              className="desktop-only"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}
+            >
               <Link href="/auth/sign-in" className="btn-pill-secondary">
                 Sign In
               </Link>

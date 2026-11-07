@@ -103,7 +103,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    if (!payoutAddress || typeof payoutAddress !== 'string' || !EVM_ADDRESS_REGEX.test(payoutAddress)) {
+    if (
+      !payoutAddress ||
+      typeof payoutAddress !== 'string' ||
+      !EVM_ADDRESS_REGEX.test(payoutAddress)
+    ) {
       return failure(
         {
           code: 'VALIDATION_FAILED',
@@ -115,14 +119,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     // Resolve user details
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        actor.userId,
+      );
     let userRecord = null;
-    try {
-      userRecord = await prisma.user.findUnique({
-        where: { id: actor.userId },
-        select: { id: true, displayName: true, email: true },
-      });
-    } catch {
-      // Prisma query fallback
+    if (isUuid) {
+      try {
+        userRecord = await prisma.user.findUnique({
+          where: { id: actor.userId },
+          select: { id: true, displayName: true, email: true },
+        });
+      } catch {
+        // Prisma query fallback
+      }
     }
 
     const submissionId = `sub-${crypto.randomUUID()}`;

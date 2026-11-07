@@ -6,8 +6,7 @@ import {
 } from './canonical-marketplace';
 
 export async function ensureDbJobForCanonicalBounty(bountyOrId: CanonicalBounty | string) {
-  const bounty =
-    typeof bountyOrId === 'string' ? findCanonicalBounty(bountyOrId) : bountyOrId;
+  const bounty = typeof bountyOrId === 'string' ? findCanonicalBounty(bountyOrId) : bountyOrId;
 
   if (!bounty) return null;
 
@@ -59,10 +58,7 @@ export async function ensureDbJobForCanonicalBounty(bountyOrId: CanonicalBounty 
     // 4. Ensure category exists
     let category = await prisma.jobCategory.findFirst({
       where: {
-        OR: [
-          { slug: bounty.category.slug },
-          { name: bounty.category.name },
-        ],
+        OR: [{ slug: bounty.category.slug }, { name: bounty.category.name }],
       },
     });
 
@@ -96,7 +92,10 @@ export async function ensureDbJobForCanonicalBounty(bountyOrId: CanonicalBounty 
       },
     });
   } catch (err) {
-    console.warn(`[ensureDbJobForCanonicalBounty] Database operation skipped or offline for ${bounty.id}:`, err);
+    console.warn(
+      `[ensureDbJobForCanonicalBounty] Database operation skipped or offline for ${bounty.id}:`,
+      err,
+    );
     return null;
   }
 }

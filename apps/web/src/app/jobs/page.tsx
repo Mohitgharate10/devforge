@@ -45,8 +45,8 @@ export default function JobsPage() {
               maxWidth: '44rem',
             }}
           >
-            Browse technical Web3 projects and example bounties. Listings may be demonstration
-            data; payments and escrow are testnet-only and must not be used for real funds.
+            Browse technical Web3 projects and example bounties. Listings may be demonstration data;
+            payments and escrow are testnet-only and must not be used for real funds.
           </p>
         </div>
 

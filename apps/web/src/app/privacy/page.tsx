@@ -48,8 +48,8 @@ export default function PrivacyPage() {
           </h2>
           <p>
             Wallet connection can read an address and network from a browser wallet. Wallet
-            connection is not account authentication. The application is a testnet prototype; do
-            not submit real funds or sensitive information. Any transaction submitted to a public
+            connection is not account authentication. The application is a testnet prototype; do not
+            submit real funds or sensitive information. Any transaction submitted to a public
             blockchain may be visible and irreversible.
           </p>
         </section>

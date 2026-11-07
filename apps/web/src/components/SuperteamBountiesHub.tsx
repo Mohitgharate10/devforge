@@ -110,12 +110,16 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
     setFormError(null);
 
     if (!user) {
-      setFormError('Authentication required. Please sign in to submit deliverables for this bounty.');
+      setFormError(
+        'Authentication required. Please sign in to submit deliverables for this bounty.',
+      );
       return;
     }
 
     if (!EVM_ADDRESS_REGEX.test(payoutAddress.trim())) {
-      setFormError('Please enter a valid 42-character EVM address (e.g. 0x71C84164b3c915122e265646cD8266395A344e45).');
+      setFormError(
+        'Please enter a valid 42-character EVM address (e.g. 0x71C84164b3c915122e265646cD8266395A344e45).',
+      );
       return;
     }
 
@@ -171,7 +175,9 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
         ),
       );
     } catch {
-      setFormError('Network error while recording submission. Please check connection and try again.');
+      setFormError(
+        'Network error while recording submission. Please check connection and try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -410,20 +416,20 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                       bounty.type === 'BOUNTY'
                         ? 'rgba(230, 0, 122, 0.12)'
                         : bounty.type === 'AUDIT CONTEST'
-                        ? 'rgba(147, 51, 234, 0.12)'
-                        : 'rgba(37, 99, 235, 0.12)',
+                          ? 'rgba(147, 51, 234, 0.12)'
+                          : 'rgba(37, 99, 235, 0.12)',
                     color:
                       bounty.type === 'BOUNTY'
                         ? '#E6007A'
                         : bounty.type === 'AUDIT CONTEST'
-                        ? '#A855F7'
-                        : '#3B82F6',
+                          ? '#A855F7'
+                          : '#3B82F6',
                     border: `1px solid ${
                       bounty.type === 'BOUNTY'
                         ? 'rgba(230, 0, 122, 0.3)'
                         : bounty.type === 'AUDIT CONTEST'
-                        ? 'rgba(147, 51, 234, 0.3)'
-                        : 'rgba(37, 99, 235, 0.3)'
+                          ? 'rgba(147, 51, 234, 0.3)'
+                          : 'rgba(37, 99, 235, 0.3)'
                     }`,
                   }}
                 >
@@ -442,10 +448,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                   letterSpacing: '-0.01em',
                 }}
               >
-                <Link
-                  href={bounty.linkUrl}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
-                >
+                <Link href={bounty.linkUrl} style={{ color: 'inherit', textDecoration: 'none' }}>
                   {bounty.title}
                 </Link>
               </h3>
@@ -710,11 +713,25 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                   marginBottom: '1.5rem',
                 }}
               >
-                <div style={{ fontWeight: 600, color: '#ff40a4', fontSize: '0.875rem', marginBottom: '0.35rem' }}>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    color: '#ff40a4',
+                    fontSize: '0.875rem',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   Authentication Required
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)', margin: '0 0 0.75rem' }}>
-                  You must be signed in to submit deliverables and receive escrow payouts on DevForge.
+                <p
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255, 255, 255, 0.75)',
+                    margin: '0 0 0.75rem',
+                  }}
+                >
+                  You must be signed in to submit deliverables and receive escrow payouts on
+                  DevForge.
                 </p>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <Link
@@ -825,7 +842,10 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmitWork} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <form
+                onSubmit={handleSubmitWork}
+                style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+              >
                 <div>
                   <label
                     style={{
@@ -949,7 +969,13 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                       outline: 'none',
                     }}
                   />
-                  <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.45)', marginTop: '0.35rem' }}>
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'rgba(255, 255, 255, 0.45)',
+                      marginTop: '0.35rem',
+                    }}
+                  >
                     Must be a valid 42-character Ethereum address (0x...)
                   </div>
                 </div>

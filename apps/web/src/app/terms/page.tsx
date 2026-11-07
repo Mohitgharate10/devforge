@@ -56,8 +56,8 @@ export default function TermsPage() {
           </h2>
           <p style={{ margin: 0, color: 'var(--text-primary)' }}>
             Escrow funding, release, and dispute arbitration are not production-ready. No verified
-            deployment is published here. Do not send funds, share sensitive information, or rely
-            on the application for real engagements.
+            deployment is published here. Do not send funds, share sensitive information, or rely on
+            the application for real engagements.
           </p>
         </section>
 
@@ -96,9 +96,9 @@ export default function TermsPage() {
             2. Software status
           </h2>
           <p>
-            This prototype is provided for evaluation and may contain errors, demonstration data,
-            or incomplete workflows. No smart contract audit or production readiness is claimed.
-            Verify all information independently and do not use the interface to make payments.
+            This prototype is provided for evaluation and may contain errors, demonstration data, or
+            incomplete workflows. No smart contract audit or production readiness is claimed. Verify
+            all information independently and do not use the interface to make payments.
           </p>
         </section>
 

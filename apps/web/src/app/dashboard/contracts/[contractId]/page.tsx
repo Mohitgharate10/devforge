@@ -266,9 +266,7 @@ export default function ContractWorkbenchPage({
       if (res.ok) {
         setDisputeReason('');
         setEvidenceUrl('');
-        setActionMessage(
-          'Dispute request recorded in DevForge. No on-chain action occurred.',
-        );
+        setActionMessage('Dispute request recorded in DevForge. No on-chain action occurred.');
         setTxModal({
           isOpen: true,
           title: 'Dispute request recorded',
@@ -801,7 +799,8 @@ export default function ContractWorkbenchPage({
                         <span
                           style={{ color: escrow.status === 'RELEASED' ? '#10B981' : '#3B82F6' }}
                         >
-                          ● {escrow.status} ({escrow.amount} {escrow.tokenSymbol}) · not verified on-chain
+                          ● {escrow.status} ({escrow.amount} {escrow.tokenSymbol}) · not verified
+                          on-chain
                         </span>
                       ) : (
                         <span style={{ color: 'var(--text-secondary)' }}>No verified funding</span>
@@ -948,9 +947,7 @@ export default function ContractWorkbenchPage({
                                 className="btn-pill-primary"
                                 style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
                               >
-                                {submitting
-                                  ? 'Saving approval...'
-                                  : 'Approve delivery'}
+                                {submitting ? 'Saving approval...' : 'Approve delivery'}
                               </button>
                             </div>
                           )}
@@ -1383,8 +1380,8 @@ export default function ContractWorkbenchPage({
                 lineHeight: 1.5,
               }}
             >
-              Records a dispute request in DevForge only. It does not freeze funds or start
-              on-chain arbitration.
+              Records a dispute request in DevForge only. It does not freeze funds or start on-chain
+              arbitration.
             </p>
 
             {/* Arbitration Timeline Rail */}
@@ -1504,8 +1501,8 @@ export default function ContractWorkbenchPage({
               }}
             >
               <span style={{ color: '#E6007A', fontWeight: 700 }}>No arbiters configured: </span>
-              dispute requests are recorded in the application only and do not result in
-              arbitration or escrow changes.
+              dispute requests are recorded in the application only and do not result in arbitration
+              or escrow changes.
             </div>
 
             <form

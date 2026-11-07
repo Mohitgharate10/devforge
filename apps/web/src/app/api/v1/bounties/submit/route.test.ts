@@ -85,7 +85,9 @@ describe('/api/v1/bounties/submit API', () => {
     expect(body.data.submission.payoutAddress).toBe(validPayout);
 
     // Verify GET reflects the submission count
-    const getReq = new Request('http://localhost/api/v1/bounties/submit?bountyId=job-substrate-pallet');
+    const getReq = new Request(
+      'http://localhost/api/v1/bounties/submit?bountyId=job-substrate-pallet',
+    );
     const getRes = await GET(getReq);
     expect(getRes.status).toBe(200);
     const getBody = await getRes.json();

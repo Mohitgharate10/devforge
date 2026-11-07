@@ -93,7 +93,8 @@ export default async function FreelancerProfilePage({
           role: canonical.title,
           startDate: new Date('2022-03-01'),
           endDate: null,
-          description: 'Conducted high-severity security reviews and on-chain verified protocol deliveries.',
+          description:
+            'Conducted high-severity security reviews and on-chain verified protocol deliveries.',
         },
       ],
       certifications: [

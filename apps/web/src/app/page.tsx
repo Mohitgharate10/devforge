@@ -343,8 +343,8 @@ export default function HomePage() {
               Example specialist profiles
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-              These sample profiles demonstrate the directory interface. Names, ratings, and
-              reviews shown here are illustrative, not verified marketplace activity.
+              These sample profiles demonstrate the directory interface. Names, ratings, and reviews
+              shown here are illustrative, not verified marketplace activity.
             </p>
           </div>
           <Link href="/freelancers" className="btn-pill-secondary">

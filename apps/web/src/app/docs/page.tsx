@@ -2,8 +2,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Prototype Documentation | DevForge',
-  description:
-    'Current DevForge prototype capabilities, limitations, and planned integrations.',
+  description: 'Current DevForge prototype capabilities, limitations, and planned integrations.',
 };
 
 export default function DocsPage() {
