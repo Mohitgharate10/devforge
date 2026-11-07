@@ -129,7 +129,21 @@ export default function ContractWorkbenchPage({
       const [cJson, eJson, rJson] = await Promise.all([cRes.json(), eRes.json(), rRes.json()]);
       if (cJson.data) setContract(cJson.data);
       if (eJson.data) setEscrows(eJson.data);
-      if (rJson.data) setReviews(rJson.data);
+
+      let localReviews: ReviewRecord[] = [];
+      try {
+        const cached = localStorage.getItem(`devforge_reviews_${contractId}`);
+        if (cached) localReviews = JSON.parse(cached);
+      } catch (_e) {
+        void _e;
+      }
+      const combined = [...(rJson.data || [])];
+      for (const lr of localReviews) {
+        if (!combined.some((r) => r.id === lr.id)) {
+          combined.push(lr);
+        }
+      }
+      setReviews(combined);
     } catch (err) {
       console.error('Failed to reload contract workbench data:', err);
     }
@@ -149,7 +163,21 @@ export default function ContractWorkbenchPage({
         if (!ignore) {
           if (cJson.data) setContract(cJson.data);
           if (eJson.data) setEscrows(eJson.data);
-          if (rJson.data) setReviews(rJson.data);
+
+          let localReviews: ReviewRecord[] = [];
+          try {
+            const cached = localStorage.getItem(`devforge_reviews_${contractId}`);
+            if (cached) localReviews = JSON.parse(cached);
+          } catch (_e) {
+            void _e;
+          }
+          const combined = [...(rJson.data || [])];
+          for (const lr of localReviews) {
+            if (!combined.some((r) => r.id === lr.id)) {
+              combined.push(lr);
+            }
+          }
+          setReviews(combined);
         }
       } catch (err) {
         console.error(err);
@@ -340,24 +368,49 @@ export default function ContractWorkbenchPage({
     e.preventDefault();
     try {
       setSubmitting(true);
+      const authorName = user?.displayName || 'Client Reviewer';
+      const targetId = contract?.freelancer?.id || '00000000-0000-0000-0000-000000000002';
       const res = await fetch(`/api/v1/contracts/${contractId}/reviews`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id ?? '',
+          'x-user-name': authorName,
+        },
         body: JSON.stringify({
-          targetId: '00000000-0000-0000-0000-000000000002', // Freelancer target ID
+          targetId,
           rating: reviewRating,
           feedback: reviewFeedback,
           qualityRating,
           communicationRating: commRating,
         }),
       });
-      if (res.ok) {
+
+      const json = await res.json().catch(() => null);
+
+      if (res.ok && json?.data) {
         setShowReviewModal(false);
         setReviewFeedback('');
+        setActionMessage('Rating & review published successfully!');
+
+        // Update reviews in state immediately
+        setReviews((prev) => {
+          const updated = [json.data, ...prev.filter((r) => r.id !== json.data.id)];
+          try {
+            localStorage.setItem(`devforge_reviews_${contractId}`, JSON.stringify(updated));
+          } catch (_e) {
+            void _e;
+          }
+          return updated;
+        });
+
         await reloadData();
+      } else {
+        setActionMessage(json?.error?.message || 'Failed to submit rating & review.');
       }
     } catch (err) {
       console.error(err);
+      setActionMessage('Network error occurred while submitting review.');
     } finally {
       setSubmitting(false);
     }

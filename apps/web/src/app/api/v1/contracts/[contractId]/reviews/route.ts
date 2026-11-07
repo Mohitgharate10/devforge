@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { createReviewRequestSchema } from '@devforge/api-contracts';
-import { validateReviewSubmission } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
 
@@ -65,31 +64,42 @@ export async function POST(
     const parsed = createReviewRequestSchema.parse(body);
 
     const contract = demoStore.getContractById(contractId);
-    const contractStatus = contract ? contract.status : 'COMPLETED';
     const clientId = contract ? contract.client.userId : 'user-parity';
     const freelancerId = contract ? contract.freelancer.userId : 'user-elena';
-    const authorId = clientId; // Default to client if submitting in demo
+    const authorId = request.headers.get('x-user-id') || clientId;
+    const authorName =
+      request.headers.get('x-user-name') ||
+      (contract ? contract.client.organizationName : 'Client Reviewer');
+    const targetId = parsed.targetId || freelancerId;
 
-    validateReviewSubmission({
-      contractId,
-      contractStatus,
-      authorId,
-      targetId: parsed.targetId,
-      clientId,
-      freelancerId,
-      rating: parsed.rating,
-      feedback: parsed.feedback,
-      qualityRating: parsed.qualityRating,
-      communicationRating: parsed.communicationRating,
-      deadlineRating: parsed.deadlineRating,
-    });
+    if (!Number.isInteger(parsed.rating) || parsed.rating < 1 || parsed.rating > 5) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: 'Rating must be an integer between 1 and 5.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
+
+    if (!parsed.feedback || parsed.feedback.trim().length < 5) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: 'Feedback must be at least 5 characters long.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
 
     try {
       const review = await prisma.review.create({
         data: {
           contractId,
           reviewerId: authorId,
-          revieweeId: parsed.targetId,
+          revieweeId: targetId,
           rating: parsed.rating,
           comment: parsed.feedback,
         },
@@ -118,13 +128,13 @@ export async function POST(
         id: `rev-${Date.now()}`,
         contractId,
         authorId,
-        authorName: 'Parity Ecosystem Fund',
-        targetId: parsed.targetId,
+        authorName,
+        targetId,
         rating: parsed.rating,
         feedback: parsed.feedback,
-        qualityRating: parsed.qualityRating ?? null,
-        communicationRating: parsed.communicationRating ?? null,
-        deadlineRating: parsed.deadlineRating ?? null,
+        qualityRating: parsed.qualityRating ?? parsed.rating,
+        communicationRating: parsed.communicationRating ?? parsed.rating,
+        deadlineRating: parsed.deadlineRating ?? parsed.rating,
         isRevealed: true,
         createdAt: new Date().toISOString(),
       });

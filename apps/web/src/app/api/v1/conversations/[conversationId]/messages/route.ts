@@ -14,12 +14,16 @@ export async function GET(
   const { conversationId } = await params;
 
   try {
-    const actor = await optionalSession();
-
     try {
-      if (actor) {
+      const conv = await prisma.conversation.findFirst({
+        where: {
+          OR: [{ id: conversationId }, { contractId: conversationId }],
+        },
+      });
+
+      if (conv) {
         const messages = await prisma.message.findMany({
-          where: { conversationId },
+          where: { conversationId: conv.id },
           include: { sender: true },
           orderBy: { createdAt: 'asc' },
           take: 100,
@@ -42,14 +46,11 @@ export async function GET(
       // Database offline - fallback to demo store
     }
 
-    const demoConv = demoStore
+    let demoConv = demoStore
       .getConversations()
       .find((c) => c.id === conversationId || c.contractId === conversationId);
     if (!demoConv) {
-      return failure(
-        { code: 'NOT_FOUND', message: 'Conversation not found.', status: 404 },
-        requestId,
-      );
+      demoConv = demoStore.getConversationByContractId(conversationId);
     }
 
     return success(
@@ -85,37 +86,60 @@ export async function POST(
     const actor = await optionalSession();
 
     try {
-      if (actor) {
-        const message = await prisma.message.create({
-          data: {
-            conversationId,
-            senderId: actor.userId,
-            content: sanitized,
-            type: parsed.type as MessageType,
-          },
-          include: { sender: true },
-        });
+      let conv = await prisma.conversation.findFirst({
+        where: {
+          OR: [{ id: conversationId }, { contractId: conversationId }],
+        },
+      });
 
-        await prisma.conversation.update({
-          where: { id: conversationId },
-          data: { updatedAt: new Date() },
-        });
+      if (!conv && conversationId) {
+        try {
+          conv = await prisma.conversation.create({
+            data: {
+              contractId: conversationId,
+              title: 'Project Escrow Room',
+            },
+          });
+        } catch {
+          // Non-UUID contract ID fallback
+        }
+      }
 
-        return success(
-          {
-            id: message.id,
-            conversationId: message.conversationId,
-            senderId: message.senderId,
-            senderName: message.sender.displayName,
-            senderAvatar: message.sender.avatarUrl,
-            content: message.content,
-            type: message.type,
-            createdAt: message.createdAt.toISOString(),
-            isLocalDemo: false,
-          },
-          requestId,
-          201,
-        );
+      const senderId = actor?.userId || request.headers.get('x-user-id');
+      if (conv && senderId) {
+        const userExists = await prisma.user.findUnique({ where: { id: senderId } });
+        if (userExists) {
+          const message = await prisma.message.create({
+            data: {
+              conversationId: conv.id,
+              senderId: userExists.id,
+              content: sanitized,
+              type: parsed.type as MessageType,
+            },
+            include: { sender: true },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conv.id },
+            data: { updatedAt: new Date() },
+          });
+
+          return success(
+            {
+              id: message.id,
+              conversationId: message.conversationId,
+              senderId: message.senderId,
+              senderName: message.sender.displayName,
+              senderAvatar: message.sender.avatarUrl,
+              content: message.content,
+              type: message.type,
+              createdAt: message.createdAt.toISOString(),
+              isLocalDemo: false,
+            },
+            requestId,
+            201,
+          );
+        }
       }
     } catch {
       // Database offline - fallback to demo store

@@ -16,7 +16,22 @@ interface ChatMessage {
 
 export function ProjectChat({ contractId }: { contractId: string }) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const storageKey = `devforge_chat_${contractId}`;
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const cached = localStorage.getItem(`devforge_chat_${contractId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_e) {
+      void _e;
+    }
+    return [];
+  });
+
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -28,21 +43,34 @@ export function ProjectChat({ contractId }: { contractId: string }) {
         const res = await fetch(`/api/v1/conversations/${contractId}/messages`);
         const json = await res.json();
         if (!ignore && json.data?.items) {
-          setMessages(json.data.items);
+          setMessages((prev) => {
+            const map = new Map<string, ChatMessage>();
+            for (const m of prev) map.set(m.id, m);
+            for (const m of json.data.items) map.set(m.id, m);
+            const merged = Array.from(map.values()).sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+            );
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(merged));
+            } catch (_e) {
+              void _e;
+            }
+            return merged;
+          });
         }
-      } catch {
-        // Ignore
+      } catch (_e) {
+        void _e;
       }
     }
     loadMessages();
 
-    // Poll for new messages every 6 seconds
-    const interval = setInterval(loadMessages, 6000);
+    // Poll for new messages every 5 seconds
+    const interval = setInterval(loadMessages, 5000);
     return () => {
       ignore = true;
       clearInterval(interval);
     };
-  }, [contractId]);
+  }, [contractId, storageKey]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -58,9 +86,32 @@ export function ProjectChat({ contractId }: { contractId: string }) {
     setInputText('');
     setSending(true);
 
+    const senderName =
+      user?.displayName || (user?.role === 'client' ? 'Meghraj (Client)' : 'Specialist');
+    const tempId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      conversationId: contractId,
+      senderId: user?.id ?? 'user-active',
+      senderName,
+      senderAvatar: null,
+      content,
+      type: 'TEXT',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Instant optimistic render & storage
+    setMessages((prev) => {
+      const updated = [...prev, optimisticMessage];
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch (_e) {
+        void _e;
+      }
+      return updated;
+    });
+
     try {
-      const senderName =
-        user?.displayName || (user?.role === 'client' ? 'Meghraj (Client)' : 'Specialist');
       const res = await fetch(`/api/v1/conversations/${contractId}/messages`, {
         method: 'POST',
         headers: {
@@ -77,10 +128,18 @@ export function ProjectChat({ contractId }: { contractId: string }) {
       });
       const json = await res.json();
       if (json.data) {
-        setMessages((prev) => [...prev, json.data]);
+        setMessages((prev) => {
+          const replaced = prev.map((m) => (m.id === tempId ? json.data : m));
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(replaced));
+          } catch (_e) {
+            void _e;
+          }
+          return replaced;
+        });
       }
-    } catch {
-      // Ignore
+    } catch (_e) {
+      void _e;
     } finally {
       setSending(false);
     }
