@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { CANONICAL_BOUNTIES, type CanonicalBounty } from '@/lib/canonical-marketplace';
@@ -82,6 +82,31 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
       });
   }, []);
 
+  const [authGateBounty, setAuthGateBounty] = useState<BountyItem | null>(null);
+  const prInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus management and Escape key dismissal
+  useEffect(() => {
+    if (!activeSubmissionBounty && !authGateBounty) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveSubmissionBounty(null);
+        setAuthGateBounty(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeSubmissionBounty, authGateBounty]);
+
+  useEffect(() => {
+    if (activeSubmissionBounty && user) {
+      const timer = setTimeout(() => {
+        prInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSubmissionBounty, user]);
+
   const availableTags = ['ALL', 'Rust', 'Solidity', 'Zero-Knowledge', 'Substrate', 'Foundry'];
 
   const filtered = bounties.filter((b) => {
@@ -91,6 +116,11 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
   });
 
   const handleOpenSubmit = (bounty: BountyItem) => {
+    if (!user) {
+      // Immediate gate: unauthenticated visitors cannot open the submission form
+      setAuthGateBounty(bounty);
+      return;
+    }
     setActiveSubmissionBounty(bounty);
     setSubmissionResult(null);
     setFormError(null);
@@ -235,8 +265,8 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
               lineHeight: 1.5,
             }}
           >
-            Fixed-scope Web3 tasks, security audits, and developer grants. Pre-funded in smart
-            contract vaults on Sepolia with guaranteed payouts.
+            Fixed-scope Web3 tasks, security audits, and developer grants. Illustrative Sepolia
+            testnet prize pool and prototype escrow scenario.
           </p>
         </div>
 
@@ -398,7 +428,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                       }}
                     >
                       {bounty.escrowStatus === 'PRE-FUNDED'
-                        ? 'Sepolia Escrow Locked'
+                        ? 'Sepolia Testnet Escrow Scenario'
                         : 'Verified Protocol Multi-Sig'}
                     </div>
                   </div>
@@ -621,6 +651,10 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
       {/* Submission Modal */}
       {activeSubmissionBounty && (
         <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSubmissionBounty(null);
+          }}
           style={{
             position: 'fixed',
             top: 0,
@@ -637,6 +671,9 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
           }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bounty-submission-dialog-title"
             style={{
               background: '#0D0D12',
               border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -653,6 +690,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
             <button
               type="button"
               onClick={() => setActiveSubmissionBounty(null)}
+              aria-label="Close dialog"
               style={{
                 position: 'absolute',
                 top: '1.25rem',
@@ -681,6 +719,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
               OFFICIAL DELIVERABLE SUBMISSION
             </div>
             <h3
+              id="bounty-submission-dialog-title"
               style={{
                 fontSize: '1.35rem',
                 fontWeight: 700,
@@ -698,8 +737,8 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                 lineHeight: 1.5,
               }}
             >
-              Submit your completed Pull Request, code repository, and verification notes for client
-              review. Once accepted, payout releases directly to your specified Sepolia address.
+              Submit your completed Pull Request, code repository, and verification notes for review
+              under this prototype escrow scenario on Sepolia testnet.
             </p>
 
             {/* Auth check banner */}
@@ -859,6 +898,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                     Pull Request or Public Repository URL *
                   </label>
                   <input
+                    ref={prInputRef}
                     type="url"
                     required
                     placeholder="https://github.com/organization/repo/pull/42"
@@ -1010,6 +1050,129 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Sign-in Gate Dialog for Anonymous Visitors */}
+      {authGateBounty && (
+        <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAuthGateBounty(null);
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1.25rem',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-gate-dialog-title"
+            style={{
+              background: '#0D0D12',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              maxWidth: '32rem',
+              width: '100%',
+              padding: '2.25rem 2rem',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)',
+              position: 'relative',
+              textAlign: 'center',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setAuthGateBounty(null)}
+              aria-label="Close dialog"
+              style={{
+                position: 'absolute',
+                top: '1.25rem',
+                right: '1.25rem',
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(230, 0, 122, 0.12)',
+                color: '#E6007A',
+                border: '1px solid rgba(230, 0, 122, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem',
+                margin: '0 auto 1.25rem',
+              }}
+            >
+              🔒
+            </div>
+            <h3
+              id="auth-gate-dialog-title"
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                marginBottom: '0.65rem',
+              }}
+            >
+              Authentication Required
+            </h3>
+            <p
+              style={{
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                lineHeight: 1.6,
+                marginBottom: '1.75rem',
+              }}
+            >
+              You must be signed in as a verified specialist to submit deliverables and receive
+              testnet escrow payouts for{' '}
+              <strong style={{ color: '#FFFFFF' }}>{authGateBounty.title}</strong>.
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Link
+                href={`/auth/sign-in?redirect=${encodeURIComponent(authGateBounty.linkUrl)}`}
+                className="btn-pill-primary"
+                style={{ fontSize: '0.85rem', padding: '0.65rem 1.4rem' }}
+              >
+                Sign In to DevForge →
+              </Link>
+              <Link
+                href="/auth/sign-up?role=freelancer"
+                className="btn-pill-secondary"
+                style={{ fontSize: '0.85rem', padding: '0.65rem 1.25rem' }}
+              >
+                Register Specialist
+              </Link>
+            </div>
           </div>
         </div>
       )}

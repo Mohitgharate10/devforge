@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { resolveActor } from '@/server/auth/middleware';
 import { success, failure } from '@/server/shared/http/api-response';
-import { findCanonicalBounty } from '@/lib/canonical-marketplace';
+import {
+  findCanonicalBounty,
+  CANONICAL_BOUNTIES,
+  CANONICAL_JOB_UUIDS,
+} from '@/lib/canonical-marketplace';
+import { ensureDbJobForCanonicalBounty } from '@/lib/ensure-db-job';
 
 export interface BountySubmissionRecord {
   id: string;
@@ -17,7 +22,7 @@ export interface BountySubmissionRecord {
   submittedAt: string;
 }
 
-// In-memory persistent fallback store across requests in this Node process
+// In-memory store reserved ONLY for unit/integration test isolation
 const globalStore = globalThis as unknown as {
   __devforge_bounty_submissions?: BountySubmissionRecord[];
 };
@@ -35,6 +40,10 @@ export function addSubmissionToStore(record: BountySubmissionRecord): void {
     globalStore.__devforge_bounty_submissions = [];
   }
   globalStore.__devforge_bounty_submissions.unshift(record);
+}
+
+export function clearSubmissionsStore(): void {
+  globalStore.__devforge_bounty_submissions = [];
 }
 
 const EVM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -85,7 +94,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return failure(
         {
           code: 'VALIDATION_FAILED',
-          message: 'A valid Pull Request or repository URL is required (https://...).',
+          message: 'A valid Pull Request or public repository URL is required (https://...).',
           status: 400,
         },
         requestId,
@@ -118,7 +127,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Resolve user details
+    // Resolve user record if existing
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
         actor.userId,
@@ -131,7 +140,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           select: { id: true, displayName: true, email: true },
         });
       } catch {
-        // Prisma query fallback
+        // Prisma lookup error
       }
     }
 
@@ -149,62 +158,109 @@ export async function POST(request: Request): Promise<NextResponse> {
       submittedAt: new Date().toISOString(),
     };
 
-    // Attempt to persist in Prisma proposals if available and user exists in DB
-    if (userRecord) {
-      try {
-        let freelancerProfile = await prisma.freelancerProfile.findUnique({
-          where: { userId: actor.userId },
-        });
-        if (!freelancerProfile) {
-          freelancerProfile = await prisma.freelancerProfile.create({
-            data: {
-              userId: actor.userId,
-              handle: `spec_${actor.userId.slice(0, 8)}`,
-              title: 'Technical Specialist',
-              bio: 'Verified technical specialist submitting deliverables on DevForge.',
-            },
-          });
-        }
+    // Durable persistence via PostgreSQL database transaction
+    let dbSuccess = false;
+    let persistedProposalId = submissionId;
 
-        // Check if job exists in DB, or link to proposal
-        const existingJob = await prisma.job.findFirst({
-          where: {
-            OR: [{ id: canonicalBounty.id }, { title: canonicalBounty.title }],
-          },
-        });
+    try {
+      const dbJob = await ensureDbJobForCanonicalBounty(canonicalBounty);
 
-        if (existingJob) {
-          await prisma.proposal.upsert({
-            where: {
-              jobId_freelancerProfileId: {
-                jobId: existingJob.id,
-                freelancerProfileId: freelancerProfile.id,
+      if (dbJob) {
+        const persistedProposal = await prisma.$transaction(async (tx) => {
+          let user = isUuid ? await tx.user.findUnique({ where: { id: actor.userId } }) : null;
+
+          if (!user && isUuid) {
+            user = await tx.user.create({
+              data: {
+                id: actor.userId,
+                email: `${actor.userId.slice(0, 8)}@devforge.network`,
+                displayName: userRecord?.displayName || 'Verified Specialist',
+                status: 'ACTIVE',
               },
-            },
-            update: {
-              coverLetter: JSON.stringify(newRecord),
-              status: 'SUBMITTED',
-            },
-            create: {
-              jobId: existingJob.id,
-              freelancerProfileId: freelancerProfile.id,
-              coverLetter: JSON.stringify(newRecord),
-              bidAmount: BigInt(canonicalBounty.rewardUsdc * 100),
-              currency: 'USDC',
-              status: 'SUBMITTED',
-            },
-          });
+            });
+          }
+
+          const targetUserId = user?.id ?? actor.userId;
+
+          let profile = isUuid
+            ? await tx.freelancerProfile.findUnique({ where: { userId: targetUserId } })
+            : null;
+
+          if (!profile && isUuid && user) {
+            profile = await tx.freelancerProfile.create({
+              data: {
+                userId: user.id,
+                handle: `spec_${user.id.slice(0, 8)}`,
+                title: 'Technical Specialist',
+                bio: 'Verified technical specialist submitting deliverables on DevForge.',
+              },
+            });
+          }
+
+          if (profile) {
+            return await tx.proposal.upsert({
+              where: {
+                jobId_freelancerProfileId: {
+                  jobId: dbJob.id,
+                  freelancerProfileId: profile.id,
+                },
+              },
+              update: {
+                coverLetter: JSON.stringify(newRecord),
+                bidAmount: BigInt(canonicalBounty.rewardUsdc * 100),
+                currency: 'USDC',
+                status: 'SUBMITTED',
+              },
+              create: {
+                jobId: dbJob.id,
+                freelancerProfileId: profile.id,
+                coverLetter: JSON.stringify(newRecord),
+                bidAmount: BigInt(canonicalBounty.rewardUsdc * 100),
+                currency: 'USDC',
+                status: 'SUBMITTED',
+              },
+            });
+          }
+
+          return null;
+        });
+
+        if (persistedProposal) {
+          dbSuccess = true;
+          persistedProposalId = persistedProposal.id;
         }
-      } catch (dbErr) {
-        console.warn('Could not mirror bounty submission to Prisma:', dbErr);
       }
+    } catch (dbErr) {
+      console.warn('Database transaction during bounty submission encountered issue:', dbErr);
     }
 
-    addSubmissionToStore(newRecord);
+    // Never return success if database transaction failed
+    if (!dbSuccess) {
+      return failure(
+        {
+          code: 'EXTERNAL_DEPENDENCY_FAILED',
+          message:
+            'Database transaction failed: deliverable submission could not be durably recorded.',
+          status: 503,
+        },
+        requestId,
+      );
+    }
+
+    // Mirror to memory store only in test environment for isolation tests
+    if (process.env.NODE_ENV === 'test') {
+      addSubmissionToStore({
+        ...newRecord,
+        id: persistedProposalId,
+      });
+    }
 
     return success(
       {
-        submission: newRecord,
+        submission: {
+          ...newRecord,
+          id: persistedProposalId,
+        },
         message: 'Deliverable registered in DevForge database awaiting client review.',
       },
       requestId,
@@ -228,14 +284,33 @@ export async function GET(request: Request): Promise<NextResponse> {
   const url = new URL(request.url);
   const bountyId = url.searchParams.get('bountyId');
 
-  const all = getSubmissionsStore();
-  const filtered = bountyId ? all.filter((s) => s.bountyId === bountyId) : all;
-
-  // Aggregate count by bountyId
   const countsByBounty: Record<string, number> = {};
-  for (const s of all) {
-    countsByBounty[s.bountyId] = (countsByBounty[s.bountyId] || 0) + 1;
+
+  try {
+    for (const b of CANONICAL_BOUNTIES) {
+      const uuid = CANONICAL_JOB_UUIDS[b.id];
+      if (uuid) {
+        const count = await prisma.proposal.count({
+          where: { jobId: uuid },
+        });
+        countsByBounty[b.id] = count;
+      }
+    }
+  } catch (err) {
+    console.warn('Database proposal count query skipped or errored:', err);
   }
+
+  // During test runs, supplement with test in-memory submissions store
+  const allTestSubmissions = getSubmissionsStore();
+  if (process.env.NODE_ENV === 'test') {
+    for (const s of allTestSubmissions) {
+      countsByBounty[s.bountyId] = (countsByBounty[s.bountyId] || 0) + 1;
+    }
+  }
+
+  const filtered = bountyId
+    ? allTestSubmissions.filter((s) => s.bountyId === bountyId)
+    : allTestSubmissions;
 
   return success(
     {
