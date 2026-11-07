@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import { findCanonicalBounty } from '@/lib/canonical-marketplace';
 
 export default function SubstratePalletJobPage() {
+  const canonical = findCanonicalBounty('job-substrate-pallet')!;
+
   return (
     <main style={{ padding: '4rem 1.5rem', maxWidth: '58rem', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
@@ -21,9 +24,9 @@ export default function SubstratePalletJobPage() {
         </Link>
 
         <div className="hero-meta-strip">
-          <span>POLKADOT FELLOWSHIP</span>
+          <span>{canonical.client.organizationName.toUpperCase()}</span>
           <span>•</span>
-          <span>ESCROW PRE-FUNDED</span>
+          <span>ESCROW {canonical.escrowStatus}</span>
           <span>•</span>
           <span>SEPOLIA TESTNET</span>
         </div>
@@ -37,15 +40,15 @@ export default function SubstratePalletJobPage() {
             lineHeight: 1.15,
           }}
         >
-          Substrate Parachain Governance Pallet Developer
+          {canonical.title}
         </h1>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-          <span className="skill-tag accent">Rust</span>
-          <span className="skill-tag accent">Substrate</span>
-          <span className="skill-tag">FRAME</span>
-          <span className="skill-tag">Polkadot SDK</span>
-          <span className="skill-tag">OpenGov</span>
+          {canonical.skills.map((skill, index) => (
+            <span key={skill} className={`skill-tag ${index < 2 ? 'accent' : ''}`}>
+              {skill}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -83,8 +86,8 @@ export default function SubstratePalletJobPage() {
               color: '#10B981',
             }}
           >
-            $10,000 – $16,000{' '}
-            <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>USDC</span>
+            ${canonical.budgetMin.toLocaleString()} – ${canonical.budgetMax.toLocaleString()}{' '}
+            <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{canonical.currency}</span>
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
             Funds locked in Sepolia escrow vault awaiting milestone delivery
@@ -118,10 +121,12 @@ export default function SubstratePalletJobPage() {
             }}
           >
             4 Weeks{' '}
-            <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>(2 Milestones)</span>
+            <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
+              ({canonical.milestones.length} Milestones)
+            </span>
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-            Milestone 1: Spec & Trait Definitions (40%) • Milestone 2: Pallet & Tests (60%)
+            {canonical.milestones.map((m) => `${m.title} (${m.share})`).join(' • ')}
           </div>
         </div>
       </div>
@@ -147,12 +152,7 @@ export default function SubstratePalletJobPage() {
           >
             Project Scope
           </h2>
-          <p>
-            The Polkadot Fellowship is seeking an experienced Substrate / FRAME engineer to build an
-            open-governance pallet extension. The deliverable requires implementing multi-asset
-            conviction voting, time-locked treasury executions, and compatibility with the latest
-            Polkadot SDK release.
-          </p>
+          <p>{canonical.description}</p>
         </section>
 
         <section>
@@ -164,7 +164,7 @@ export default function SubstratePalletJobPage() {
               marginBottom: '0.75rem',
             }}
           >
-            Key Requirements
+            Key Requirements & Acceptance Criteria
           </h2>
           <ul
             style={{
@@ -174,12 +174,11 @@ export default function SubstratePalletJobPage() {
               gap: '0.5rem',
             }}
           >
-            <li>Deep proficiency with Rust and FRAME pallet development.</li>
-            <li>
-              Prior contributions to Substrate parachain runtimes or Polkadot OpenGov pallets.
-            </li>
-            <li>Comprehensive unit and benchmark test suites with mock runtimes.</li>
-            <li>Formal documentation of dispatchable calls, storage items, and events.</li>
+            {canonical.milestones.map((m) => (
+              <li key={m.title}>
+                <strong>{m.title}:</strong> {m.desc}
+              </li>
+            ))}
           </ul>
         </section>
 
@@ -202,11 +201,11 @@ export default function SubstratePalletJobPage() {
               Ready to Scope this Deliverable?
             </h3>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Submit an on-chain proposal with your milestone roadmap and pricing.
+              Submit an on-chain proposal or register your PR deliverable directly.
             </p>
           </div>
           <Link
-            href="/auth/sign-in?role=freelancer"
+            href="/jobs"
             className="btn-pill-primary"
             style={{ padding: '0.75rem 1.5rem' }}
           >

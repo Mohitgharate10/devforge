@@ -3,6 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { AiProposalCopilot } from '@/components/AiProposalCopilot';
+import { findCanonicalBounty } from '@/lib/canonical-marketplace';
 
 export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
@@ -11,93 +12,44 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
   const [coverNote, setCoverNote] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  // Fallback demo job database
-  const sampleJobs: Record<
-    string,
-    {
-      title: string;
-      category: string;
-      client: string;
-      budget: string;
-      currency: string;
-      description: string;
-      skills: string[];
-      milestones: Array<{ title: string; share: string; desc: string }>;
-    }
-  > = {
-    'job-bridge-audit': {
-      title: 'EVM & Substrate Cross-Chain Bridge Security Audit',
-      category: 'Smart Contract Auditing',
-      client: 'Parity Ecosystem Fund',
-      budget: '$12,000 – $18,000',
-      currency: 'USDC',
-      description:
-        'Seeking senior smart contract security researchers to perform formal verification and manual auditing on our EIP-712 cross-chain token bridge contracts.\nScope covers reentrancy guards, replay attack mitigation, and multi-sig emergency pauses.',
-      skills: ['Solidity', 'Foundry', 'Rust', 'EIP-712', 'Halmos'],
-      milestones: [
-        {
-          title: 'Milestone 01: Threat Modeling & Architecture Review',
-          share: '30%',
-          desc: 'Identify trust boundaries and state invariants across EVM and Substrate nodes.',
-        },
-        {
-          title: 'Milestone 02: Formal Verification & Fuzzing Report',
-          share: '40%',
-          desc: 'Run Foundry invariant fuzzing and deliver initial vulnerability finding list.',
-        },
-        {
-          title: 'Milestone 03: Final Audited Report & Fix Verification',
-          share: '30%',
-          desc: 'Verify protocol patches and sign off with cryptographic audit artifact.',
-        },
-      ],
-    },
-    'job-zk-circuit': {
-      title: 'ZK-Rollup Proof Verifier Circuit Optimization',
-      category: 'Zero Knowledge & Cryptography',
-      client: 'Axiom Research Labs',
-      budget: '$15,000 – $25,000',
-      currency: 'USDC',
-      description:
-        'We need a cryptography systems specialist to optimize on-chain Groth16 proof verifier contracts on Sepolia to minimize Layer 2 verification gas.',
-      skills: ['Zero-Knowledge', 'Rust', 'Circom', 'Halo2', 'Viem'],
-      milestones: [
-        {
-          title: 'Milestone 01: Circuit Profiling & Gas Audit',
-          share: '35%',
-          desc: 'Benchmark constraint count and pairing precompile overhead on Sepolia.',
-        },
-        {
-          title: 'Milestone 02: Verification Logic Refactor',
-          share: '65%',
-          desc: 'Deliver rewritten EVM verifier contract achieving >25% gas reduction.',
-        },
-      ],
-    },
-  };
+  const canonical = findCanonicalBounty(jobId);
 
-  const job = sampleJobs[jobId] ?? {
-    title: 'Web3 Protocol Bounty Deliverable',
-    category: 'Full Stack Web3',
-    client: 'Verified DevForge Client',
-    budget: '$10,000 – $15,000',
-    currency: 'USDC',
-    description:
-      'Engineered milestone contract requiring audited security, performant state updates, and transparent settlement verification.',
-    skills: ['Solidity', 'TypeScript', 'Web3 Escrow', 'Next.js'],
-    milestones: [
-      {
-        title: 'Milestone 01: Core Architecture & Spec',
-        share: '40%',
-        desc: 'Deliver verified architecture diagram and interface specifications.',
-      },
-      {
-        title: 'Milestone 02: Production Implementation',
-        share: '60%',
-        desc: 'Full smart contract implementation with test coverage and Sepolia deployment.',
-      },
-    ],
-  };
+  const job = canonical
+    ? {
+        title: canonical.title,
+        category: canonical.category.name,
+        client: canonical.client.organizationName,
+        budget:
+          canonical.budgetMin === canonical.budgetMax
+            ? `$${canonical.budgetMin.toLocaleString()}`
+            : `$${canonical.budgetMin.toLocaleString()} – $${canonical.budgetMax.toLocaleString()}`,
+        currency: canonical.currency,
+        description: canonical.description,
+        skills: canonical.skills,
+        milestones: canonical.milestones,
+      }
+    : {
+        title: 'Web3 Protocol Bounty Deliverable',
+        category: 'Full Stack Web3',
+        client: 'Verified DevForge Client',
+        budget: '$10,000 – $15,000',
+        currency: 'USDC',
+        description:
+          'Engineered milestone contract requiring audited security, performant state updates, and transparent settlement verification.',
+        skills: ['Solidity', 'TypeScript', 'Web3 Escrow', 'Next.js'],
+        milestones: [
+          {
+            title: 'Milestone 01: Core Architecture & Spec',
+            share: '40%',
+            desc: 'Deliver verified architecture diagram and interface specifications.',
+          },
+          {
+            title: 'Milestone 02: Production Implementation',
+            share: '60%',
+            desc: 'Full smart contract implementation with test coverage and Sepolia deployment.',
+          },
+        ],
+      };
 
   const [submittingProposal, setSubmittingProposal] = useState(false);
 

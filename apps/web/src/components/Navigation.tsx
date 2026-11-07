@@ -27,7 +27,7 @@ export function Navigation() {
   return (
     <>
       <header className="site-nav">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           {/* Mobile Hamburger Toggle Button */}
           <button
             type="button"
@@ -45,6 +45,7 @@ export function Navigation() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '1.1rem',
+              flexShrink: 0,
             }}
           >
             {mobileMenuOpen ? (
@@ -79,7 +80,12 @@ export function Navigation() {
             )}
           </button>
 
-          <Link href="/" className="brand-logo" onClick={() => setMobileMenuOpen(false)}>
+          <Link
+            href="/"
+            className="brand-logo"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{ flexShrink: 0 }}
+          >
             <span className="brand-dot" aria-hidden="true" />
             <span>DevForge</span>
           </Link>
@@ -107,10 +113,13 @@ export function Navigation() {
           </div>
 
           <WalletConnectButton />
-          <NotificationCenter />
+
+          <div className="desktop-only">
+            <NotificationCenter />
+          </div>
 
           {user ? (
-            <div style={{ position: 'relative' }} ref={menuRef}>
+            <div style={{ position: 'relative' }} ref={menuRef} className="desktop-only">
               <button
                 type="button"
                 onClick={() => setDropdownOpen((prev) => !prev)}
@@ -225,7 +234,7 @@ export function Navigation() {
                     href={
                       user.role === 'freelancer'
                         ? `/freelancers/${user.handle || 'elena-rostova'}`
-                        : '/bounties/new'
+                        : '/jobs/create'
                     }
                     onClick={() => setDropdownOpen(false)}
                     style={{
@@ -249,7 +258,7 @@ export function Navigation() {
                   </Link>
 
                   <Link
-                    href={user.role === 'client' ? '/bounties' : '/dashboard/proposals'}
+                    href={user.role === 'client' ? '/jobs' : '/dashboard/proposals'}
                     onClick={() => setDropdownOpen(false)}
                     style={{
                       padding: '0.5rem 0.75rem',
@@ -339,14 +348,14 @@ export function Navigation() {
               )}
             </div>
           ) : (
-            <>
+            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <Link href="/auth/sign-in" className="btn-pill-secondary">
                 Sign In
               </Link>
               <Link href="/auth/sign-up" className="btn-pill-primary">
                 Get Started
               </Link>
-            </>
+            </div>
           )}
         </div>
       </header>
@@ -354,6 +363,81 @@ export function Navigation() {
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="mobile-nav-drawer">
+          {/* Mobile Auth Actions at Top of Drawer */}
+          {!user ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.75rem',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <Link
+                href="/auth/sign-in"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn-pill-secondary"
+                style={{ textAlign: 'center', width: '100%', padding: '0.65rem 0' }}
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/sign-up"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn-pill-primary"
+                style={{ textAlign: 'center', width: '100%', padding: '0.65rem 0' }}
+              >
+                Get Started
+              </Link>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid var(--border-hairline)',
+                borderRadius: '10px',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>
+                  {user.displayName}
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.7rem',
+                    fontFamily: 'var(--font-mono)',
+                    color: user.role === 'freelancer' ? '#10B981' : '#E6007A',
+                    fontWeight: 600,
+                  }}
+                >
+                  {user.role.toUpperCase()}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  signOut();
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#EF4444',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <Link
               href="/bounties"
@@ -375,6 +459,17 @@ export function Navigation() {
               <span>Open Bounties & Roles</span>
               <span>→</span>
             </Link>
+            {user?.role === 'client' && (
+              <Link
+                href="/jobs/create"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mobile-nav-link"
+                style={{ borderColor: 'rgba(230, 0, 122, 0.3)', color: '#ff40a4' }}
+              >
+                <span>+ Post New Job / Bounty</span>
+                <span>→</span>
+              </Link>
+            )}
             <Link
               href="/dashboard/proposals"
               onClick={() => setMobileMenuOpen(false)}

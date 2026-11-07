@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@devforge/database';
 import { normalizeHandle } from '@devforge/domain';
+import { findCanonicalSpecialist } from '@/lib/canonical-marketplace';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,163 +52,60 @@ export default async function FreelancerProfilePage({
     );
   }
 
-  // Fallback demo profile if database is offline or not yet seeded
-  if (!freelancer && handle === 'satoshi_core') {
+  // Fallback to single canonical marketplace data
+  const canonical = findCanonicalSpecialist(rawHandle);
+  if (!freelancer && canonical) {
     freelancer = {
-      id: 'demo-satoshi',
-      handle: 'satoshi_core',
-      title: 'EVM & Substrate Security Auditor',
-      bio: 'Senior smart contract security researcher with 6+ years auditing high-volume DeFi protocols and cross-chain messaging bridges.\nSpecialized in reentrancy, oracle manipulation vectors, and formal verification using Foundry and Halmos.',
-      hourlyRate: BigInt(15000),
-      availability: 'AVAILABLE',
+      id: canonical.id,
+      handle: canonical.canonicalHandle,
+      title: canonical.title,
+      bio: canonical.bio,
+      hourlyRate: BigInt(canonical.hourlyRateUsd * 100),
+      availability: canonical.availability,
       user: {
-        displayName: 'Elena Rostova',
+        displayName: canonical.displayName,
         avatarUrl: null,
         createdAt: new Date('2024-01-15T00:00:00Z'),
         wallets: [
           {
-            address: '0x71C84164b3c915122e265646cD8266395A344e45',
-            chainId: 11155111,
+            address: canonical.walletAddress,
+            chainId: canonical.chainId,
           },
         ],
       },
-      skills: [
-        { skillId: 's1', proficiency: 'EXPERT', skill: { name: 'Solidity' } },
-        { skillId: 's2', proficiency: 'EXPERT', skill: { name: 'Smart Contract Auditing' } },
-        { skillId: 's3', proficiency: 'INTERMEDIATE', skill: { name: 'Rust' } },
-        { skillId: 's4', proficiency: 'EXPERT', skill: { name: 'Foundry' } },
-      ],
-      portfolioProjects: [
-        {
-          id: 'p1',
-          title: 'Perpetuals DEX Liquidation Audit',
-          description:
-            'Audited core margin engine and liquidation keeper contracts protecting $45M in TVL. Identified 2 high-severity reentrancy vectors before mainnet deployment.',
-          projectUrl: 'https://polkadot.com',
-          repositoryUrl: 'https://github.com/polkadot-js/api',
-          coverImageUrl: null,
-        },
-        {
-          id: 'p2',
-          title: 'Cross-Chain Token Bridge Escrow',
-          description:
-            'Implemented EIP-712 signature verification and multi-sig emergency pauses for EVM-to-Substrate asset transfers.',
-          projectUrl: 'https://sepolia.etherscan.io',
-          repositoryUrl: 'https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md',
-          coverImageUrl: null,
-        },
-      ],
+      skills: canonical.skills.map((s, idx) => ({
+        skillId: `s${idx + 1}`,
+        proficiency: s.proficiency,
+        skill: { name: s.name },
+      })),
+      portfolioProjects: canonical.portfolioProjects.map((p) => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        projectUrl: p.projectUrl,
+        repositoryUrl: p.repositoryUrl || null,
+        coverImageUrl: null,
+      })),
       experiences: [
         {
           id: 'e1',
-          company: 'ConsenSys Diligence Partner',
-          role: 'Lead Security Auditor',
+          company: `${canonical.displayName} Advisory`,
+          role: canonical.title,
           startDate: new Date('2022-03-01'),
           endDate: null,
-          description: 'Conducted 30+ comprehensive protocol audits across Ethereum and Layer 2s.',
+          description: 'Conducted high-severity security reviews and on-chain verified protocol deliveries.',
         },
       ],
       certifications: [
         {
           id: 'c1',
-          name: 'Certified Smart Contract Security Professional',
-          issuer: 'Blockchain Security Alliance',
+          name: 'Certified Protocol Specialist',
+          issuer: 'DevForge Protocol Consortium',
           issuedAt: new Date('2023-05-01'),
           expiresAt: null,
-          credentialUrl: 'https://example.com',
+          credentialUrl: 'https://sepolia.etherscan.io',
         },
       ],
-    };
-  }
-
-  if (!freelancer && handle === 'zk_builder') {
-    freelancer = {
-      id: 'demo-marcus',
-      handle: 'zk_builder',
-      title: 'Zero Knowledge & DeFi Systems Engineer',
-      bio: 'Core contributor to zero-knowledge circuits and privacy-preserving automated market makers.\nExpertise in Circom, Halo2, and developing high-throughput rollups.',
-      hourlyRate: BigInt(17500),
-      availability: 'PARTIALLY_AVAILABLE',
-      user: {
-        displayName: 'Marcus Vance',
-        avatarUrl: null,
-        createdAt: new Date('2024-03-10T00:00:00Z'),
-        wallets: [
-          {
-            address: '0x388C818CA8B9251b393131C08a73683246A73134',
-            chainId: 1,
-          },
-        ],
-      },
-      skills: [
-        { skillId: 's1', proficiency: 'EXPERT', skill: { name: 'Rust' } },
-        { skillId: 's2', proficiency: 'EXPERT', skill: { name: 'Zero-Knowledge' } },
-        { skillId: 's3', proficiency: 'EXPERT', skill: { name: 'DeFi Protocols' } },
-        { skillId: 's4', proficiency: 'INTERMEDIATE', skill: { name: 'Viem' } },
-      ],
-      portfolioProjects: [
-        {
-          id: 'p3',
-          title: 'ZK-SNARK State Verifier',
-          description:
-            'Optimized on-chain proof verification reducing gas consumption by 38% across Layer 2 settlements.',
-          projectUrl: 'https://zksync.io',
-          repositoryUrl: 'https://github.com/matter-labs/zksync-era',
-          coverImageUrl: null,
-        },
-      ],
-      experiences: [
-        {
-          id: 'e2',
-          company: 'ZK Protocol Labs',
-          role: 'Senior Cryptography Engineer',
-          startDate: new Date('2021-06-01'),
-          endDate: null,
-          description: 'Architected succinct proving systems and on-chain verification contracts.',
-        },
-      ],
-      certifications: [],
-    };
-  }
-
-  if (!freelancer && handle === 'polka_dev') {
-    freelancer = {
-      id: 'demo-kenji',
-      handle: 'polka_dev',
-      title: 'Full Stack Web3 Architect',
-      bio: 'Bridging high-performance Next.js web applications with smart contracts, subgraphs, and indexers.\nSpecialist in Polkadot-inspired minimal design, EIP-4361, and decentralized storage.',
-      hourlyRate: BigInt(13000),
-      availability: 'AVAILABLE',
-      user: {
-        displayName: 'Kenji Sato',
-        avatarUrl: null,
-        createdAt: new Date('2024-05-20T00:00:00Z'),
-        wallets: [
-          {
-            address: '0x220866B1A2219f40e72f5c628B65D54268cA3A9D',
-            chainId: 1,
-          },
-        ],
-      },
-      skills: [
-        { skillId: 's1', proficiency: 'EXPERT', skill: { name: 'TypeScript' } },
-        { skillId: 's2', proficiency: 'EXPERT', skill: { name: 'Next.js' } },
-        { skillId: 's3', proficiency: 'INTERMEDIATE', skill: { name: 'Solidity' } },
-        { skillId: 's4', proficiency: 'EXPERT', skill: { name: 'Subgraphs' } },
-      ],
-      portfolioProjects: [
-        {
-          id: 'p4',
-          title: 'Decentralized Milestone Escrow Interface',
-          description:
-            'A Polkadot-aesthetic web terminal connecting clients and builders with multi-chain smart contracts.',
-          projectUrl: 'https://polkadot.network',
-          repositoryUrl: 'https://github.com/polkadot-js/apps',
-          coverImageUrl: null,
-        },
-      ],
-      experiences: [],
-      certifications: [],
     };
   }
 

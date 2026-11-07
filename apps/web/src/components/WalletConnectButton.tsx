@@ -232,7 +232,16 @@ export function WalletConnectButton() {
         <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
       </svg>
       <span>
-        {connecting ? 'Connecting...' : hasProvider ? 'Connect Wallet' : 'Connect Demo Wallet'}
+        {connecting ? (
+          'Connecting...'
+        ) : (
+          <>
+            <span className="desktop-only">
+              {hasProvider ? 'Connect Wallet' : 'Connect Demo Wallet'}
+            </span>
+            <span className="mobile-only">Connect</span>
+          </>
+        )}
       </span>
     </button>
   );

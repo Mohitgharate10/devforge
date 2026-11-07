@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { CANONICAL_SPECIALISTS } from '@/lib/canonical-marketplace';
 
 export type SpecialistCard = {
   handle: string;
@@ -13,32 +14,14 @@ export type SpecialistCard = {
   isLocalNew?: boolean;
 };
 
-const DEFAULT_SPECIALISTS: SpecialistCard[] = [
-  {
-    handle: 'satoshi_core',
-    name: 'Elena Rostova',
-    title: 'EVM & Substrate Security Auditor',
-    rate: '$150/hr',
-    availability: 'AVAILABLE',
-    skills: ['Solidity', 'Rust', 'Smart Contract Auditing', 'Foundry'],
-  },
-  {
-    handle: 'zk_builder',
-    name: 'Marcus Vance',
-    title: 'Zero Knowledge & DeFi Systems Engineer',
-    rate: '$175/hr',
-    availability: 'PARTIALLY_AVAILABLE',
-    skills: ['Rust', 'Zero-Knowledge', 'DeFi Protocols', 'Viem'],
-  },
-  {
-    handle: 'polka_dev',
-    name: 'Kenji Sato',
-    title: 'Full Stack Web3 Architect',
-    rate: '$130/hr',
-    availability: 'AVAILABLE',
-    skills: ['TypeScript', 'Next.js', 'Solidity', 'Subgraphs'],
-  },
-];
+const DEFAULT_SPECIALISTS: SpecialistCard[] = CANONICAL_SPECIALISTS.map((s) => ({
+  handle: s.canonicalHandle,
+  name: s.displayName,
+  title: s.title,
+  rate: `$${s.hourlyRateUsd}/hr`,
+  availability: s.availability,
+  skills: s.skills.map((sk) => sk.name),
+}));
 
 function subscribe(callback: () => void) {
   window.addEventListener('storage', callback);

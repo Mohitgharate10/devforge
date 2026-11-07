@@ -11,115 +11,41 @@ import { searchJobsQuerySchema } from '@devforge/api-contracts';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 
+import { CANONICAL_BOUNTIES } from '@/lib/canonical-marketplace';
+
 type JobWithRelations = Job & {
   category: JobCategory;
   clientProfile: ClientProfile;
   skills: Array<JobSkill & { skill: Skill }>;
 };
 
-const DEFAULT_VERIFIED_JOBS = [
-  {
-    id: 'job-substrate-pallet',
-    title: 'Substrate Parachain Governance Pallet Developer',
-    description:
-      'Design and implement open governance pallets with multi-asset conviction voting and time-locked treasury executions for the Polkadot Fellowship.',
-    category: {
-      id: 'cat-fullstack',
-      name: 'Full Stack Web3',
-      slug: 'fullstack-web3',
-    },
-    client: {
-      id: 'client-polkadot',
-      organizationName: 'Polkadot Fellowship',
-      slug: 'polkadot-fellowship',
-    },
-    budgetMin: 1000000,
-    budgetMax: 1600000,
-    currency: 'USDC',
-    status: 'PUBLISHED' as const,
-    skills: [
-      { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'REQUIRED' as const },
-      {
-        skillId: 's-substrate',
-        name: 'Substrate',
-        slug: 'substrate',
-        requirementLevel: 'REQUIRED' as const,
-      },
-      { skillId: 's-frame', name: 'FRAME', slug: 'frame', requirementLevel: 'PREFERRED' as const },
-    ],
-    publishedAt: new Date(Date.now() - 3600 * 1000 * 2).toISOString(),
-    createdAt: new Date(Date.now() - 3600 * 1000 * 6).toISOString(),
+const DEFAULT_VERIFIED_JOBS = CANONICAL_BOUNTIES.map((b, index) => ({
+  id: b.id,
+  title: b.title,
+  description: b.description,
+  category: {
+    id: b.category.id,
+    name: b.category.name,
+    slug: b.category.slug,
   },
-  {
-    id: 'job-bridge-audit',
-    title: 'EVM & Substrate Cross-Chain Bridge Security Audit',
-    description:
-      'Seeking a senior smart contract security researcher to perform a rigorous formal verification and manual audit on our EIP-712 token bridge contracts before mainnet release.\nScope covers reentrancy guards, replay attack mitigation, and multi-sig emergency pauses.',
-    category: {
-      id: 'cat-security',
-      name: 'Smart Contract Auditing',
-      slug: 'security-auditing',
-    },
-    client: {
-      id: 'client-parity',
-      organizationName: 'Parity Ecosystem Fund',
-      slug: 'parity-ecosystem',
-    },
-    budgetMin: 1200000,
-    budgetMax: 1800000,
-    currency: 'USDC',
-    status: 'PUBLISHED' as const,
-    skills: [
-      {
-        skillId: 's-solidity',
-        name: 'Solidity',
-        slug: 'solidity',
-        requirementLevel: 'REQUIRED' as const,
-      },
-      {
-        skillId: 's-foundry',
-        name: 'Foundry',
-        slug: 'foundry',
-        requirementLevel: 'REQUIRED' as const,
-      },
-      { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'PREFERRED' as const },
-    ],
-    publishedAt: new Date(Date.now() - 3600 * 1000 * 4).toISOString(),
-    createdAt: new Date(Date.now() - 3600 * 1000 * 24).toISOString(),
+  client: {
+    id: b.client.id,
+    organizationName: b.client.organizationName,
+    slug: b.client.slug,
   },
-  {
-    id: 'job-zk-circuit',
-    title: 'ZK-Rollup Proof Verifier Circuit Optimization',
-    description:
-      'We need a cryptography systems specialist to optimize on-chain Groth16 / Plonk proof verification contracts on Sepolia.\nGoal is reducing verification gas consumption by at least 25% while maintaining soundness.',
-    category: {
-      id: 'cat-zk',
-      name: 'Zero Knowledge & Cryptography',
-      slug: 'zero-knowledge',
-    },
-    client: {
-      id: 'client-axiom',
-      organizationName: 'Axiom Research Labs',
-      slug: 'axiom-research',
-    },
-    budgetMin: 1500000,
-    budgetMax: 2500000,
-    currency: 'USDC',
-    status: 'PUBLISHED' as const,
-    skills: [
-      {
-        skillId: 's-zk',
-        name: 'Zero-Knowledge',
-        slug: 'zero-knowledge',
-        requirementLevel: 'REQUIRED' as const,
-      },
-      { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'REQUIRED' as const },
-      { skillId: 's-viem', name: 'Viem', slug: 'viem', requirementLevel: 'PREFERRED' as const },
-    ],
-    publishedAt: new Date(Date.now() - 3600 * 1000 * 12).toISOString(),
-    createdAt: new Date(Date.now() - 3600 * 1000 * 48).toISOString(),
-  },
-];
+  budgetMin: b.budgetMin * 100,
+  budgetMax: b.budgetMax * 100,
+  currency: b.currency,
+  status: 'PUBLISHED' as const,
+  skills: b.skills.map((s, sIndex) => ({
+    skillId: `s-${s.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+    name: s,
+    slug: s.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+    requirementLevel: sIndex < 2 ? ('REQUIRED' as const) : ('PREFERRED' as const),
+  })),
+  publishedAt: new Date(Date.now() - 3600 * 1000 * (index + 1) * 3).toISOString(),
+  createdAt: new Date(Date.now() - 3600 * 1000 * (index + 1) * 8).toISOString(),
+}));
 
 export async function GET(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
