@@ -4,12 +4,9 @@ import { prisma } from '@devforge/database';
 import { createProposalRequestSchema } from '@devforge/api-contracts';
 import { validateCoverLetter, validateBidAmount, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireRole } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
-import {
-  findCanonicalBounty,
-  getCanonicalJobUuid,
-} from '@/lib/canonical-marketplace';
+import { findCanonicalBounty, getCanonicalJobUuid } from '@/lib/canonical-marketplace';
 import { ensureDbJobForCanonicalBounty } from '@/lib/ensure-db-job';
 
 export async function POST(
@@ -26,7 +23,7 @@ export async function POST(
     validateCoverLetter(parsed.coverLetter);
     validateBidAmount(parsed.bidAmount);
 
-    const actor = await optionalSession();
+    const actor = await requireRole('freelancer', request.headers);
     const canonicalBounty = findCanonicalBounty(jobId);
 
     // Resolve or auto-ensure DB job for canonical bounty
@@ -37,7 +34,8 @@ export async function POST(
       dbJob = await ensureDbJobForCanonicalBounty(canonicalBounty);
       targetJobUuid = dbJob?.id ?? getCanonicalJobUuid(canonicalBounty.id) ?? null;
     } else {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId);
       if (isUuid) {
         try {
           dbJob = await prisma.job.findUnique({
@@ -132,16 +130,13 @@ export async function POST(
     }
 
     // Prepare unified proposal record for response & demoStore sync
-    const jobTitle =
-      canonicalBounty?.title ?? dbJob?.title ?? 'Web3 Engineering Engagement';
+    const jobTitle = canonicalBounty?.title ?? dbJob?.title ?? 'Web3 Engineering Engagement';
     const clientName =
       canonicalBounty?.client.organizationName ??
       dbJob?.clientProfile?.organizationName ??
       'Protocol / Client Team';
     const clientSlug =
-      canonicalBounty?.client.slug ??
-      dbJob?.clientProfile?.slug ??
-      'protocol-team';
+      canonicalBounty?.client.slug ?? dbJob?.clientProfile?.slug ?? 'protocol-team';
 
     const proposalId = createdProposal?.id ?? `prop-${crypto.randomUUID().slice(0, 8)}`;
     const freelancerDisplayName =
@@ -176,8 +171,12 @@ export async function POST(
       bidAmount: parsed.bidAmount,
       currency: parsed.currency ?? 'USDC',
       status: 'SUBMITTED' as const,
-      createdAt: createdProposal ? createdProposal.createdAt.toISOString() : new Date().toISOString(),
-      updatedAt: createdProposal ? createdProposal.updatedAt.toISOString() : new Date().toISOString(),
+      createdAt: createdProposal
+        ? createdProposal.createdAt.toISOString()
+        : new Date().toISOString(),
+      updatedAt: createdProposal
+        ? createdProposal.updatedAt.toISOString()
+        : new Date().toISOString(),
     };
 
     demoStore.addProposal(demoRecord);

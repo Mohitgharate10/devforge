@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Escrow Protocol | DevForge',
-  description: 'Non-custodial, milestone-based smart contract escrow on Ethereum Sepolia.',
+  title: 'Escrow Prototype | DevForge',
+  description: 'Escrow is experimental and not ready for real payments.',
 };
 
 export default function EscrowProtocolPage() {
@@ -10,11 +10,9 @@ export default function EscrowProtocolPage() {
     <main style={{ padding: '4rem 2.5rem', maxWidth: '84rem', margin: '0 auto' }}>
       <div style={{ marginBottom: '3.5rem' }}>
         <div className="hero-meta-strip">
-          <span>03 / SMART CONTRACT PROTOCOL</span>
+          <span>03 / ESCROW PROTOTYPE</span>
           <span>•</span>
-          <span>SEPOLIA TESTNET</span>
-          <span>•</span>
-          <span>NON-CUSTODIAL</span>
+          <span>NO REAL FUNDS</span>
         </div>
         <h1
           style={{
@@ -24,7 +22,7 @@ export default function EscrowProtocolPage() {
             marginBottom: '1rem',
           }}
         >
-          Non-Custodial Milestone Escrow
+          Milestone escrow prototype
         </h1>
         <p
           style={{
@@ -34,9 +32,9 @@ export default function EscrowProtocolPage() {
             lineHeight: 1.6,
           }}
         >
-          DevForge never holds customer funds. Every engagement creates an independent smart
-          contract vault locked on-chain. Capital is released incrementally only when both parties
-          sign off on verified deliverable milestones.
+          This page describes an intended workflow, not a live payment service. There is no verified
+          production deployment presented here, and release and dispute handling are not
+          production-ready. Do not send funds or rely on this prototype for an engagement.
         </p>
       </div>
 
@@ -58,14 +56,14 @@ export default function EscrowProtocolPage() {
               marginBottom: '1rem',
             }}
           >
-            STAGE 01 / FUNDING
+            PLANNED STAGE 01 / FUNDING
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-            Client On-Chain Lockup
+            Testnet funding
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Client deposits USDC or ETH directly into the milestone escrow contract. Funds are
-            immutable, time-locked, and provably verified by the DevForge event indexer.
+            Funding is an experimental testnet concept. The application does not currently offer a
+            verified escrow deployment or production-safe payment flow.
           </p>
         </div>
 
@@ -78,14 +76,14 @@ export default function EscrowProtocolPage() {
               marginBottom: '1rem',
             }}
           >
-            STAGE 02 / DELIVERY
+            PLANNED STAGE 02 / DELIVERY
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-            Cryptographic Submission
+            Work submission
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            The technical specialist submits git commits, IPFS hashes, and verification artifacts.
-            Milestone state changes to <code>DELIVERED</code> with timestamped audit logs.
+            Project workflows can track submitted work. Submissions are not cryptographically
+            verified on-chain, and should not be treated as proof of delivery.
           </p>
         </div>
 
@@ -98,14 +96,14 @@ export default function EscrowProtocolPage() {
               marginBottom: '1rem',
             }}
           >
-            STAGE 03 / RELEASE
+            PLANNED STAGE 03 / RELEASE
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-            Dual-Key Settlement
+            Payment release
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Upon client approval or automated test passage, the escrow contract releases milestone
-            funds directly to the specialist’s verified payout wallet without platform interception.
+            Payment release and dispute arbitration are not production-ready or guaranteed by this
+            prototype.
           </p>
         </div>
       </div>
@@ -131,11 +129,10 @@ export default function EscrowProtocolPage() {
               letterSpacing: '0.05em',
             }}
           >
-            ● DEPLOYED CONTRACT SPECIFICATION
+            PROTOTYPE STATUS
           </span>
           <span className="status-pill">
-            <span className="live-indicator" />
-            <span>Sepolia Chain ID: 11155111</span>
+            <span>No verified deployment published</span>
           </span>
         </div>
 
@@ -154,7 +151,7 @@ export default function EscrowProtocolPage() {
                 color: 'var(--text-muted)',
               }}
             >
-              ESCROW FACTORY
+              NETWORK TARGET
             </div>
             <div
               style={{
@@ -164,7 +161,7 @@ export default function EscrowProtocolPage() {
                 marginTop: '0.25rem',
               }}
             >
-              0x8269...9F41
+              Sepolia testnet only
             </div>
           </div>
           <div>
@@ -185,7 +182,7 @@ export default function EscrowProtocolPage() {
                 marginTop: '0.25rem',
               }}
             >
-              ERC-20 & Native ETH Escrow
+              No production payment support
             </div>
           </div>
           <div>
@@ -206,7 +203,7 @@ export default function EscrowProtocolPage() {
                 marginTop: '0.25rem',
               }}
             >
-              Optimistic Multi-Sig with Arbitration
+              Not production-ready
             </div>
           </div>
         </div>
@@ -219,17 +216,12 @@ export default function EscrowProtocolPage() {
             gap: '1rem',
           }}
         >
-          <Link href="/freelancers" className="btn-pill-primary">
-            Explore Specialists →
+          <Link href="/docs" className="btn-pill-primary">
+            Read prototype docs →
           </Link>
-          <a
-            href="https://sepolia.etherscan.io"
-            target="_blank"
-            rel="noreferrer"
-            className="btn-pill-secondary"
-          >
-            Inspect on Etherscan ↗
-          </a>
+          <Link href="/jobs" className="btn-pill-secondary">
+            Browse marketplace →
+          </Link>
         </div>
       </div>
     </main>

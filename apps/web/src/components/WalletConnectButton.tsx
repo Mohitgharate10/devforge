@@ -21,6 +21,7 @@ export function WalletConnectButton() {
   const [address, setAddress] = useState<string | null>(null);
   const [chainId, setChainId] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const hasProvider = useSyncExternalStore(
     emptySubscribe,
     () => typeof window !== 'undefined' && !!window.ethereum,
@@ -38,13 +39,19 @@ export function WalletConnectButton() {
             setAddress(list[0] ?? null);
           }
         })
-        .catch(() => {});
+        .catch((error) => {
+          console.error('Failed to read connected wallet accounts:', error);
+          setConnectionError('Could not read the wallet account.');
+        });
 
       // Check current chain
       window.ethereum
         .request({ method: 'eth_chainId' })
         .then((id) => setChainId(id as string))
-        .catch(() => {});
+        .catch((error) => {
+          console.error('Failed to read the wallet network:', error);
+          setConnectionError('Could not read the wallet network.');
+        });
 
       const handleAccountsChanged = (...args: unknown[]) => {
         const accs = args[0] as string[];
@@ -73,15 +80,13 @@ export function WalletConnectButton() {
 
   const connectWallet = async () => {
     if (!window.ethereum) {
-      // Demo simulation fallback if no browser wallet extension is installed
-      const mockSepoliaAddress = '0x71C84164b3c915122e265646cD8266395A344e45';
-      setAddress(mockSepoliaAddress);
-      setChainId(SEPOLIA_CHAIN_ID_HEX);
+      setConnectionError('No browser wallet detected. A demo address will not be substituted.');
       return;
     }
 
     try {
       setConnecting(true);
+      setConnectionError(null);
       const accounts = (await window.ethereum.request({
         method: 'eth_requestAccounts',
       })) as string[];
@@ -96,14 +101,19 @@ export function WalletConnectButton() {
       setChainId(currentChain);
     } catch (err) {
       console.error('Wallet connection rejected:', err);
+      setConnectionError(err instanceof Error ? err.message : 'Wallet connection was rejected.');
     } finally {
       setConnecting(false);
     }
   };
 
   const switchToSepolia = async () => {
-    if (!window.ethereum) return;
+    if (!window.ethereum) {
+      setConnectionError('No browser wallet detected.');
+      return;
+    }
     try {
+      setConnectionError(null);
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
@@ -129,9 +139,13 @@ export function WalletConnectButton() {
           setChainId(SEPOLIA_CHAIN_ID_HEX);
         } catch (addError) {
           console.error('Failed to add Sepolia network:', addError);
+          setConnectionError('Could not add Sepolia to this wallet.');
         }
+      } else {
+        console.error('Failed to switch wallet network:', switchError);
+        setConnectionError('Could not switch the wallet to Sepolia.');
       }
-    }
+    };
   };
 
   const isWrongNetwork = chainId && chainId.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX.toLowerCase();
@@ -139,30 +153,40 @@ export function WalletConnectButton() {
   if (address) {
     if (isWrongNetwork) {
       return (
-        <button
-          type="button"
-          onClick={switchToSepolia}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            padding: '0.4rem 0.85rem',
-            borderRadius: '9999px',
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            color: '#EF4444',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'var(--font-mono)',
-          }}
-          title="Click to switch wallet to Sepolia"
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EF4444' }} />
-            Switch to Sepolia
-          </span>
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <button
+            type="button"
+            onClick={switchToSepolia}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              padding: '0.4rem 0.85rem',
+              borderRadius: '9999px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              color: '#EF4444',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+            }}
+            title={connectionError ?? 'Click to switch wallet to Sepolia'}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EF4444' }} />
+              Switch to Sepolia
+            </span>
+          </button>
+          {connectionError && (
+            <span
+              role="alert"
+              style={{ color: '#EF4444', fontSize: '0.7rem', maxWidth: '14rem', lineHeight: 1.3 }}
+            >
+              {connectionError}
+            </span>
+          )}
+        </div>
       );
     }
 
@@ -197,52 +221,63 @@ export function WalletConnectButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={connectWallet}
-      disabled={connecting}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.45rem',
-        padding: '0.45rem 0.95rem',
-        borderRadius: '9999px',
-        border: '1px solid rgba(230, 0, 122, 0.35)',
-        background: 'rgba(230, 0, 122, 0.08)',
-        color: '#ff40a4',
-        fontSize: '0.825rem',
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        fontFamily: 'var(--font-mono)',
-      }}
-    >
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ opacity: 0.85 }}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+      <button
+        type="button"
+        onClick={connectWallet}
+        disabled={connecting}
+        title={connectionError ?? undefined}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.45rem',
+          padding: '0.45rem 0.95rem',
+          borderRadius: '9999px',
+          border: '1px solid rgba(230, 0, 122, 0.35)',
+          background: 'rgba(230, 0, 122, 0.08)',
+          color: '#ff40a4',
+          fontSize: '0.825rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          fontFamily: 'var(--font-mono)',
+        }}
       >
-        <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
-        <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
-      </svg>
-      <span>
-        {connecting ? (
-          'Connecting...'
-        ) : (
-          <>
-            <span className="desktop-only">
-              {hasProvider ? 'Connect Wallet' : 'Connect Demo Wallet'}
-            </span>
-            <span className="mobile-only">Connect</span>
-          </>
-        )}
-      </span>
-    </button>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ opacity: 0.85 }}
+        >
+          <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a2 2 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+          <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+        </svg>
+        <span>
+          {connecting ? (
+            'Connecting...'
+          ) : (
+            <>
+              <span className="desktop-only">
+                {hasProvider ? 'Connect Wallet' : 'Wallet unavailable'}
+              </span>
+              <span className="mobile-only">Connect</span>
+            </>
+          )}
+        </span>
+      </button>
+      {connectionError && (
+        <span
+          role="alert"
+          style={{ color: '#EF4444', fontSize: '0.7rem', maxWidth: '14rem', lineHeight: 1.3 }}
+        >
+          {connectionError}
+        </span>
+      )}
+    </div>
   );
 }

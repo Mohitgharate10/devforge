@@ -7,7 +7,7 @@ export default function PrivacyPage() {
         <div className="hero-meta-strip">
           <span>PRIVACY & DATA POLICIES</span>
           <span>•</span>
-          <span>EIP-4361 MINIMAL RETENTION</span>
+          <span>PROTOTYPE DATA HANDLING</span>
         </div>
         <h1
           style={{
@@ -17,10 +17,11 @@ export default function PrivacyPage() {
             marginBottom: '1rem',
           }}
         >
-          Privacy Policy
+          Privacy information
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6 }}>
-          DevForge is architected around pseudonymous Web3 identity and minimal data retention.
+          DevForge is a prototype. This page summarizes the data handling implemented in the
+          application and is not a substitute for legal review.
         </p>
       </div>
 
@@ -43,14 +44,13 @@ export default function PrivacyPage() {
               marginBottom: '0.75rem',
             }}
           >
-            1. Public Blockchain Telemetry
+            1. Testnet and wallet activity
           </h2>
           <p>
-            When you deposit into or release funds from the{' '}
-            <code style={{ color: '#E6007A' }}>DevForgeEscrow.sol</code> contract, your Ethereum
-            wallet address, transaction hash, and timestamp are broadcast publicly to the Ethereum
-            Sepolia network. Public blockchain records are immutable and cannot be altered or
-            removed by DevForge.
+            Wallet connection can read an address and network from a browser wallet. Wallet
+            connection is not account authentication. The application is a testnet prototype; do
+            not submit real funds or sensitive information. Any transaction submitted to a public
+            blockchain may be visible and irreversible.
           </p>
         </section>
 
@@ -63,13 +63,12 @@ export default function PrivacyPage() {
               marginBottom: '0.75rem',
             }}
           >
-            2. Off-Chain Account Data
+            2. Account data
           </h2>
           <p>
-            DevForge stores minimal profile information (handle, display name, hourly rate, and
-            encrypted credentials if using email login). If authenticating purely via Sign-In with
-            Ethereum (EIP-4361), your cryptographic signature verifies ownership without requiring
-            email or passwords.
+            When you create an account, the service stores account and profile information in its
+            database. Passwords are stored as Argon2 hashes. Do not enter information you would not
+            want stored in this prototype.
           </p>
         </section>
 
@@ -82,12 +81,12 @@ export default function PrivacyPage() {
               marginBottom: '0.75rem',
             }}
           >
-            3. Local Storage & Cookies
+            3. Sessions and browser storage
           </h2>
           <p>
-            DevForge utilizes browser local storage and standard session cookies solely to preserve
-            your active authentication state and keep you signed in across browser sessions. We do
-            not sell user data to advertising third parties.
+            Authentication uses a server-managed session referenced by an HttpOnly cookie; the
+            browser does not use local storage as the source of account identity. Cookie lifetime
+            depends on the sign-in option. Review browser settings to manage or clear cookies.
           </p>
         </section>
       </div>

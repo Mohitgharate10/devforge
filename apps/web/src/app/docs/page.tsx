@@ -1,36 +1,36 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Protocol Documentation | DevForge',
+  title: 'Prototype Documentation | DevForge',
   description:
-    'Technical architecture, REST API standards, and smart contract integration documentation.',
+    'Current DevForge prototype capabilities, limitations, and planned integrations.',
 };
 
 export default function DocsPage() {
   const sections = [
     {
       num: '01',
-      title: 'Authentication & SIWE',
-      desc: 'Better Auth integration with Sign-In with Ethereum (EIP-4361). Cryptographic wallet ownership proof and session management.',
-      tags: ['Better Auth', 'EIP-4361', 'CSRF', 'Session Cookies'],
+      title: 'Account authentication',
+      desc: 'Email and password accounts use server-validated, database-backed sessions. Wallet connection is separate; wallet-based sign-in is not available.',
+      tags: ['Argon2', 'HttpOnly Cookie', 'Database Session'],
     },
     {
       num: '02',
       title: 'Talent Profiles & Taxonomy',
-      desc: 'Hierarchical category taxonomies, verifiable skill proficiency ratings, and cryptographically verified portfolio project metadata.',
-      tags: ['Prisma Schema', 'Domain Policies', 'Taxonomy', 'Portfolios'],
+      desc: 'Profile and directory pages are available. Example profiles and ratings are illustrative and are not verified reviews.',
+      tags: ['Profiles', 'Directory', 'Example Data'],
     },
     {
       num: '03',
       title: 'Job Marketplace & Bounties',
-      desc: 'Decentralized job lifecycle state machine: DRAFT ➔ PUBLISHED ➔ PAUSED ➔ CLOSED ➔ ARCHIVED with budget boundaries and cursor pagination.',
-      tags: ['Sprint 4', 'State Machine', 'Full-Text Search', 'Filters'],
+      desc: 'Browse marketplace listings and submit proposals. Some listings are demonstration data; check each listing before relying on it.',
+      tags: ['Jobs', 'Bounties', 'Proposals'],
     },
     {
       num: '04',
-      title: 'Non-Custodial Milestone Escrow',
-      desc: 'On-chain milestone contracts protecting both client capital and freelancer deliverables. Direct Sepolia smart contract settlement.',
-      tags: ['Smart Contracts', 'Milestones', 'Arbitration', 'Viem'],
+      title: 'Escrow prototype',
+      desc: 'Escrow and dispute workflows are not production-ready. Only use testnet assets, and do not send real funds.',
+      tags: ['Sepolia Testnet', 'Prototype', 'No Real Funds'],
     },
   ];
 
@@ -40,7 +40,7 @@ export default function DocsPage() {
         <div className="hero-meta-strip">
           <span>04 / DOCUMENTATION</span>
           <span>•</span>
-          <span>SYSTEM ARCHITECTURE</span>
+          <span>PROTOTYPE STATUS</span>
         </div>
         <h1
           style={{
@@ -50,7 +50,7 @@ export default function DocsPage() {
             marginBottom: '1rem',
           }}
         >
-          DevForge Technical Docs
+          DevForge prototype docs
         </h1>
         <p
           style={{
@@ -60,8 +60,8 @@ export default function DocsPage() {
             lineHeight: 1.6,
           }}
         >
-          Comprehensive architecture, REST API envelope specifications, and smart contract
-          integration guide.
+          A practical overview of what works today and what is still planned. This project is a
+          prototype; the sections below are not claims of production readiness.
         </p>
       </div>
 
@@ -86,7 +86,7 @@ export default function DocsPage() {
                 SECTION {s.num}
               </span>
               <span className="status-pill" style={{ fontSize: '0.65rem' }}>
-                ACTIVE
+                PROTOTYPE
               </span>
             </div>
 
@@ -141,7 +141,7 @@ export default function DocsPage() {
             color: 'var(--text-secondary)',
           }}
         >
-          DevForge Core Architecture Specification v0.4.0
+          DevForge prototype overview
         </span>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link href="/freelancers" className="btn-pill-secondary">

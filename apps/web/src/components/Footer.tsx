@@ -56,7 +56,7 @@ export function Footer() {
                 border: '1px solid rgba(230, 0, 122, 0.3)',
               }}
             >
-              SEPOLIA TESTNET
+              PROTOTYPE
             </span>
           </div>
           <p
@@ -67,8 +67,8 @@ export function Footer() {
               marginBottom: '1.25rem',
             }}
           >
-            A decentralized milestone escrow platform for Web3 engineers and technical teams. All
-            settlements currently run on Ethereum Sepolia testnet with zero real monetary value.
+            A marketplace prototype for Web3 teams and technical specialists. Escrow and payments
+            are not production-ready; do not send funds.
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
@@ -89,26 +89,6 @@ export function Footer() {
               }}
             >
               <span>GitHub Repo</span>
-              <span>↗</span>
-            </a>
-            <a
-              href="https://sepolia.etherscan.io/address/0x633C1B2dE8d4380E83141f2359489569777E4426"
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                fontSize: '0.8rem',
-                fontFamily: 'var(--font-mono)',
-                padding: '0.4rem 0.8rem',
-                borderRadius: '6px',
-                border: '1px solid var(--border-hairline)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <span>Escrow Contract</span>
               <span>↗</span>
             </a>
           </div>
@@ -198,18 +178,11 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <a
-                href="https://sepolia.etherscan.io/address/0x633C1B2dE8d4380E83141f2359489569777E4426"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Sepolia Contract
-              </a>
+              <span style={{ color: 'var(--text-secondary)' }}>Escrow (prototype only)</span>
             </li>
             <li>
               <Link href="/terms#arbitration" style={{ color: 'var(--text-secondary)' }}>
-                Arbiter Transparency
+                Terms & disclaimers
               </Link>
             </li>
           </ul>

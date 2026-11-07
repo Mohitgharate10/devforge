@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth, AuthUser } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 function SignInContent() {
   const router = useRouter();
@@ -18,7 +18,6 @@ function SignInContent() {
   const [password, setPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(() => {
     return searchParams.get('registered') === 'true'
@@ -26,52 +25,17 @@ function SignInContent() {
       : null;
   });
 
-  const handleConnectWallet = async () => {
-    let walletAddr = '0x71C84164b3c915122e265646cD8266395A344e45';
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        const accs = (await window.ethereum.request({ method: 'eth_requestAccounts' })) as string[];
-        if (accs && accs[0]) walletAddr = accs[0];
-      } catch {
-        // user rejected
-      }
-    }
-    setWalletConnected(true);
-    const walletUser: AuthUser = {
-      id: 'wallet-' + walletAddr.slice(2, 10),
-      email: `${walletAddr.slice(0, 8).toLowerCase()}@devforge.network`,
-      displayName: `${walletAddr.slice(0, 6)}...${walletAddr.slice(-4)}`,
-      role,
-      handle: walletAddr.slice(0, 8).toLowerCase(),
-      walletAddress: walletAddr,
-    };
-
-    signIn(walletUser, keepSignedIn);
-    setSuccessMessage(`Wallet verified via EIP-4361 as ${role.toUpperCase()}! Redirecting...`);
-    setTimeout(() => {
-      router.push(role === 'client' ? '/jobs/create' : '/jobs');
-    }, 800);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const fallbackUser: AuthUser = {
-      id: 'user-' + Date.now(),
-      email: email || (role === 'client' ? 'fund@devforge.network' : 'builder@devforge.network'),
-      displayName: email.split('@')[0] || (role === 'client' ? 'Protocol Lead' : 'Web3 Builder'),
-      role: role,
-      handle: email.split('@')[0] || (role === 'client' ? 'protocol_lead' : 'builder'),
-    };
-
     try {
       const res = await fetch('/api/v1/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role, rememberMe: keepSignedIn }),
       });
 
       if (!res.ok) {
@@ -83,25 +47,46 @@ function SignInContent() {
         return;
       }
 
-      const json = await res.json().catch(() => ({}));
-      const authedUser: AuthUser = json.data?.user
-        ? {
-            id: json.data.user.id,
-            email: json.data.user.email || email,
-            displayName: json.data.user.displayName || email.split('@')[0],
-            role: json.data.user.roles?.includes('client')
-              ? 'client'
-              : json.data.user.roles?.includes('freelancer')
-                ? 'freelancer'
-                : role,
-          }
-        : fallbackUser;
+      const json = await res.json();
+      const sessionUser = json?.data?.user;
+      if (!sessionUser?.id || !sessionUser?.email || !sessionUser?.displayName) {
+        throw new Error('The sign-in response did not contain a valid user.');
+      }
+      const activeRole =
+        sessionUser.role === 'client' || sessionUser.role === 'admin'
+          ? sessionUser.role
+          : sessionUser.role === 'freelancer'
+            ? sessionUser.role
+            : role;
+      const authedUser = {
+        id: sessionUser.id,
+        email: sessionUser.email,
+        displayName: sessionUser.displayName,
+        avatarUrl: sessionUser.avatarUrl ?? null,
+        roles: sessionUser.roles ?? [],
+        role: activeRole,
+        handle: sessionUser.handle,
+      };
 
-      signIn(authedUser, keepSignedIn);
+      signIn(authedUser);
       setSuccessMessage(
         `Authenticated successfully as ${authedUser.role.toUpperCase()}! Redirecting...`,
       );
-      setTimeout(() => router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs'), 800);
+      setTimeout(() => {
+        const requestedRedirect = searchParams.get('redirect');
+        if (requestedRedirect) {
+          try {
+            const target = new URL(requestedRedirect, window.location.origin);
+            if (target.origin === window.location.origin) {
+              router.push(`${target.pathname}${target.search}${target.hash}`);
+              return;
+            }
+          } catch {
+            // Fall through to the role-specific start page for invalid redirects.
+          }
+        }
+        router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs');
+      }, 800);
     } catch {
       setErrorMessage('Network error during sign-in. Please try again.');
     } finally {
@@ -128,7 +113,7 @@ function SignInContent() {
           Sign In
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6 }}>
-          Access your DevForge escrow settlements, project rooms, and active milestone contracts.
+          Sign in to manage your DevForge account and marketplace activity.
         </p>
       </div>
 
@@ -269,7 +254,9 @@ function SignInContent() {
       {/* Web3 SIWE Option */}
       <button
         type="button"
-        onClick={handleConnectWallet}
+        onClick={() =>
+          setErrorMessage('Wallet sign-in is not available yet. Use your email and password.')
+        }
         style={{
           width: '100%',
           padding: '0.85rem 1.5rem',
@@ -293,16 +280,10 @@ function SignInContent() {
             width: 8,
             height: 8,
             borderRadius: '50%',
-            background: walletConnected
-              ? 'var(--status-live)'
-              : role === 'client'
-                ? '#E6007A'
-                : '#10B981',
+            background: 'var(--text-muted)',
           }}
         />
-        {walletConnected
-          ? `Wallet Connected (${role === 'client' ? '0x3C44...93BC' : '0x71C8...4e45'})`
-          : `Sign In with Ethereum as ${role === 'client' ? 'Client' : 'Freelancer'} (EIP-4361)`}
+        Wallet sign-in coming soon
       </button>
 
       <div

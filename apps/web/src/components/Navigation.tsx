@@ -92,12 +92,10 @@ export function Navigation() {
         </div>
 
         <nav className="nav-links desktop-only" aria-label="Main Navigation">
-          <Link href="/bounties">Bounties</Link>
-          <Link href="/freelancers">Freelancers</Link>
-          <Link href="/jobs">Open Roles</Link>
-          <Link href="/dashboard/proposals">Proposals</Link>
-          <Link href="/dashboard/contracts">Contracts</Link>
-          <Link href="/escrow">Escrow Protocol</Link>
+          <Link href="/jobs">Find work</Link>
+          <Link href="/freelancers">Find talent</Link>
+          {user && <Link href="/dashboard">Dashboard</Link>}
+          <Link href="/escrow">How escrow works</Link>
           <Link href="/docs">Docs</Link>
           {user?.role === 'admin' && (
             <Link href="/admin" style={{ color: '#E6007A' }}>
@@ -108,8 +106,7 @@ export function Navigation() {
 
         <div className="nav-cta-group">
           <div className="status-pill desktop-only" title="Network status">
-            <span className="live-indicator" aria-hidden="true" />
-            <span>Sepolia Escrow</span>
+            <span>Sepolia testnet demo</span>
           </div>
 
           <WalletConnectButton />
@@ -440,25 +437,27 @@ export function Navigation() {
 
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <Link
-              href="/bounties"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mobile-nav-link"
-            >
-              <span>Earn Bounties & Grants</span>
-              <span>→</span>
-            </Link>
-            <Link
               href="/freelancers"
               onClick={() => setMobileMenuOpen(false)}
               className="mobile-nav-link"
             >
-              <span>Technical Talent</span>
+              <span>Find talent</span>
               <span>→</span>
             </Link>
             <Link href="/jobs" onClick={() => setMobileMenuOpen(false)} className="mobile-nav-link">
-              <span>Open Bounties & Roles</span>
+              <span>Find work</span>
               <span>→</span>
             </Link>
+            {user && (
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mobile-nav-link"
+              >
+                <span>Dashboard</span>
+                <span>→</span>
+              </Link>
+            )}
             {user?.role === 'client' && (
               <Link
                 href="/jobs/create"
@@ -471,27 +470,11 @@ export function Navigation() {
               </Link>
             )}
             <Link
-              href="/dashboard/proposals"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mobile-nav-link"
-            >
-              <span>Proposals</span>
-              <span>→</span>
-            </Link>
-            <Link
-              href="/dashboard/contracts"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mobile-nav-link"
-            >
-              <span>Contracts Workbench</span>
-              <span>→</span>
-            </Link>
-            <Link
               href="/escrow"
               onClick={() => setMobileMenuOpen(false)}
               className="mobile-nav-link"
             >
-              <span>Escrow Protocol</span>
+              <span>How escrow works</span>
               <span>→</span>
             </Link>
             <Link href="/docs" onClick={() => setMobileMenuOpen(false)} className="mobile-nav-link">
@@ -532,8 +515,7 @@ export function Navigation() {
                 NETWORK
               </span>
               <div className="status-pill" style={{ margin: 0 }}>
-                <span className="live-indicator" aria-hidden="true" />
-                <span>Sepolia Escrow</span>
+                <span>Sepolia testnet demo</span>
               </div>
             </div>
           </nav>

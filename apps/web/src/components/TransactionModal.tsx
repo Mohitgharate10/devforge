@@ -6,7 +6,6 @@ interface TransactionModalProps {
   title: string;
   actionDescription: string;
   status: 'pending' | 'confirmed' | 'failed';
-  txHash?: string | null;
   errorMessage?: string | null;
 }
 
@@ -16,7 +15,6 @@ export function TransactionModal({
   title,
   actionDescription,
   status,
-  txHash,
   errorMessage,
 }: TransactionModalProps) {
   if (!isOpen) return null;
@@ -108,7 +106,7 @@ export function TransactionModal({
                 fontFamily: 'var(--font-mono)',
               }}
             >
-              Network: Ethereum Sepolia (Chain ID: 11155111)
+              DevForge prototype action
             </p>
           </div>
         </div>
@@ -146,7 +144,7 @@ export function TransactionModal({
               alignItems: 'center',
             }}
           >
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Transaction State:</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Action status:</span>
             <span
               style={{
                 padding: '0.2rem 0.6rem',
@@ -165,41 +163,12 @@ export function TransactionModal({
               }}
             >
               {status === 'pending'
-                ? 'Broadcasting to Sepolia...'
+                ? 'In progress...'
                 : status === 'confirmed'
-                  ? 'Confirmed On-Chain'
-                  : 'Execution Failed'}
+                  ? 'Complete'
+                  : 'Not completed'}
             </span>
           </div>
-
-          {txHash && (
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingTop: '0.5rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-              }}
-            >
-              <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Etherscan Tx:</span>
-              <a
-                href={`https://sepolia.etherscan.io/tx/${txHash}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  color: '#E6007A',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                }}
-              >
-                {txHash.slice(0, 10)}...{txHash.slice(-8)} ↗
-              </a>
-            </div>
-          )}
 
           {status === 'failed' && errorMessage && (
             <div
@@ -233,7 +202,7 @@ export function TransactionModal({
               transition: 'all 0.2s ease',
             }}
           >
-            {status === 'pending' ? 'Waiting for Confirmation...' : 'Dismiss'}
+            {status === 'pending' ? 'Please wait...' : 'Dismiss'}
           </button>
         </div>
       </div>

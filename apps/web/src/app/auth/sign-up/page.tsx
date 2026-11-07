@@ -15,25 +15,11 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [title, setTitle] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
   const [hourlyRate, setHourlyRate] = useState('150');
   const [bio, setBio] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const handleWalletConnect = () => {
-    // Generate a sample verified testnet wallet for preview
-    const sampleAddresses = [
-      '0x71C84164b3c915122e265646cD8266395A344e45',
-      '0x388C818CA8B9251b393131C08a73683246A73134',
-      '0x1234567890abcdef1234567890abcdef12345678',
-    ];
-    const picked =
-      sampleAddresses[Math.floor(Math.random() * sampleAddresses.length)] ??
-      '0x71C84164b3c915122e265646cD8266395A344e45';
-    setWalletAddress(picked);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,31 +35,12 @@ export default function SignUpPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          password: password || 'DevForgePass123!',
+          password,
           displayName,
           role,
           handle: userHandle,
         }),
       });
-
-      if (role === 'freelancer') {
-        try {
-          const stored = localStorage.getItem('devforge_demo_specialists');
-          const list = stored ? JSON.parse(stored) : [];
-          const newEntry = {
-            handle: userHandle,
-            name: displayName,
-            title: title || 'Fullstack Web3 Engineer',
-            rate: `$${hourlyRate}/hr`,
-            availability: 'AVAILABLE',
-            skills: ['Solidity', 'TypeScript', 'Web3 Escrow'],
-            isLocalNew: true,
-          };
-          localStorage.setItem('devforge_demo_specialists', JSON.stringify([newEntry, ...list]));
-        } catch {
-          // ignore
-        }
-      }
 
       const data = await res.json().catch(() => ({}));
 
@@ -88,17 +55,17 @@ export default function SignUpPage() {
       const createdUser = data?.data?.user;
 
       // Prime auth state with registered user
-      signIn(
-        {
-          id: createdUser?.id || 'user-' + userHandle,
-          email: createdUser?.email || email,
-          displayName: createdUser?.displayName || displayName || userHandle,
-          role: role,
-          handle: userHandle,
-          walletAddress: walletAddress || null,
-        },
-        true,
-      );
+      if (!createdUser?.id || !createdUser?.email || !createdUser?.displayName) {
+        throw new Error('The sign-up response did not contain a valid user.');
+      }
+      signIn({
+        id: createdUser.id,
+        email: createdUser.email,
+        displayName: createdUser.displayName,
+        role,
+        roles: createdUser.roles ?? [role],
+        handle: userHandle,
+      });
 
       setSuccessMessage(
         `Account created successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting...`,
@@ -119,7 +86,7 @@ export default function SignUpPage() {
         <div className="hero-meta-strip">
           <span>03 / ONBOARDING</span>
           <span>•</span>
-          <span>EIP-4361 IDENTITY</span>
+          <span>EMAIL ACCOUNT</span>
         </div>
         <h1
           style={{
@@ -132,7 +99,8 @@ export default function SignUpPage() {
           Create Your Profile
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6 }}>
-          Join DevForge to accept on-chain milestone contracts or deploy audited technical bounties.
+          Create a client or specialist account to explore job listings and proposal workflows.
+          Escrow is a testnet prototype and must not be used for real funds.
         </p>
       </div>
 
@@ -397,6 +365,7 @@ export default function SignUpPage() {
             <input
               type="password"
               required
+              minLength={8}
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -512,35 +481,12 @@ export default function SignUpPage() {
                   letterSpacing: '0.05em',
                 }}
               >
-                Verified Settlement Wallet (Sepolia / EVM)
+                Wallet linking
               </label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  placeholder="0x..."
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '0.85rem 1rem',
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border-hairline)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.85rem',
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleWalletConnect}
-                  className="btn-pill-secondary"
-                  style={{ fontSize: '0.8rem', padding: '0 1rem', whiteSpace: 'nowrap' }}
-                >
-                  Connect Wallet
-                </button>
-              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                Wallet linking is not available yet. We will only mark a wallet as yours after you
+                verify ownership with a signature.
+              </p>
             </div>
 
             <div>

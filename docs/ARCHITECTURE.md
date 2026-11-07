@@ -1,5 +1,7 @@
 # DevForge Architecture
 
+> **Status:** This document describes the intended architecture, not a guarantee that every component is implemented or deployed. The current prototype uses email/password authentication with opaque database-backed sessions. Wallet-based sign-in, OAuth, production escrow, and several separately described services are not production-ready.
+
 ## 1. Architectural principles
 
 DevForge is a **modular monolith with separable edge services**. The application starts with one deployable web/API product to preserve delivery speed and transactional consistency, while realtime, background processing, and contracts have independent runtime boundaries because they have different scaling and reliability needs.
@@ -93,9 +95,9 @@ sequenceDiagram
   W-->>B: Authorized response
 ```
 
-Better Auth manages password, OAuth, verification, reset, and session primitives. Browser sessions are database-backed and stored in `HttpOnly`, `Secure`, `SameSite=Lax` cookies. This is safer for the browser than persistent bearer tokens and permits server-side invalidation.
+The current application verifies email/password credentials and stores a hash of a random session token in PostgreSQL. The browser receives the raw token only in an `HttpOnly`, `SameSite=Lax` cookie, marked `Secure` in production. OAuth and wallet-based sign-in are not currently available.
 
-Wallet login/linking uses SIWE: the server creates a short-lived, single-use nonce bound to the domain and intended action; MetaMask signs a human-readable message; the server validates the signature, nonce, chain, domain, and expiry before linking/authenticating the wallet. A wallet address alone is never authorization.
+The wallet control only connects to a browser wallet and displays its address/network; it does not authenticate an account or authorize application actions.
 
 ## 8. Authorization flow
 

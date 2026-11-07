@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Open Roles & Bounties | DevForge',
   description:
-    'Explore technical contracts, auditing scopes, and protocol development bounties with on-chain milestone escrow.',
+    'Browse Web3 projects, bounties, and technical roles. DevForge is a testnet marketplace prototype.',
 };
 
 export default function JobsPage() {
@@ -26,9 +26,7 @@ export default function JobsPage() {
           <div className="hero-meta-strip">
             <span>02 / MARKETPLACE</span>
             <span>•</span>
-            <span>VERIFIED BOUNTIES</span>
-            <span>•</span>
-            <span>SEPOLIA ESCROW</span>
+            <span>MARKETPLACE PROTOTYPE</span>
           </div>
           <h1
             style={{
@@ -47,13 +45,13 @@ export default function JobsPage() {
               maxWidth: '44rem',
             }}
           >
-            Work directly with verified Web3 protocols, research funds, and decentralized teams.
-            Every deliverable is backed by 100% pre-funded on-chain escrow.
+            Browse technical Web3 projects and example bounties. Listings may be demonstration
+            data; payments and escrow are testnet-only and must not be used for real funds.
           </p>
         </div>
 
         <Link href="/jobs/create" className="btn-pill-primary">
-          + Post a Bounty / Job
+          + Post a job
         </Link>
       </div>
 

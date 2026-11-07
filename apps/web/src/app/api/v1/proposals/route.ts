@@ -4,10 +4,7 @@ import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
 import { getSubmissionsStore } from '@/app/api/v1/bounties/submit/route';
-import {
-  findCanonicalBounty,
-  findCanonicalBountyByUuid,
-} from '@/lib/canonical-marketplace';
+import { findCanonicalBounty, findCanonicalBountyByUuid } from '@/lib/canonical-marketplace';
 
 export interface MergedProposalItem {
   id: string;
@@ -36,7 +33,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const status = url.searchParams.get('status');
 
   try {
-    const actor = await optionalSession();
+    const actor = await optionalSession(request.headers);
     const itemsMap = new Map<string, MergedProposalItem>();
 
     // 1. Fetch from PostgreSQL database if available

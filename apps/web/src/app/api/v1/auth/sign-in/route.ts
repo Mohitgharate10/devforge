@@ -3,20 +3,28 @@ import { prisma } from '@devforge/database';
 import { normalizeEmail } from '@devforge/domain';
 import { verify } from '@node-rs/argon2';
 import { success, failure } from '@/server/shared/http/api-response';
+import { createSession, serializeSessionCookie } from '@/server/auth/session';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
-    const body = await request.json().catch(() => ({}));
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return failure(
+        { code: 'VALIDATION_FAILED', message: 'A valid request body is required.', status: 400 },
+        requestId,
+      );
+    }
     const rawEmail = typeof body.email === 'string' ? body.email.trim() : '';
     const rawPassword = typeof body.password === 'string' ? body.password : '';
+    const requestedRole = body.role === 'client' || body.role === 'freelancer' ? body.role : null;
 
-    if (!rawEmail || !rawEmail.includes('@')) {
+    if (!rawEmail || !rawEmail.includes('@') || !rawPassword) {
       return failure(
         {
           code: 'VALIDATION_FAILED',
-          message: 'Please provide a valid email address.',
+          message: 'A valid email address and password are required.',
           status: 400,
         },
         requestId,
@@ -56,8 +64,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Verify password if hash exists
-    if (user.passwordHash && rawPassword) {
+    if (user.passwordHash) {
       try {
         const matches = await verify(user.passwordHash, rawPassword);
         if (!matches) {
@@ -80,9 +87,27 @@ export async function POST(request: Request): Promise<NextResponse> {
           requestId,
         );
       }
+    } else {
+      return failure(
+        {
+          code: 'UNAUTHENTICATED',
+          message: 'Invalid email or password.',
+          status: 401,
+        },
+        requestId,
+      );
     }
 
     const roles = user.userRoles.map((ur) => ur.role.name);
+    const role =
+      requestedRole && roles.includes(requestedRole)
+        ? requestedRole
+        : roles.includes('client')
+          ? 'client'
+          : roles.includes('freelancer')
+            ? 'freelancer'
+            : 'admin';
+    const session = await createSession(user.id, request, body.rememberMe !== false);
 
     const response = success(
       {
@@ -95,16 +120,16 @@ export async function POST(request: Request): Promise<NextResponse> {
           status: user.status,
           roles: roles.length > 0 ? roles : ['client', 'freelancer'],
           createdAt: user.createdAt.toISOString(),
+          role,
         },
       },
       requestId,
       200,
     );
 
-    // Set cookie for session
     response.headers.set(
       'Set-Cookie',
-      `devforge_session=${user.id}; Path=/; Max-Age=2592000; SameSite=Lax`,
+      serializeSessionCookie(session.token, body.rememberMe !== false),
     );
 
     return response;

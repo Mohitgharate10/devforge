@@ -175,28 +175,28 @@ export default function AdminDashboardPage() {
                 fontWeight: 600,
               }}
             >
-              PLATFORM GOVERNANCE & ARBITRATION
+              ADMINISTRATION · PROTOTYPE
             </span>
             <span
               style={{
                 fontSize: '0.75rem',
                 fontFamily: 'var(--font-mono)',
-                color: '#10B981',
-                border: '1px solid rgba(16, 185, 129, 0.4)',
-                background: 'rgba(16, 185, 129, 0.08)',
+                color: '#E6007A',
+                border: '1px solid rgba(230, 0, 122, 0.4)',
+                background: 'rgba(230, 0, 122, 0.08)',
                 padding: '0.2rem 0.5rem',
                 borderRadius: '4px',
               }}
             >
-              ● Sepolia Live
+              Prototype · testnet only
             </span>
           </div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
             DevForge Admin Operations
           </h1>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>
-            Smart contract escrow arbitration, dispute mediation queue, trust metrics, and platform
-            fee settlement.
+            Prototype account, listing, and dispute-request administration. No on-chain arbitration
+            or payment settlement is configured.
           </p>
         </div>
 
@@ -208,15 +208,6 @@ export default function AdminDashboardPage() {
           >
             ← Contracts Registry
           </Link>
-          <a
-            href="https://sepolia.etherscan.io/address/0x633C1B2dE8d4380E83141f2359489569777E4426"
-            target="_blank"
-            rel="noreferrer"
-            className="btn-pill-primary"
-            style={{ fontSize: '0.85rem' }}
-          >
-            Escrow Contract Etherscan ↗
-          </a>
         </div>
       </div>
 
@@ -586,8 +577,8 @@ export default function AdminDashboardPage() {
           Smart Contract Infrastructure & Architecture
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Production non-custodial milestone escrow deployed on Sepolia (EVM target: Paris, Solidity
-          0.8.24).
+          Escrow is a testnet prototype. No verified contract deployment or production settlement
+          flow is configured.
         </p>
 
         <div
@@ -623,7 +614,7 @@ export default function AdminDashboardPage() {
                 wordBreak: 'break-all',
               }}
             >
-              0x633C1B2dE8d4380E83141f2359489569777E4426
+              No verified deployment published
             </div>
             <div
               style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}
@@ -658,12 +649,12 @@ export default function AdminDashboardPage() {
                 wordBreak: 'break-all',
               }}
             >
-              0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+              No arbitrator configured
             </div>
             <div
               style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}
             >
-              Enforces dispute resolution split and emergency protocol mediation
+              On-chain dispute arbitration is not available
             </div>
           </div>
         </div>

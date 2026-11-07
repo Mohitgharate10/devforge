@@ -5,7 +5,7 @@ export default function TermsPage() {
     <main style={{ padding: '4rem 1.5rem', maxWidth: '52rem', margin: '0 auto' }}>
       <div style={{ marginBottom: '2.5rem' }}>
         <div className="hero-meta-strip">
-          <span>LEGAL PROTOCOL SPECIFICATION</span>
+          <span>PROTOTYPE DISCLAIMERS</span>
           <span>•</span>
           <span>UPDATED NOVEMBER 2026</span>
         </div>
@@ -17,11 +17,11 @@ export default function TermsPage() {
             marginBottom: '1rem',
           }}
         >
-          Terms of Service & Protocol Disclaimers
+          Prototype disclaimers
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6 }}>
-          DevForge is an experimental decentralized milestone escrow interface. By interacting with
-          DevForge, you acknowledge and agree to these terms.
+          DevForge is an early-stage software prototype. This page is informational, has not been
+          reviewed as a legal agreement, and should not be relied on as legal advice.
         </p>
       </div>
 
@@ -52,14 +52,12 @@ export default function TermsPage() {
               marginBottom: '0.75rem',
             }}
           >
-            ⚠️ Sepolia Testnet Alpha Disclaimer
+            ⚠️ Prototype warning
           </h2>
           <p style={{ margin: 0, color: 'var(--text-primary)' }}>
-            DevForge is currently deployed exclusively to the Ethereum Sepolia Testnet (Chain ID
-            11155111). All tokens, deposits, rewards, and escrow values are testnet assets (Sepolia
-            ETH, mock USDC) with <strong>zero real-world economic value</strong>. DevForge is not a
-            registered financial custodian, bank, or broker. Never deposit real mainnet funds to
-            testnet contract addresses.
+            Escrow funding, release, and dispute arbitration are not production-ready. No verified
+            deployment is published here. Do not send funds, share sensitive information, or rely
+            on the application for real engagements.
           </p>
         </section>
 
@@ -72,33 +70,17 @@ export default function TermsPage() {
               marginBottom: '0.75rem',
             }}
           >
-            1. Escrow Trust Assumptions & Multi-Sig Arbitration
+            1. Escrow and dispute handling
           </h2>
           <p>
-            DevForge smart contract vaults (
-            <code style={{ color: '#E6007A' }}>DevForgeEscrow.sol</code>) are non-custodial in
-            standard execution: funds are released solely upon client cryptographic authorization or
-            refund authorization.
+            DevForge does not currently provide a production escrow service. The interface may
+            display experimental workflows, but they do not prove that funds were deposited,
+            secured, released, or refunded.
           </p>
           <p>
-            In the event of a contested milestone deliverable, a dispute can be initiated by either
-            party. Dispute resolution utilizes an explicit{' '}
-            <strong>2-of-3 multi-sig committee</strong> composed of:
-          </p>
-          <ul style={{ paddingLeft: '1.5rem', margin: '0.5rem 0' }}>
-            <li>
-              <strong>The Client address</strong> (party who pre-funded the vault).
-            </li>
-            <li>
-              <strong>The Freelancer address</strong> (party executing technical deliverables).
-            </li>
-            <li>
-              <strong>The DevForge Arbitration Key</strong> (an appointed dispute resolution panel).
-            </li>
-          </ul>
-          <p>
-            Any distribution requires consensus between at least two of these signers. Users
-            acknowledge this trust assumption prior to locking funds into escrow.
+            Dispute requests may be recorded in the application, but there is no configured
+            arbitration panel or binding on-chain dispute process. Do not rely on DevForge to
+            resolve a real commercial disagreement.
           </p>
         </section>
 
@@ -111,13 +93,12 @@ export default function TermsPage() {
               marginBottom: '0.75rem',
             }}
           >
-            2. Code Quality & Smart Contract Security
+            2. Software status
           </h2>
           <p>
-            The DevForge smart contracts and frontend interface are provided &quot;as is&quot;
-            without warranties of any kind. While the contract employs ReentrancyGuard, explicit
-            access controls, and deterministic state transitions, users interact at their own risk
-            during the testnet alpha period.
+            This prototype is provided for evaluation and may contain errors, demonstration data,
+            or incomplete workflows. No smart contract audit or production readiness is claimed.
+            Verify all information independently and do not use the interface to make payments.
           </p>
         </section>
 
@@ -130,13 +111,12 @@ export default function TermsPage() {
               marginBottom: '0.75rem',
             }}
           >
-            3. Freelancer Independent Contractor Status
+            3. Marketplace information
           </h2>
           <p>
-            DevForge is a decentralized marketplace facilitator. Freelancers listed on DevForge are
-            independent contractors, not employees, agents, or partners of DevForge. Clients are
-            solely responsible for verifying the technical deliverables and running their own
-            independent testing prior to milestone payout approvals.
+            Listings and profiles may be examples and are not necessarily verified or available.
+            DevForge does not currently guarantee that a client, specialist, project, or review is
+            authentic. Confirm details directly before relying on any displayed information.
           </p>
         </section>
       </div>

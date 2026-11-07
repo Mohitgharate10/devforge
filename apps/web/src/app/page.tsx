@@ -7,66 +7,49 @@ export default function HomePage() {
       {/* ─── Hero Section ─────────────────────────────────── */}
       <section className="hero-editorial" style={{ paddingTop: '5rem', paddingBottom: '3.5rem' }}>
         <div className="hero-meta-strip">
-          <span>01 / PROTOCOL</span>
+          <span>01 / MARKETPLACE</span>
           <span>•</span>
-          <span>NON-CUSTODIAL MILESTONE ESCROW</span>
-          <span>•</span>
-          <span>SEPOLIA VERIFIED</span>
+          <span>WEB3 TALENT & PROJECTS</span>
         </div>
 
         <h1 className="hero-title">
-          The decentralized forge for <span className="highlight">builders</span> & technical teams.
+          Find Web3 specialists. <span className="highlight">Hire by milestone.</span>
         </h1>
 
         <p className="hero-subtitle">
-          Hire elite Web3 engineers, smart contract security auditors, and zero-knowledge
-          cryptographers. Every milestone is pre-funded on-chain via smart contracts and released
-          only upon verified delivery.
+          DevForge is a marketplace prototype for technical teams and independent Web3 builders.
+          Explore work, compare specialists, and follow milestone-based projects.
         </p>
 
         <div className="hero-cta-container">
-          <Link href="/freelancers" className="btn-pill-primary">
-            Explore Talent Directory →
+          <Link href="/jobs" className="btn-pill-primary">
+            Browse open work →
+          </Link>
+          <Link href="/freelancers" className="btn-pill-secondary">
+            Find specialists
           </Link>
           <Link href="/jobs/create" className="btn-pill-secondary">
-            + Post a Bounty / Job
-          </Link>
-          <Link
-            href="https://sepolia.etherscan.io/address/0x633C1B2dE8d4380E83141f2359489569777E4426"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: 'var(--text-secondary)',
-              fontSize: '0.85rem',
-              fontFamily: 'var(--font-mono)',
-              textDecoration: 'none',
-              padding: '0.5rem 0.75rem',
-            }}
-          >
-            <span>Contract: 0x633C...4426 ↗</span>
+            Post a job
           </Link>
         </div>
 
-        {/* Live Protocol Telemetry Rail (Sepolia Testnet Alpha) */}
+        {/* Current product status, not live protocol telemetry. */}
         <div className="stats-rail" style={{ marginTop: '3.5rem' }}>
           <div className="stat-item">
             <span className="stat-number">Sepolia</span>
-            <span className="stat-label">Testnet Alpha (Zero Real Value)</span>
+            <span className="stat-label">Test network only · no real funds</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">2-of-3</span>
-            <span className="stat-label">Multi-Sig Arbitrated Escrow</span>
+            <span className="stat-number">Milestones</span>
+            <span className="stat-label">Escrow prototype in development</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">EIP-4361</span>
-            <span className="stat-label">Sign-In with Ethereum</span>
+            <span className="stat-number">Email</span>
+            <span className="stat-label">Wallet sign-in is not available yet</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">Testnet</span>
-            <span className="stat-label">Interactive Demo Persona Profiles</span>
+            <span className="stat-number">Demo</span>
+            <span className="stat-label">Some listings and profiles are examples</span>
           </div>
         </div>
       </section>
@@ -77,7 +60,7 @@ export default function HomePage() {
           <div className="hero-meta-strip" style={{ justifyContent: 'center' }}>
             <span>ARCHITECTURE</span>
             <span>•</span>
-            <span>ESCROW SECURITY GUARANTEE</span>
+            <span>PROPOSED TESTNET WORKFLOW</span>
           </div>
           <h2
             style={{
@@ -87,7 +70,7 @@ export default function HomePage() {
               margin: '0.5rem 0',
             }}
           >
-            How DevForge Milestone Escrow Works
+            How milestone escrow is intended to work
           </h2>
           <p
             style={{
@@ -98,8 +81,8 @@ export default function HomePage() {
               lineHeight: 1.6,
             }}
           >
-            Eliminating upfront payment risk and freelance ghosting. Funds sit in a deterministic
-            smart contract vault on Ethereum Sepolia with transparent 2-of-3 dispute arbitration.
+            This is a product prototype, not a live payment service. Escrow currently targets
+            Ethereum Sepolia testnet only; do not send real funds.
           </p>
         </div>
 
@@ -151,7 +134,7 @@ export default function HomePage() {
                   marginBottom: '0.75rem',
                 }}
               >
-                Pre-Fund Milestone Vault
+                Agree on milestones
               </h3>
               <p
                 style={{
@@ -161,12 +144,8 @@ export default function HomePage() {
                   margin: 0,
                 }}
               >
-                Client deposits milestone funds into{' '}
-                <code style={{ color: '#E6007A', fontFamily: 'var(--font-mono)' }}>
-                  DevForgeEscrow.sol
-                </code>
-                . Deterministic Keccak-256 keys lock funds between client and freelancer addresses.
-                Zero platform custody.
+                Clients and specialists define the work, acceptance criteria, and payment schedule
+                before an engagement begins. On-chain funding is still a testnet prototype.
               </p>
             </div>
             <div
@@ -183,7 +162,7 @@ export default function HomePage() {
               }}
             >
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
-              <span>Sepolia Testnet Verified Escrow</span>
+              <span>Testnet only · no real funds</span>
             </div>
           </div>
 
@@ -228,7 +207,7 @@ export default function HomePage() {
                   marginBottom: '0.75rem',
                 }}
               >
-                Deliver in Live Project Rooms
+                Track the work
               </h3>
               <p
                 style={{
@@ -238,8 +217,8 @@ export default function HomePage() {
                   margin: 0,
                 }}
               >
-                Freelancer submits pull requests, formal verification invariant tests, or IPFS
-                artifacts directly into the authenticated contract room with realtime messaging.
+                Use the project workflow to submit work and review progress. Realtime collaboration
+                and on-chain delivery verification are not available yet.
               </p>
             </div>
             <div
@@ -256,7 +235,7 @@ export default function HomePage() {
               }}
             >
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
-              <span>Realtime Rooms & Delivery Logs</span>
+              <span>Project workflow prototype</span>
             </div>
           </div>
 
@@ -301,7 +280,7 @@ export default function HomePage() {
                   marginBottom: '0.75rem',
                 }}
               >
-                Release Payout or Arbitrate
+                Review before release
               </h3>
               <p
                 style={{
@@ -311,9 +290,8 @@ export default function HomePage() {
                   margin: 0,
                 }}
               >
-                Client approves deliverable with 1-click on-chain release directly to the
-                specialist&apos;s wallet. In case of disagreement, transparent 2-of-3 multi-sig
-                arbitration mediates fund distribution.
+                A future release flow should require client approval and send funds directly to the
+                specialist. Payment release and dispute arbitration are not production-ready.
               </p>
             </div>
             <div
@@ -330,8 +308,8 @@ export default function HomePage() {
               }}
             >
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
-              <Link href="/terms#arbitration" style={{ textDecoration: 'none', color: 'inherit' }}>
-                2-of-3 Arbiter Transparency ↗
+              <Link href="/escrow" style={{ textDecoration: 'none', color: 'inherit' }}>
+                Read testnet details ↗
               </Link>
             </div>
           </div>
@@ -343,7 +321,7 @@ export default function HomePage() {
         <SuperteamBountiesHub isHomepage={true} />
       </section>
 
-      {/* ─── Top Verified Talent Spotlight ───────────────── */}
+      {/* ─── Example Talent Profiles ─────────────────────── */}
       <section style={{ padding: '4.5rem 0', borderTop: '1px solid var(--border-hairline)' }}>
         <div
           style={{
@@ -357,16 +335,16 @@ export default function HomePage() {
         >
           <div>
             <div className="hero-meta-strip">
-              <span>SPECIALISTS</span>
+              <span>EXAMPLE PROFILES</span>
               <span>•</span>
-              <span>DEMO PERSONAS & SEPOLIA PROFILES</span>
+              <span>NOT VERIFIED USERS</span>
             </div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.25rem 0' }}>
-              Featured Technical Talent
+              Example specialist profiles
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-              Curated Web3 specialists. In testnet alpha mode, these highlight platform capabilities
-              and testnet reputation.
+              These sample profiles demonstrate the directory interface. Names, ratings, and
+              reviews shown here are illustrative, not verified marketplace activity.
             </p>
           </div>
           <Link href="/freelancers" className="btn-pill-secondary">
@@ -425,7 +403,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  5.0 (14 verified reviews)
+                  Example profile
                 </span>
               </div>
 
@@ -541,7 +519,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  4.9 (9 verified reviews)
+                  Example profile
                 </span>
               </div>
 

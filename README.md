@@ -1,19 +1,19 @@
 # DevForge
 
-> A decentralized marketplace for technical freelance work, with non-custodial milestone escrow.
+> A prototype marketplace for technical freelance work, with a Sepolia-only escrow experiment.
 
 [Live application](https://devforge-web-8bv4.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Product requirements](docs/PRD.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 ## What it does
 
-DevForge helps clients and freelancers define work, agree milestones, and track delivery. It combines a modern web application with EVM-compatible escrow contracts so that milestones can be funded, reviewed, released, or resolved through defined flows.
+DevForge is an early-stage prototype for clients and technical specialists to explore project listings, proposals, and milestone workflows. It is not a production marketplace or payment service.
 
-- Create jobs, proposals, milestones, and deliverable submissions.
-- Use credential and wallet-based authentication.
-- Manage project progress, messages, and disputes in role-specific dashboards.
-- Lock milestone funds through the `DevForgeEscrow.sol` contract.
+- Browse job listings and sample marketplace data.
+- Create email/password accounts with database-backed sessions.
+- Explore proposal, project, and milestone workflows that are still under development.
+- Connect a browser wallet for address/network display; wallet connection does not sign in or authorize an account.
 
-> **Security note:** Smart-contract code is not a substitute for an independent audit. Do not use real funds until the contracts have been reviewed, tested on the intended network, and deployed with production-safe configuration.
+> **Prototype warning:** Escrow, payment release, arbitration, OAuth, and wallet-based authentication are not production-ready. Do not send real funds or use this application for real engagements.
 
 ## Architecture
 
@@ -33,7 +33,7 @@ The application follows one-way dependencies: the web application can consume sh
 
 - **Application:** Next.js 16, React 19, TypeScript, Tailwind CSS, Radix UI
 - **Data:** PostgreSQL 16, Prisma, Redis
-- **Identity:** Better Auth, Argon2, EIP-712 wallet verification
+- **Identity:** Argon2 password hashing and opaque database-backed sessions
 - **Contracts:** Solidity, Hardhat, TypeChain
 - **Tooling:** pnpm 11, Vitest, ESLint, Prettier
 
@@ -51,17 +51,33 @@ The application follows one-way dependencies: the web application can consume sh
 ```bash
 git clone https://github.com/Mohitgharate10/devforge.git
 cd devforge
-cp .env.example .env.local
+```
+
+On Windows PowerShell, create the Prisma environment file with:
+
+```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+On macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+Then start the local services, apply the database migrations, and seed development data:
+
+```bash
 docker compose -f docker/compose.yml up -d
 pnpm install
-pnpm db:migrate:dev
+pnpm db:migrate:deploy
 pnpm db:seed
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The health endpoint is available at `/api/v1/health`.
 
-Never commit `.env.local`. Replace all development secrets before deployment, and configure optional OAuth values only when the relevant provider is enabled.
+Prisma reads `DATABASE_URL` and `DIRECT_URL` from `.env`; keep this file local and never commit it. The example uses local Docker credentials and must not be used in production. Replace all development secrets before deployment, and configure optional OAuth values only when the relevant provider is enabled.
 
 ## Common commands
 

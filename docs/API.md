@@ -1,5 +1,7 @@
 # DevForge REST API Design
 
+> This is a design document, not a complete inventory of deployed endpoints. OAuth and wallet-based account sign-in are not currently available; wallet verification does not create an authenticated session.
+
 ## 1. Conventions
 
 - Base path: `/api/v1`; JSON request/response; UTC ISO-8601 timestamps; UUID resources.

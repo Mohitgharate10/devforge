@@ -105,9 +105,8 @@ export default function ContractWorkbenchPage({
     title: string;
     actionDescription: string;
     status: 'pending' | 'confirmed' | 'failed';
-    txHash?: string | null;
     errorMessage?: string | null;
-  }>({ isOpen: false, title: '', actionDescription: '', status: 'pending', txHash: null });
+  }>({ isOpen: false, title: '', actionDescription: '', status: 'pending' });
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -115,7 +114,7 @@ export default function ContractWorkbenchPage({
   const [qualityRating, setQualityRating] = useState(5);
   const [commRating, setCommRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
-  const [blockchainActionMsg, setBlockchainActionMsg] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const reloadData = async () => {
     try {
@@ -164,57 +163,14 @@ export default function ContractWorkbenchPage({
     };
   }, [contractId]);
 
-  const handleDepositEscrow = async (milestone: Milestone) => {
-    const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+  const handleDepositEscrow = (milestone: Milestone) => {
     setTxModal({
       isOpen: true,
-      title: `Funding Milestone #${milestone.sequence} Escrow`,
-      actionDescription: `Locking ${(milestone.amount / 1000000).toFixed(2)} ETH in 2-of-3 multi-sig escrow on Sepolia for '${milestone.title}'...`,
-      status: 'pending',
-      txHash: mockHash,
+      title: `Funding unavailable for milestone #${milestone.sequence}`,
+      actionDescription: `No payment was made for '${milestone.title}'. On-chain escrow funding is not connected in this prototype.`,
+      status: 'failed',
+      errorMessage: 'No funds were moved and no transaction was created.',
     });
-    try {
-      setSubmitting(true);
-      const res = await fetch(`/api/v1/contracts/${contractId}/escrow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          milestoneId: milestone.id,
-          milestoneIndex: milestone.sequence - 1,
-          amountEth: (milestone.amount / 1000000).toFixed(2),
-          clientAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-          freelancerAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          txHash: mockHash,
-        }),
-      });
-
-      if (res.ok) {
-        setBlockchainActionMsg(`✓ Sepolia Escrow Funded: Tx ${mockHash.slice(0, 10)}...`);
-        setTxModal({
-          isOpen: true,
-          title: `Milestone #${milestone.sequence} Escrow Funded!`,
-          actionDescription: `Successfully locked ${(milestone.amount / 1000000).toFixed(2)} ETH in Sepolia Escrow Vault. Freelancer is cleared to commence milestone work.`,
-          status: 'confirmed',
-          txHash: mockHash,
-        });
-        await reloadData();
-      } else {
-        setTxModal((prev) => ({
-          ...prev,
-          status: 'failed',
-          errorMessage: 'Failed to record escrow deposit. Please verify Sepolia connection.',
-        }));
-      }
-    } catch (err: unknown) {
-      setTxModal((prev) => ({
-        ...prev,
-        status: 'failed',
-        errorMessage:
-          err instanceof Error ? err.message : 'Network error encountered during escrow deposit.',
-      }));
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const handleSubmitDelivery = async (e: React.FormEvent, milestoneId: string) => {
@@ -239,14 +195,12 @@ export default function ContractWorkbenchPage({
   };
 
   const handleApproveDelivery = async (deliveryId: string) => {
-    const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
     setTxModal({
       isOpen: true,
-      title: 'Releasing Milestone Payout',
+      title: 'Recording delivery approval',
       actionDescription:
-        'Approving work artifact delivery and executing automated multi-sig payout transfer to freelancer on Sepolia...',
+        'Saving the approval in DevForge. This does not release funds or create a blockchain transaction.',
       status: 'pending',
-      txHash: mockHash,
     });
     try {
       setSubmitting(true);
@@ -259,23 +213,20 @@ export default function ContractWorkbenchPage({
       });
       if (res.ok) {
         setApprovalFeedback('');
-        setBlockchainActionMsg(
-          `✓ Milestone Approved & Payout Transferred: Tx ${mockHash.slice(0, 10)}...`,
-        );
+        setActionMessage('Delivery approved in DevForge. No on-chain payment was made.');
         setTxModal({
           isOpen: true,
-          title: 'Escrow Payout Released ✓',
+          title: 'Delivery approved',
           actionDescription:
-            'Milestone delivery accepted and verified. Sepolia funds successfully transferred to freelancer wallet.',
+            'The delivery status was updated in DevForge. No funds were transferred and no blockchain transaction was submitted.',
           status: 'confirmed',
-          txHash: mockHash,
         });
         await reloadData();
       } else {
         setTxModal((prev) => ({
           ...prev,
           status: 'failed',
-          errorMessage: 'Release approval could not be executed on Sepolia.',
+          errorMessage: 'Could not save the delivery approval.',
         }));
       }
     } catch (err: unknown) {
@@ -292,15 +243,13 @@ export default function ContractWorkbenchPage({
 
   const handleOpenDispute = async (e: React.FormEvent) => {
     e.preventDefault();
-    const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
     setShowDisputeModal(false);
     setTxModal({
       isOpen: true,
-      title: 'Registering Dispute On-Chain',
+      title: 'Recording dispute request',
       actionDescription:
-        'Freezing escrow release on Sepolia and initiating 2-of-3 multi-sig arbitration council review...',
+        'Submitting a dispute request to DevForge. This does not freeze escrow or initiate on-chain arbitration.',
       status: 'pending',
-      txHash: mockHash,
     });
     try {
       setSubmitting(true);
@@ -317,14 +266,15 @@ export default function ContractWorkbenchPage({
       if (res.ok) {
         setDisputeReason('');
         setEvidenceUrl('');
-        setBlockchainActionMsg(`⚖ Escrow Frozen & Dispute Filed: Tx ${mockHash.slice(0, 10)}...`);
+        setActionMessage(
+          'Dispute request recorded in DevForge. No on-chain action occurred.',
+        );
         setTxModal({
           isOpen: true,
-          title: 'Escrow Frozen & Dispute Filed!',
+          title: 'Dispute request recorded',
           actionDescription:
-            'Escrow release is frozen. DevForge Multi-Sig Arbitration Council (0x633C...4426) has been summoned. 7-day review window initiated.',
+            'The dispute request was recorded in DevForge only. No escrow was frozen and no arbitration was initiated.',
           status: 'confirmed',
-          txHash: mockHash,
         });
         await reloadData();
       } else {
@@ -456,7 +406,7 @@ export default function ContractWorkbenchPage({
               fontFamily: 'var(--font-mono)',
             }}
           >
-            ⚠ IN ARBITRATION DISPUTE
+            ⚠ DISPUTE REQUEST RECORDED
           </span>
         );
       default:
@@ -540,12 +490,12 @@ export default function ContractWorkbenchPage({
               fontWeight: 600,
             }}
           >
-            Open Arbitration Dispute
+            Request dispute review
           </button>
         </div>
       </div>
 
-      {blockchainActionMsg && (
+      {actionMessage && (
         <div
           style={{
             background: 'rgba(230, 0, 122, 0.15)',
@@ -558,7 +508,7 @@ export default function ContractWorkbenchPage({
             marginBottom: '1.5rem',
           }}
         >
-          {blockchainActionMsg}
+          {actionMessage}
         </div>
       )}
 
@@ -620,7 +570,7 @@ export default function ContractWorkbenchPage({
                   borderRadius: '4px',
                 }}
               >
-                Sepolia Testnet (ID 11155111)
+                Prototype · no verified escrow
               </span>
             </div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
@@ -825,7 +775,7 @@ export default function ContractWorkbenchPage({
                     </p>
                   )}
 
-                  {/* On-Chain Escrow Status Card */}
+                  {/* Prototype Escrow Status Card */}
                   <div
                     style={{
                       background: 'rgba(0, 0, 0, 0.35)',
@@ -845,53 +795,19 @@ export default function ContractWorkbenchPage({
                   >
                     <div>
                       <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                        Sepolia Escrow:{' '}
+                        Escrow record:{' '}
                       </span>
                       {escrow ? (
                         <span
                           style={{ color: escrow.status === 'RELEASED' ? '#10B981' : '#3B82F6' }}
                         >
-                          ● {escrow.status} ({escrow.amount} {escrow.tokenSymbol})
+                          ● {escrow.status} ({escrow.amount} {escrow.tokenSymbol}) · not verified on-chain
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-secondary)' }}>Unfunded Vault</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>No verified funding</span>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                      {escrow?.depositTxHash && (
-                        <a
-                          href={`https://sepolia.etherscan.io/tx/${escrow.depositTxHash}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            color: '#E6007A',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.2rem',
-                          }}
-                          title="View Escrow Deposit on Sepolia Etherscan"
-                        >
-                          Deposit Tx ↗
-                        </a>
-                      )}
-                      {escrow?.releaseTxHash && (
-                        <a
-                          href={`https://sepolia.etherscan.io/tx/${escrow.releaseTxHash}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            color: '#10B981',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.2rem',
-                          }}
-                          title="View Payout Release on Sepolia Etherscan"
-                        >
-                          Release Tx ↗
-                        </a>
-                      )}
                       <span
                         style={{
                           fontSize: '0.7rem',
@@ -900,9 +816,7 @@ export default function ContractWorkbenchPage({
                           paddingLeft: '0.5rem',
                         }}
                       >
-                        {milestone.status === 'SUBMITTED'
-                          ? '⏱ Auto-Release: 14d unreviewed'
-                          : '⏱ Auto-Refund: 30d inactive'}
+                        On-chain funding and automatic release/refund are unavailable
                       </span>
                     </div>
                   </div>
@@ -923,9 +837,7 @@ export default function ContractWorkbenchPage({
                         className="btn-pill-primary"
                         style={{ fontSize: '0.8rem', padding: '0.45rem 1rem' }}
                       >
-                        {submitting
-                          ? 'Broadcasting...'
-                          : `⚡ Deposit Milestone Escrow on Sepolia (${(milestone.amount / 1000000).toFixed(2)} ETH)`}
+                        Funding unavailable
                       </button>
                     </div>
                   )}
@@ -1037,8 +949,8 @@ export default function ContractWorkbenchPage({
                                 style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
                               >
                                 {submitting
-                                  ? 'Releasing Escrow...'
-                                  : 'Approve & Release Sepolia Payout ✓'}
+                                  ? 'Saving approval...'
+                                  : 'Approve delivery'}
                               </button>
                             </div>
                           )}
@@ -1459,7 +1371,7 @@ export default function ContractWorkbenchPage({
                 ⚖
               </div>
               <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#EF4444', margin: 0 }}>
-                Escrow Dispute Mediation & Arbitration
+                Dispute request (prototype)
               </h2>
             </div>
 
@@ -1471,8 +1383,8 @@ export default function ContractWorkbenchPage({
                 lineHeight: 1.5,
               }}
             >
-              Freezes automated escrow release on Sepolia and initiates multi-sig neutral
-              arbitration. Review the timeline and arbiter criteria before submitting.
+              Records a dispute request in DevForge only. It does not freeze funds or start
+              on-chain arbitration.
             </p>
 
             {/* Arbitration Timeline Rail */}
@@ -1494,7 +1406,7 @@ export default function ContractWorkbenchPage({
                   fontWeight: 700,
                 }}
               >
-                ARBITRATION TIMELINE & ESCROW POLICY
+                DISPUTE HANDLING STATUS
               </div>
               <div
                 style={{
@@ -1512,7 +1424,7 @@ export default function ContractWorkbenchPage({
                   }}
                 >
                   <div style={{ fontSize: '0.7rem', color: '#60A5FA', fontWeight: 700 }}>
-                    STAGE 1 (Days 1–3)
+                    Not automated
                   </div>
                   <div
                     style={{
@@ -1521,10 +1433,10 @@ export default function ContractWorkbenchPage({
                       marginTop: '0.2rem',
                     }}
                   >
-                    Direct Negotiation
+                    In-app communication
                   </div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
-                    Parties submit notes in chat
+                    No automatic negotiation workflow
                   </div>
                 </div>
                 <div
@@ -1536,7 +1448,7 @@ export default function ContractWorkbenchPage({
                   }}
                 >
                   <div style={{ fontSize: '0.7rem', color: '#F472B6', fontWeight: 700 }}>
-                    STAGE 2 (Days 4–7)
+                    Not available
                   </div>
                   <div
                     style={{
@@ -1545,10 +1457,10 @@ export default function ContractWorkbenchPage({
                       marginTop: '0.2rem',
                     }}
                   >
-                    Arbiter Review
+                    Arbitration
                   </div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
-                    2-of-3 Council evaluation
+                    No arbiters are configured
                   </div>
                 </div>
                 <div
@@ -1560,7 +1472,7 @@ export default function ContractWorkbenchPage({
                   }}
                 >
                   <div style={{ fontSize: '0.7rem', color: '#34D399', fontWeight: 700 }}>
-                    STAGE 3 (Day 14+)
+                    Not available
                   </div>
                   <div
                     style={{
@@ -1569,16 +1481,16 @@ export default function ContractWorkbenchPage({
                       marginTop: '0.2rem',
                     }}
                   >
-                    Auto-Timeout
+                    Automatic release/refund
                   </div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
-                    Inactivity auto-release/refund
+                    No automatic fund movement
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Arbiter Transparency Panel */}
+            {/* Arbitration availability */}
             <div
               style={{
                 background: 'rgba(230, 0, 122, 0.05)',
@@ -1591,20 +1503,9 @@ export default function ContractWorkbenchPage({
                 color: 'var(--text-secondary)',
               }}
             >
-              <span style={{ color: '#E6007A', fontWeight: 700 }}>
-                Arbiter Signers (2-of-3 Multi-Sig):{' '}
-              </span>
-              DevForge Protocol Council (
-              <a
-                href="https://sepolia.etherscan.io/address/0x633C1aFa437146FfF2AbeE562e1531e28D5b4426"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: '#E6007A', textDecoration: 'underline' }}
-              >
-                0x633C...4426 ↗
-              </a>
-              ), Client Signer, Freelancer Signer. Resolution releases escrow or refunds based on
-              verified git commit logs.
+              <span style={{ color: '#E6007A', fontWeight: 700 }}>No arbiters configured: </span>
+              dispute requests are recorded in the application only and do not result in
+              arbitration or escrow changes.
             </div>
 
             <form
@@ -1692,7 +1593,7 @@ export default function ContractWorkbenchPage({
                   className="btn-pill-primary"
                   style={{ background: '#EF4444', borderColor: '#EF4444' }}
                 >
-                  {submitting ? 'Broadcasting Dispute...' : 'Freeze Escrow & Submit Dispute ⚖'}
+                  {submitting ? 'Recording request...' : 'Record dispute request'}
                 </button>
               </div>
             </form>
@@ -1700,13 +1601,12 @@ export default function ContractWorkbenchPage({
         </div>
       )}
 
-      {/* Reusable Sepolia Transaction Modal */}
+      {/* Reusable prototype action modal */}
       <TransactionModal
         isOpen={txModal.isOpen}
         title={txModal.title}
         actionDescription={txModal.actionDescription}
         status={txModal.status}
-        txHash={txModal.txHash}
         errorMessage={txModal.errorMessage}
         onClose={() => setTxModal((prev) => ({ ...prev, isOpen: false }))}
       />

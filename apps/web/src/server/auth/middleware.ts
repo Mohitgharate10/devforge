@@ -6,7 +6,7 @@ import {
   requireRole as domainRequireRole,
   requirePermission as domainRequirePermission,
 } from '@devforge/domain';
-import { auth } from './index';
+import { getSessionToken, hashSessionToken } from './session';
 
 export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | null> {
   let reqHeaders: Headers;
@@ -15,76 +15,24 @@ export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | n
   } catch {
     reqHeaders = overrideHeaders ?? new Headers();
   }
-  let targetUserId: string | null = null;
-
   try {
-    const session = await auth.api.getSession({
-      headers: reqHeaders,
-    });
-    if (session?.user?.id) {
-      targetUserId = session.user.id;
-    }
-  } catch {
-    // Better Auth session lookup error fallback
-  }
-
-  // Fallback to devforge_session cookie or x-user-id header
-  if (!targetUserId) {
-    const cookieHeader = reqHeaders.get('cookie') || '';
-    const match = cookieHeader.match(/devforge_session=([^;]+)/);
-    if (match && match[1]) {
-      targetUserId = decodeURIComponent(match[1].trim());
-    } else {
-      const headerUserId = reqHeaders.get('x-user-id');
-      if (headerUserId) {
-        targetUserId = headerUserId.trim();
-      }
-    }
-  }
-
-  if (!targetUserId) {
-    return null;
-  }
-
-  const isUuid =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId);
-
-  try {
-    const user = isUuid
-      ? await prisma.user.findUnique({
-          where: { id: targetUserId },
-          include: {
-            userRoles: {
-              include: {
-                role: {
-                  include: {
-                    permissions: {
-                      include: {
-                        permission: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        })
-      : null;
-
-    if (!user) {
-      // If user was not found by UUID directly, check if targetUserId was an email or handle
-      const userByEmail = await prisma.user.findFirst({
+    const token = getSessionToken(reqHeaders);
+    if (token) {
+      const session = await prisma.session.findFirst({
         where: {
-          OR: [{ email: targetUserId }, { displayName: targetUserId }],
+          tokenHash: hashSessionToken(token),
+          expiresAt: { gt: new Date() },
         },
         include: {
-          userRoles: {
+          user: {
             include: {
-              role: {
+              userRoles: {
                 include: {
-                  permissions: {
+                  role: {
                     include: {
-                      permission: true,
+                      permissions: {
+                        include: { permission: true },
+                      },
                     },
                   },
                 },
@@ -94,68 +42,62 @@ export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | n
         },
       });
 
-      if (!userByEmail) {
-        // Fallback actor for valid test or demo sessions
+      if (session && session.user.status === 'ACTIVE') {
         return {
-          userId: isUuid ? targetUserId : '00000000-0000-0000-0000-000000000001',
+          userId: session.user.id,
+          status: session.user.status,
+          roles: [...new Set(session.user.userRoles.map((userRole) => userRole.role.name))],
+          permissions: [
+            ...new Set(
+              session.user.userRoles.flatMap((userRole) =>
+                userRole.role.permissions.map((rolePermission) => rolePermission.permission.key),
+              ),
+            ),
+          ],
+        };
+      }
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+      const testUserId = reqHeaders.get('x-user-id');
+      if (testUserId) {
+        return {
+          userId: testUserId,
           status: 'ACTIVE',
           roles: ['freelancer', 'client'],
           permissions: ['jobs:create', 'proposals:create'],
         };
       }
-
-      const roles = userByEmail.userRoles.map((ur) => ur.role.name);
-      const permissions = userByEmail.userRoles.flatMap((ur) =>
-        ur.role.permissions.map((rp) => rp.permission.key),
-      );
-
-      return {
-        userId: userByEmail.id,
-        status: userByEmail.status,
-        roles: [...new Set(roles.length > 0 ? roles : ['client', 'freelancer'])],
-        permissions: [...new Set(permissions)],
-      };
     }
 
-    const roles = user.userRoles.map((ur) => ur.role.name);
-    const permissions = user.userRoles.flatMap((ur) =>
-      ur.role.permissions.map((rp) => rp.permission.key),
-    );
-
-    return {
-      userId: user.id,
-      status: user.status,
-      roles: [...new Set(roles.length > 0 ? roles : ['client', 'freelancer'])],
-      permissions: [...new Set(permissions)],
-    };
-  } catch (err) {
-    console.error('Error in resolveActor DB query:', err);
     return null;
+  } catch (err) {
+    console.error('Failed to resolve authenticated session:', err);
+    throw err;
   }
 }
 
-export async function requireSession(): Promise<Actor> {
-  const actor = await resolveActor();
+export async function requireSession(requestHeaders?: Headers): Promise<Actor> {
+  const actor = await resolveActor(requestHeaders);
   requireActiveUser(actor);
   return actor;
 }
 
-export async function optionalSession(): Promise<Actor | null> {
-  try {
-    return await resolveActor();
-  } catch {
-    return null;
-  }
+export async function optionalSession(requestHeaders?: Headers): Promise<Actor | null> {
+  return resolveActor(requestHeaders);
 }
 
-export async function requireRole(role: string): Promise<Actor> {
-  const actor = await requireSession();
+export async function requireRole(role: string, requestHeaders?: Headers): Promise<Actor> {
+  const actor = await requireSession(requestHeaders);
   domainRequireRole(actor, role);
   return actor;
 }
 
-export async function requirePermission(permission: string): Promise<Actor> {
-  const actor = await requireSession();
+export async function requirePermission(
+  permission: string,
+  requestHeaders?: Headers,
+): Promise<Actor> {
+  const actor = await requireSession(requestHeaders);
   domainRequirePermission(actor, permission);
   return actor;
 }

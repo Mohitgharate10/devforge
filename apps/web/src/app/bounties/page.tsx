@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Web3 Bounties & Ecosystem Grants | DevForge Earn',
   description:
-    'Explore open developer bounties, security audit contests, and research grants pre-funded in Sepolia smart escrow vaults.',
+    'Browse example developer bounties, security audit contests, and research grants in the DevForge testnet prototype.',
 };
 
 export default function BountiesPage() {
