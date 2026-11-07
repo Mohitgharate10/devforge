@@ -135,10 +135,7 @@ export async function POST(
 
     const demo = demoStore.getProposals().find((p) => p.id === proposalId);
     if (!demo) {
-      return failure(
-        { code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 },
-        requestId,
-      );
+      return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
     assertCanTransitionProposalStatus(demo.status, 'ACCEPTED');
@@ -203,7 +200,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'VALIDATION_FAILED', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'VALIDATION_FAILED',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

@@ -65,21 +65,13 @@ export function TransactionModal({
                 status === 'pending'
                   ? 'rgba(59, 130, 246, 0.15)'
                   : status === 'confirmed'
-                  ? 'rgba(16, 185, 129, 0.15)'
-                  : 'rgba(239, 68, 68, 0.15)',
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : 'rgba(239, 68, 68, 0.15)',
               border: `1px solid ${
-                status === 'pending'
-                  ? '#3B82F6'
-                  : status === 'confirmed'
-                  ? '#10B981'
-                  : '#EF4444'
+                status === 'pending' ? '#3B82F6' : status === 'confirmed' ? '#10B981' : '#EF4444'
               }`,
               color:
-                status === 'pending'
-                  ? '#3B82F6'
-                  : status === 'confirmed'
-                  ? '#10B981'
-                  : '#EF4444',
+                status === 'pending' ? '#3B82F6' : status === 'confirmed' ? '#10B981' : '#EF4444',
             }}
           >
             {status === 'pending' && (
@@ -166,21 +158,17 @@ export function TransactionModal({
                   status === 'pending'
                     ? 'rgba(59, 130, 246, 0.2)'
                     : status === 'confirmed'
-                    ? 'rgba(16, 185, 129, 0.2)'
-                    : 'rgba(239, 68, 68, 0.2)',
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)',
                 color:
-                  status === 'pending'
-                    ? '#60A5FA'
-                    : status === 'confirmed'
-                    ? '#34D399'
-                    : '#F87171',
+                  status === 'pending' ? '#60A5FA' : status === 'confirmed' ? '#34D399' : '#F87171',
               }}
             >
               {status === 'pending'
                 ? 'Broadcasting to Sepolia...'
                 : status === 'confirmed'
-                ? 'Confirmed On-Chain'
-                : 'Execution Failed'}
+                  ? 'Confirmed On-Chain'
+                  : 'Execution Failed'}
             </span>
           </div>
 
@@ -237,9 +225,7 @@ export function TransactionModal({
               borderRadius: '9999px',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               background:
-                status === 'pending'
-                  ? 'rgba(255, 255, 255, 0.05)'
-                  : 'rgba(255, 255, 255, 0.1)',
+                status === 'pending' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
               color: status === 'pending' ? 'rgba(255, 255, 255, 0.3)' : '#FFFFFF',
               fontWeight: 600,
               fontSize: '0.85rem',

@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { rejectProposalRequestSchema } from '@devforge/api-contracts';
-import {
-  assertCanTransitionProposalStatus,
-  assertJobClient,
-  DomainError,
-} from '@devforge/domain';
+import { assertCanTransitionProposalStatus, assertJobClient, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
@@ -81,10 +77,7 @@ export async function POST(
 
     const demo = demoStore.getProposals().find((p) => p.id === proposalId);
     if (!demo) {
-      return failure(
-        { code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 },
-        requestId,
-      );
+      return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
     assertCanTransitionProposalStatus(demo.status, 'REJECTED');
@@ -102,7 +95,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'STATE_TRANSITION_INVALID', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'STATE_TRANSITION_INVALID',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

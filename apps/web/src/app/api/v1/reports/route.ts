@@ -94,7 +94,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
   } catch (error) {
     return failure(
-      { code: 'VALIDATION_FAILED', message: error instanceof Error ? error.message : 'Invalid report request.', status: 400 },
+      {
+        code: 'VALIDATION_FAILED',
+        message: error instanceof Error ? error.message : 'Invalid report request.',
+        status: 400,
+      },
       requestId,
     );
   }

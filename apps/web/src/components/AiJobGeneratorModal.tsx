@@ -29,7 +29,10 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
     e.preventDefault();
     try {
       setGenerating(true);
-      const skillsArray = selectedSkills.split(',').map((s) => s.trim()).filter(Boolean);
+      const skillsArray = selectedSkills
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       const res = await fetch('/api/v1/ai/generate-job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,28 +55,39 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0, 0, 0, 0.85)',
-      backdropFilter: 'blur(10px)',
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1.5rem',
-    }}>
-      <div style={{
-        background: '#111114',
-        border: '1px solid rgba(230, 0, 122, 0.4)',
-        borderRadius: '16px',
-        maxWidth: '42rem',
-        width: '100%',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        padding: '2rem',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+      }}
+    >
+      <div
+        style={{
+          background: '#111114',
+          border: '1px solid rgba(230, 0, 122, 0.4)',
+          borderRadius: '16px',
+          maxWidth: '42rem',
+          width: '100%',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          padding: '2rem',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.25rem',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{ fontSize: '1.5rem' }}>✨</span>
             <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
@@ -82,20 +96,37 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '1.25rem', cursor: 'pointer' }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '1.25rem',
+              cursor: 'pointer',
+            }}
           >
             ✕
           </button>
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Describe your project needs in plain language. DevForge AI will generate technical acceptance criteria, required competencies, and milestone-based escrow structures.
+          Describe your project needs in plain language. DevForge AI will generate technical
+          acceptance criteria, required competencies, and milestone-based escrow structures.
         </p>
 
         {!result ? (
-          <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <form
+            onSubmit={handleGenerate}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
             <div>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+              <label
+                style={{
+                  fontSize: '0.8rem',
+                  color: 'var(--text-secondary)',
+                  display: 'block',
+                  marginBottom: '0.35rem',
+                }}
+              >
                 Job Title or High-Level Objective
               </label>
               <input
@@ -118,7 +149,14 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--text-secondary)',
+                    display: 'block',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   Target Domain
                 </label>
                 <select
@@ -136,13 +174,22 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
                 >
                   <option value="Smart Contract Security">Smart Contract Security</option>
                   <option value="Zero-Knowledge Systems">Zero-Knowledge Systems</option>
-                  <option value="Substrate / Polkadot Runtimes">Substrate / Polkadot Runtimes</option>
+                  <option value="Substrate / Polkadot Runtimes">
+                    Substrate / Polkadot Runtimes
+                  </option>
                   <option value="DeFi Protocol Architecture">DeFi Protocol Architecture</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--text-secondary)',
+                    display: 'block',
+                    marginBottom: '0.35rem',
+                  }}
+                >
                   Key Skill Tags (comma-separated)
                 </label>
                 <input
@@ -162,7 +209,14 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '1rem',
+                marginTop: '1rem',
+              }}
+            >
               <button type="button" onClick={onClose} className="btn-pill-secondary">
                 Cancel
               </button>
@@ -178,37 +232,67 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
           </form>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{
-              background: 'rgba(230, 0, 122, 0.08)',
-              border: '1px solid rgba(230, 0, 122, 0.3)',
-              borderRadius: '10px',
-              padding: '1.25rem',
-            }}>
-              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#E6007A', marginBottom: '0.25rem' }}>
+            <div
+              style={{
+                background: 'rgba(230, 0, 122, 0.08)',
+                border: '1px solid rgba(230, 0, 122, 0.3)',
+                borderRadius: '10px',
+                padding: '1.25rem',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: '#E6007A',
+                  marginBottom: '0.25rem',
+                }}
+              >
                 GENERATED SPECIFICATION
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>{result.title}</h3>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                Suggested Budget: <strong style={{ color: '#10B981' }}>${result.suggestedBudgetMin.toLocaleString()} - ${result.suggestedBudgetMax.toLocaleString()} USDC</strong>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
+                {result.title}
+              </h3>
+              <div
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '0.75rem',
+                }}
+              >
+                Suggested Budget:{' '}
+                <strong style={{ color: '#10B981' }}>
+                  ${result.suggestedBudgetMin.toLocaleString()} - $
+                  {result.suggestedBudgetMax.toLocaleString()} USDC
+                </strong>
               </div>
-              <pre style={{
-                background: 'rgba(0,0,0,0.5)',
-                padding: '1rem',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                color: 'var(--text-primary)',
-                whiteSpace: 'pre-wrap',
-                fontFamily: 'inherit',
-                maxHeight: '14rem',
-                overflowY: 'auto',
-                border: '1px solid var(--border-hairline)',
-              }}>
+              <pre
+                style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem',
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'inherit',
+                  maxHeight: '14rem',
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-hairline)',
+                }}
+              >
                 {result.description}
               </pre>
             </div>
 
             <div>
-              <div style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 SUGGESTED MILESTONE PHASES ({result.milestones.length})
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -227,9 +311,18 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
                   >
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{m.description}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {m.description}
+                      </div>
                     </div>
-                    <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: '#E6007A', fontWeight: 700 }}>
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#E6007A',
+                        fontWeight: 700,
+                      }}
+                    >
                       {m.percentage}%
                     </span>
                   </div>
@@ -237,7 +330,14 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '0.5rem',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setResult(null)}
@@ -247,7 +347,12 @@ export function AiJobGeneratorModal({ isOpen, onClose, onApplyDraft }: AiJobGene
                 ↺ Regenerate
               </button>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button type="button" onClick={onClose} className="btn-pill-secondary" style={{ fontSize: '0.8rem' }}>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-pill-secondary"
+                  style={{ fontSize: '0.8rem' }}
+                >
                   Dismiss
                 </button>
                 <button

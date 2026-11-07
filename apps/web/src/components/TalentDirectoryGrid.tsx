@@ -91,8 +91,7 @@ export function TalentDirectoryGrid() {
         card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         card.handle.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesSkill =
-        selectedSkill === 'ALL' || card.skills.includes(selectedSkill);
+      const matchesSkill = selectedSkill === 'ALL' || card.skills.includes(selectedSkill);
 
       const matchesAvailability =
         selectedAvailability === 'ALL' || card.availability === selectedAvailability;
@@ -185,7 +184,16 @@ export function TalentDirectoryGrid() {
       </div>
 
       {/* Result Counter & Notice */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem',
+          fontSize: '0.85rem',
+          color: 'var(--text-secondary)',
+        }}
+      >
         <div>
           Showing <strong>{filteredCards.length}</strong> verified specialists
         </div>
@@ -195,18 +203,52 @@ export function TalentDirectoryGrid() {
       </div>
 
       {filteredCards.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border-hairline)', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'rgba(255,255,255,0.3)' }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '4rem 1.5rem',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-hairline)',
+            borderRadius: '12px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '1rem',
+              color: 'rgba(255,255,255,0.3)',
+            }}
+          >
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </div>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>No specialists match your criteria</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>Try clearing your search term or filtering for all skills.</p>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+            No specialists match your criteria
+          </h3>
+          <p
+            style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}
+          >
+            Try clearing your search term or filtering for all skills.
+          </p>
           <button
             type="button"
-            onClick={() => { setSearchTerm(''); setSelectedSkill('ALL'); setSelectedAvailability('ALL'); }}
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedSkill('ALL');
+              setSelectedAvailability('ALL');
+            }}
             className="btn-pill-secondary"
             style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}
           >

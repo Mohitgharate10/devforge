@@ -77,29 +77,33 @@ export function ProjectChat({ contractId }: { contractId: string }) {
     switch (type) {
       case 'ESCROW_RELEASED':
         return (
-          <span style={{
-            fontSize: '0.65rem',
-            padding: '0.15rem 0.4rem',
-            borderRadius: '4px',
-            background: 'rgba(16, 185, 129, 0.15)',
-            color: '#10B981',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 600,
-          }}>
+          <span
+            style={{
+              fontSize: '0.65rem',
+              padding: '0.15rem 0.4rem',
+              borderRadius: '4px',
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#10B981',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600,
+            }}
+          >
             ⚡ ESCROW RELEASED
           </span>
         );
       case 'DELIVERY_SUBMITTED':
         return (
-          <span style={{
-            fontSize: '0.65rem',
-            padding: '0.15rem 0.4rem',
-            borderRadius: '4px',
-            background: 'rgba(230, 0, 122, 0.15)',
-            color: '#E6007A',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 600,
-          }}>
+          <span
+            style={{
+              fontSize: '0.65rem',
+              padding: '0.15rem 0.4rem',
+              borderRadius: '4px',
+              background: 'rgba(230, 0, 122, 0.15)',
+              color: '#E6007A',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600,
+            }}
+          >
             📦 DELIVERABLE PR
           </span>
         );
@@ -109,37 +113,49 @@ export function ProjectChat({ contractId }: { contractId: string }) {
   };
 
   return (
-    <div style={{
-      background: 'var(--bg-card)',
-      borderRadius: '16px',
-      border: '1px solid var(--border-hairline)',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '520px',
-      overflow: 'hidden',
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: '1rem 1.25rem',
-        borderBottom: '1px solid var(--border-hairline)',
-        background: 'rgba(255,255,255,0.02)',
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        borderRadius: '16px',
+        border: '1px solid var(--border-hairline)',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+        flexDirection: 'column',
+        height: '520px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: '1rem 1.25rem',
+          borderBottom: '1px solid var(--border-hairline)',
+          background: 'rgba(255,255,255,0.02)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#10B981',
-            boxShadow: '0 0 8px #10B981',
-          }} />
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#10B981',
+              boxShadow: '0 0 8px #10B981',
+            }}
+          />
           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>
             Project Room & Milestone Chat
           </h3>
         </div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+        <span
+          style={{
+            fontSize: '0.7rem',
+            color: 'var(--text-secondary)',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
           E2E Authenticated
         </span>
       </div>
@@ -157,7 +173,14 @@ export function ProjectChat({ contractId }: { contractId: string }) {
         }}
       >
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 'auto' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              margin: 'auto',
+            }}
+          >
             No messages yet. Begin project collaboration below!
           </div>
         ) : (
@@ -165,24 +188,51 @@ export function ProjectChat({ contractId }: { contractId: string }) {
             <div
               key={m.id}
               style={{
-                background: m.senderName.includes('Elena') ? 'rgba(230,0,122,0.06)' : 'rgba(255,255,255,0.03)',
+                background: m.senderName.includes('Elena')
+                  ? 'rgba(230,0,122,0.06)'
+                  : 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: '10px',
                 padding: '0.85rem 1rem',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '0.35rem',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <span
+                    style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}
+                  >
                     {m.senderName}
                   </span>
                   {renderBadge(m.type)}
                 </div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-                  {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    color: 'var(--text-secondary)',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
+                  {new Date(m.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'rgba(255,255,255,0.9)',
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
                 {m.content}
               </div>
             </div>

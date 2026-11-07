@@ -34,9 +34,9 @@ export default function EscrowProtocolPage() {
             lineHeight: 1.6,
           }}
         >
-          DevForge never holds customer funds. Every engagement creates an independent smart contract
-          vault locked on-chain. Capital is released incrementally only when both parties sign off on
-          verified deliverable milestones.
+          DevForge never holds customer funds. Every engagement creates an independent smart
+          contract vault locked on-chain. Capital is released incrementally only when both parties
+          sign off on verified deliverable milestones.
         </p>
       </div>
 
@@ -104,8 +104,8 @@ export default function EscrowProtocolPage() {
             Dual-Key Settlement
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Upon client approval or automated test passage, the escrow contract releases milestone funds
-            directly to the specialist’s verified payout wallet without platform interception.
+            Upon client approval or automated test passage, the escrow contract releases milestone
+            funds directly to the specialist’s verified payout wallet without platform interception.
           </p>
         </div>
       </div>
@@ -139,34 +139,86 @@ export default function EscrowProtocolPage() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.5rem',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-muted)',
+              }}
+            >
               ESCROW FACTORY
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.85rem',
+                color: 'var(--text-primary)',
+                marginTop: '0.25rem',
+              }}
+            >
               0x8269...9F41
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-muted)',
+              }}
+            >
               STANDARD
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.85rem',
+                color: 'var(--text-primary)',
+                marginTop: '0.25rem',
+              }}
+            >
               ERC-20 & Native ETH Escrow
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-muted)',
+              }}
+            >
               SETTLEMENT MODEL
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.85rem',
+                color: 'var(--text-primary)',
+                marginTop: '0.25rem',
+              }}
+            >
               Optimistic Multi-Sig with Arbitration
             </div>
           </div>
         </div>
 
-        <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-hairline)', display: 'flex', gap: '1rem' }}>
+        <div
+          style={{
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-hairline)',
+            display: 'flex',
+            gap: '1rem',
+          }}
+        >
           <Link href="/freelancers" className="btn-pill-primary">
             Explore Specialists →
           </Link>

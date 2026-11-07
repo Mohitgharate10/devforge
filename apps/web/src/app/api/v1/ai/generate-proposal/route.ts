@@ -19,7 +19,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     return success(generated, requestId);
   } catch (error) {
     return failure(
-      { code: 'VALIDATION_FAILED', message: error instanceof Error ? error.message : 'Invalid request.', status: 400 },
+      {
+        code: 'VALIDATION_FAILED',
+        message: error instanceof Error ? error.message : 'Invalid request.',
+        status: 400,
+      },
       requestId,
     );
   }

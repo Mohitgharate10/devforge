@@ -1,7 +1,6 @@
 import { isAddress, keccak256, encodePacked, stringToHex } from 'viem';
 import { DomainError } from '../identity/auth.errors';
 
-
 export type EscrowStatus = 'PENDING' | 'DEPOSITED' | 'RELEASED' | 'REFUNDED' | 'DISPUTED';
 
 const VALID_ESCROW_TRANSITIONS: Record<EscrowStatus, EscrowStatus[]> = {
@@ -41,10 +40,7 @@ export function computeVaultKey(contractId: string, milestoneIndex: number): `0x
   }
 
   return keccak256(
-    encodePacked(
-      ['bytes32', 'uint256'],
-      [contractIdBytes32, BigInt(milestoneIndex)],
-    ),
+    encodePacked(['bytes32', 'uint256'], [contractIdBytes32, BigInt(milestoneIndex)]),
   );
 }
 
@@ -55,24 +51,42 @@ export interface EscrowParticipantContext {
   isAdmin: boolean;
 }
 
-export function canDepositEscrow(ctx: EscrowParticipantContext, currentStatus: EscrowStatus): boolean {
+export function canDepositEscrow(
+  ctx: EscrowParticipantContext,
+  currentStatus: EscrowStatus,
+): boolean {
   return (ctx.isClient || ctx.isAdmin) && currentStatus === 'PENDING';
 }
 
-export function canReleaseEscrow(ctx: EscrowParticipantContext, currentStatus: EscrowStatus): boolean {
+export function canReleaseEscrow(
+  ctx: EscrowParticipantContext,
+  currentStatus: EscrowStatus,
+): boolean {
   return (ctx.isClient || ctx.isAdmin) && currentStatus === 'DEPOSITED';
 }
 
-export function canRaiseDispute(ctx: EscrowParticipantContext, currentStatus: EscrowStatus): boolean {
+export function canRaiseDispute(
+  ctx: EscrowParticipantContext,
+  currentStatus: EscrowStatus,
+): boolean {
   return (ctx.isClient || ctx.isFreelancer || ctx.isAdmin) && currentStatus === 'DEPOSITED';
 }
 
-export function canResolveDispute(ctx: EscrowParticipantContext, currentStatus: EscrowStatus): boolean {
+export function canResolveDispute(
+  ctx: EscrowParticipantContext,
+  currentStatus: EscrowStatus,
+): boolean {
   return ctx.isAdmin && currentStatus === 'DISPUTED';
 }
 
-export function canRefundEscrow(ctx: EscrowParticipantContext, currentStatus: EscrowStatus): boolean {
-  return (ctx.isFreelancer || ctx.isAdmin) && (currentStatus === 'DEPOSITED' || currentStatus === 'DISPUTED');
+export function canRefundEscrow(
+  ctx: EscrowParticipantContext,
+  currentStatus: EscrowStatus,
+): boolean {
+  return (
+    (ctx.isFreelancer || ctx.isAdmin) &&
+    (currentStatus === 'DEPOSITED' || currentStatus === 'DISPUTED')
+  );
 }
 
 export function validateEscrowDepositInput(input: {
@@ -86,16 +100,28 @@ export function validateEscrowDepositInput(input: {
     throw new DomainError('Contract ID is required', 'VALIDATION_FAILED', 400);
   }
   if (input.milestoneIndex < 0 || !Number.isInteger(input.milestoneIndex)) {
-    throw new DomainError('Milestone index must be a non-negative integer', 'VALIDATION_FAILED', 400);
+    throw new DomainError(
+      'Milestone index must be a non-negative integer',
+      'VALIDATION_FAILED',
+      400,
+    );
   }
   const numericAmount = Number(input.amount);
   if (isNaN(numericAmount) || numericAmount <= 0) {
     throw new DomainError('Escrow amount must be greater than zero', 'VALIDATION_FAILED', 400);
   }
   if (!isAddress(input.clientAddress)) {
-    throw new DomainError(`Invalid client Ethereum address: ${input.clientAddress}`, 'VALIDATION_FAILED', 400);
+    throw new DomainError(
+      `Invalid client Ethereum address: ${input.clientAddress}`,
+      'VALIDATION_FAILED',
+      400,
+    );
   }
   if (!isAddress(input.freelancerAddress)) {
-    throw new DomainError(`Invalid freelancer Ethereum address: ${input.freelancerAddress}`, 'VALIDATION_FAILED', 400);
+    throw new DomainError(
+      `Invalid freelancer Ethereum address: ${input.freelancerAddress}`,
+      'VALIDATION_FAILED',
+      400,
+    );
   }
 }

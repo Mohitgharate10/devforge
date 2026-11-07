@@ -54,7 +54,9 @@ describe('Proposal Policy', () => {
     });
 
     it('validates cover letter length', () => {
-      expect(() => validateCoverLetter('This is a sufficiently long cover letter proposal.')).not.toThrow();
+      expect(() =>
+        validateCoverLetter('This is a sufficiently long cover letter proposal.'),
+      ).not.toThrow();
       expect(() => validateCoverLetter('Too short')).toThrow(DomainError);
       expect(() => validateCoverLetter('')).toThrow(DomainError);
     });

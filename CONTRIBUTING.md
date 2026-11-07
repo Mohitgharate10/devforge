@@ -25,16 +25,19 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 ## How Can I Contribute?
 
 ### 1. Reporting Bugs
+
 - Search existing [GitHub Issues](https://github.com/Mohitgharate10/devforge/issues) to ensure the issue hasn't already been reported.
 - Open a new issue with a descriptive title.
 - Provide a clear summary, steps to reproduce, expected behavior, and relevant logs or screenshots.
 - Mention your environment (Node version, OS, browser, wallet provider).
 
 ### 2. Suggesting Enhancements
+
 - Open a feature request issue explaining the motivation and proposed solution.
 - Outline user impact and any architectural implications.
 
 ### 3. Submitting Pull Requests
+
 - PRs can address bug fixes, enhancements, or documentation updates.
 - Please discuss significant changes in an issue before starting work.
 
@@ -43,6 +46,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 ## Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/<your-username>/devforge.git
    cd devforge
@@ -50,6 +54,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 
 2. **Branching Strategy**
    Always create a new branch from `main`:
+
    ```bash
    git checkout -b feat/your-feature-name
    # or
@@ -58,22 +63,26 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 
 3. **Install Dependencies**
    Make sure you have Node.js `>= 22` and pnpm `>= 11`:
+
    ```bash
    pnpm install
    ```
 
 4. **Environment Configuration**
+
    ```bash
    cp .env.example .env.local
    # Update your .env.local values
    ```
 
 5. **Start Infrastructure Services**
+
    ```bash
    docker compose -f docker/compose.yml up -d
    ```
 
 6. **Run Database Migrations**
+
    ```bash
    pnpm db:migrate:dev
    ```
@@ -96,6 +105,7 @@ DevForge follows clean architecture and modular monolith principles:
 - **`packages/contracts`**: Contains Solidity escrow smart contracts, Hardhat configuration, and test suites.
 
 **Dependency Rules:**
+
 - `apps/web` can depend on `@devforge/domain`, `@devforge/api-contracts`, `@devforge/database`, and `@devforge/observability`.
 - `@devforge/domain` must not depend on Next.js, Prisma, or HTTP libraries.
 - Keep dependencies one-directional to avoid circular imports.
@@ -111,6 +121,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ```
 
 ### Allowed Types:
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation changes only
@@ -120,6 +131,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 - `chore`: Changes to build process, tools, or dependencies
 
 ### Examples:
+
 ```bash
 git commit -m "feat(escrow): add milestone refund timeout check"
 git commit -m "fix(auth): handle wallet reconnection edge case"
@@ -132,9 +144,11 @@ git commit -m "docs(readme): add setup walkthrough and architecture diagram"
 
 1. **Verify Quality Suite Locally**
    Before pushing, ensure all checks pass:
+
    ```bash
    pnpm check
    ```
+
    This command validates:
    - Code formatting (`pnpm format:check`)
    - ESLint rules (`pnpm lint`)
@@ -142,6 +156,7 @@ git commit -m "docs(readme): add setup walkthrough and architecture diagram"
    - Unit tests (`pnpm test`)
 
 2. **Commit and Push**
+
    ```bash
    git push origin feat/your-feature-name
    ```

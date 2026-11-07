@@ -2,8 +2,12 @@ name: Continuous Integration
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
   push:
     branches: [master, main]
+    paths-ignore:
+      - '**.md'
 
 permissions:
   contents: read

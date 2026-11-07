@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import {
-  validateNotificationPayload,
-  isChannelEnabledForUser,
-} from './notification.policy';
+import { validateNotificationPayload, isChannelEnabledForUser } from './notification.policy';
 import { DomainError } from '../identity/auth.errors';
 
 describe('Notification Policy', () => {
   it('validates title and message', () => {
-    expect(() => validateNotificationPayload('Milestone Approved', 'Your payout was released.')).not.toThrow();
+    expect(() =>
+      validateNotificationPayload('Milestone Approved', 'Your payout was released.'),
+    ).not.toThrow();
     expect(() => validateNotificationPayload('', 'Message')).toThrow(DomainError);
     expect(() => validateNotificationPayload('Title', '')).toThrow(DomainError);
   });

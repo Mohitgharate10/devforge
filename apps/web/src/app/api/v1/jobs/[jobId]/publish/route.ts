@@ -49,7 +49,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'VALIDATION_FAILED', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'VALIDATION_FAILED',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

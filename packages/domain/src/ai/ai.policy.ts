@@ -34,7 +34,9 @@ export function calculateSkillMatch(
   for (let i = 0; i < requiredSkills.length; i++) {
     const req = normalizedRequired[i]!;
     const originalReq = requiredSkills[i]!;
-    if (normalizedCandidate.some((cand) => cand === req || cand.includes(req) || req.includes(cand))) {
+    if (
+      normalizedCandidate.some((cand) => cand === req || cand.includes(req) || req.includes(cand))
+    ) {
       matched.push(originalReq);
     } else {
       missing.push(originalReq);
@@ -80,7 +82,8 @@ export function generateJobDraftFallback(input: {
 } {
   const title = input.title.trim();
   const category = input.category ?? 'Web3 Development';
-  const skills = input.skills && input.skills.length > 0 ? input.skills : ['Rust', 'Substrate', 'TypeScript'];
+  const skills =
+    input.skills && input.skills.length > 0 ? input.skills : ['Rust', 'Substrate', 'TypeScript'];
 
   return {
     title,
@@ -103,7 +106,8 @@ Milestone-driven escrow payout upon verifiable acceptance criteria.`,
       {
         title: 'Architecture Spec & Test Harness',
         percentage: 30,
-        description: 'Detailed system blueprint, technical interface definitions, and passing test scaffold.',
+        description:
+          'Detailed system blueprint, technical interface definitions, and passing test scaffold.',
       },
       {
         title: 'Core Implementation & Smart Contracts / Logic',
@@ -113,7 +117,8 @@ Milestone-driven escrow payout upon verifiable acceptance criteria.`,
       {
         title: 'Auditing, Documentation & Final Deployment',
         percentage: 20,
-        description: 'Final security checklists, deployment verification, and handoff documentation.',
+        description:
+          'Final security checklists, deployment verification, and handoff documentation.',
       },
     ],
   };

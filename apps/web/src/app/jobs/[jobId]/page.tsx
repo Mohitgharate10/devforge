@@ -4,12 +4,7 @@ import { use, useState } from 'react';
 import Link from 'next/link';
 import { AiProposalCopilot } from '@/components/AiProposalCopilot';
 
-
-export default function JobDetailPage({
-  params,
-}: {
-  params: Promise<{ jobId: string }>;
-}) {
+export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
   const [bidAmount, setBidAmount] = useState('14000');
@@ -40,9 +35,21 @@ export default function JobDetailPage({
         'Seeking senior smart contract security researchers to perform formal verification and manual auditing on our EIP-712 cross-chain token bridge contracts.\nScope covers reentrancy guards, replay attack mitigation, and multi-sig emergency pauses.',
       skills: ['Solidity', 'Foundry', 'Rust', 'EIP-712', 'Halmos'],
       milestones: [
-        { title: 'Milestone 01: Threat Modeling & Architecture Review', share: '30%', desc: 'Identify trust boundaries and state invariants across EVM and Substrate nodes.' },
-        { title: 'Milestone 02: Formal Verification & Fuzzing Report', share: '40%', desc: 'Run Foundry invariant fuzzing and deliver initial vulnerability finding list.' },
-        { title: 'Milestone 03: Final Audited Report & Fix Verification', share: '30%', desc: 'Verify protocol patches and sign off with cryptographic audit artifact.' },
+        {
+          title: 'Milestone 01: Threat Modeling & Architecture Review',
+          share: '30%',
+          desc: 'Identify trust boundaries and state invariants across EVM and Substrate nodes.',
+        },
+        {
+          title: 'Milestone 02: Formal Verification & Fuzzing Report',
+          share: '40%',
+          desc: 'Run Foundry invariant fuzzing and deliver initial vulnerability finding list.',
+        },
+        {
+          title: 'Milestone 03: Final Audited Report & Fix Verification',
+          share: '30%',
+          desc: 'Verify protocol patches and sign off with cryptographic audit artifact.',
+        },
       ],
     },
     'job-zk-circuit': {
@@ -55,8 +62,16 @@ export default function JobDetailPage({
         'We need a cryptography systems specialist to optimize on-chain Groth16 proof verifier contracts on Sepolia to minimize Layer 2 verification gas.',
       skills: ['Zero-Knowledge', 'Rust', 'Circom', 'Halo2', 'Viem'],
       milestones: [
-        { title: 'Milestone 01: Circuit Profiling & Gas Audit', share: '35%', desc: 'Benchmark constraint count and pairing precompile overhead on Sepolia.' },
-        { title: 'Milestone 02: Verification Logic Refactor', share: '65%', desc: 'Deliver rewritten EVM verifier contract achieving >25% gas reduction.' },
+        {
+          title: 'Milestone 01: Circuit Profiling & Gas Audit',
+          share: '35%',
+          desc: 'Benchmark constraint count and pairing precompile overhead on Sepolia.',
+        },
+        {
+          title: 'Milestone 02: Verification Logic Refactor',
+          share: '65%',
+          desc: 'Deliver rewritten EVM verifier contract achieving >25% gas reduction.',
+        },
       ],
     },
   };
@@ -71,8 +86,16 @@ export default function JobDetailPage({
       'Engineered milestone contract requiring audited security, performant state updates, and transparent settlement verification.',
     skills: ['Solidity', 'TypeScript', 'Web3 Escrow', 'Next.js'],
     milestones: [
-      { title: 'Milestone 01: Core Architecture & Spec', share: '40%', desc: 'Deliver verified architecture diagram and interface specifications.' },
-      { title: 'Milestone 02: Production Implementation', share: '60%', desc: 'Full smart contract implementation with test coverage and Sepolia deployment.' },
+      {
+        title: 'Milestone 01: Core Architecture & Spec',
+        share: '40%',
+        desc: 'Deliver verified architecture diagram and interface specifications.',
+      },
+      {
+        title: 'Milestone 02: Production Implementation',
+        share: '60%',
+        desc: 'Full smart contract implementation with test coverage and Sepolia deployment.',
+      },
     ],
   };
 
@@ -87,7 +110,9 @@ export default function JobDetailPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bidAmount: parseInt(bidAmount, 10) || 14000,
-          coverLetter: coverNote || 'I have extensive engineering experience with smart contracts and invariant testing.',
+          coverLetter:
+            coverNote ||
+            'I have extensive engineering experience with smart contracts and invariant testing.',
           currency: 'USDC',
         }),
       });
@@ -115,10 +140,30 @@ export default function JobDetailPage({
         ← BACK TO OPEN ROLES
       </Link>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '4rem', alignItems: 'start' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)',
+          gap: '4rem',
+          alignItems: 'start',
+        }}
+      >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--accent-magenta)' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.8rem',
+                color: 'var(--accent-magenta)',
+              }}
+            >
               {job.category}
             </span>
             <span style={{ color: 'var(--text-muted)' }}>•</span>
@@ -147,10 +192,24 @@ export default function JobDetailPage({
               marginBottom: '2.5rem',
             }}
           >
-            <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-muted)',
+                marginBottom: '0.5rem',
+              }}
+            >
               TECHNICAL SCOPE
             </div>
-            <p style={{ color: 'var(--text-primary)', fontSize: '1rem', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+            <p
+              style={{
+                color: 'var(--text-primary)',
+                fontSize: '1rem',
+                lineHeight: 1.7,
+                whiteSpace: 'pre-line',
+              }}
+            >
               {job.description}
             </p>
           </div>
@@ -177,11 +236,24 @@ export default function JobDetailPage({
                   }}
                 >
                   <div>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--accent-magenta)', marginRight: '0.5rem' }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        color: 'var(--accent-magenta)',
+                        marginRight: '0.5rem',
+                      }}
+                    >
                       0{idx + 1}
                     </span>
                     <strong style={{ fontSize: '0.95rem' }}>{m.title}</strong>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                    <p
+                      style={{
+                        fontSize: '0.85rem',
+                        color: 'var(--text-secondary)',
+                        marginTop: '0.25rem',
+                      }}
+                    >
                       {m.desc}
                     </p>
                   </div>
@@ -217,19 +289,42 @@ export default function JobDetailPage({
             }}
           >
             <div>
-              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-muted)',
+                }}
+              >
                 TOTAL CONTRACT BUDGET
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '1.75rem',
+                  fontWeight: 700,
+                  color: 'var(--text-primary)',
+                  marginTop: '0.25rem',
+                }}
+              >
                 {job.budget}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              <div
+                style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}
+              >
                 100% Locked in Non-Custodial Vault
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-muted)',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 REQUIRED EXPERTISE
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
@@ -280,7 +375,14 @@ export default function JobDetailPage({
               </button>
             )}
 
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                textAlign: 'center',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
               Sepolia Testnet Contract Factory Verified
             </div>
           </div>
@@ -315,7 +417,13 @@ export default function JobDetailPage({
             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               Submit Technical Proposal
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
+            <p
+              style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.875rem',
+                marginBottom: '1.25rem',
+              }}
+            >
               Specify your proposed total bid and technical approach for {job.title}.
             </p>
 
@@ -326,10 +434,20 @@ export default function JobDetailPage({
               onApplyCoverLetter={(letter) => setCoverNote(letter)}
             />
 
-            <form onSubmit={handleProposalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
+            <form
+              onSubmit={handleProposalSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+            >
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   PROPOSED TOTAL BID (USDC)
                 </label>
                 <input
@@ -352,7 +470,15 @@ export default function JobDetailPage({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   PROPOSED APPROACH & RELEVANT DELIVERABLES
                 </label>
                 <textarea
@@ -376,7 +502,14 @@ export default function JobDetailPage({
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '1rem',
+                  marginTop: '1rem',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}

@@ -19,13 +19,15 @@ export default function CreateJobPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showAiModal, setShowAiModal] = useState(false);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSuccessMessage(null);
 
-    const skillList = skills.split(',').map((s) => s.trim()).filter(Boolean);
+    const skillList = skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     let resolvedJobId = `job-${Date.now().toString(36)}`;
 
     try {
@@ -35,7 +37,9 @@ export default function CreateJobPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          description: description || 'Technical specification and milestone deliverables for protocol implementation.',
+          description:
+            description ||
+            'Technical specification and milestone deliverables for protocol implementation.',
           budgetMin: Number(budgetMin) * 100,
           budgetMax: Number(budgetMax) * 100,
           currency,
@@ -101,9 +105,26 @@ export default function CreateJobPage() {
         >
           Post a Bounty or Role
         </h1>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6, margin: 0, maxWidth: '28rem' }}>
-            Publish your technical specification to elite Web3 engineers. Escrow is locked upon milestone agreement.
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <p
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '1rem',
+              lineHeight: 1.6,
+              margin: 0,
+              maxWidth: '28rem',
+            }}
+          >
+            Publish your technical specification to elite Web3 engineers. Escrow is locked upon
+            milestone agreement.
           </p>
           <button
             type="button"
@@ -123,7 +144,6 @@ export default function CreateJobPage() {
         </div>
       </div>
 
-
       {successMessage && (
         <div
           style={{
@@ -139,14 +159,20 @@ export default function CreateJobPage() {
         >
           {successMessage}
           <div style={{ marginTop: '0.5rem' }}>
-            <Link href="/jobs" style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}>
+            <Link
+              href="/jobs"
+              style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}
+            >
               Redirecting to Open Roles →
             </Link>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+      >
         <div>
           <label
             style={{
@@ -427,7 +453,14 @@ export default function CreateJobPage() {
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '1rem',
+          }}
+        >
           <Link href="/jobs" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             ← Cancel
           </Link>
@@ -455,4 +488,3 @@ export default function CreateJobPage() {
     </main>
   );
 }
-

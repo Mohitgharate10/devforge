@@ -89,14 +89,23 @@ export function AiProposalCopilot({
   };
 
   return (
-    <div style={{
-      background: 'rgba(230, 0, 122, 0.05)',
-      border: '1px solid rgba(230, 0, 122, 0.25)',
-      borderRadius: '12px',
-      padding: '1.25rem',
-      marginBottom: '1.5rem',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+    <div
+      style={{
+        background: 'rgba(230, 0, 122, 0.05)',
+        border: '1px solid rgba(230, 0, 122, 0.25)',
+        borderRadius: '12px',
+        padding: '1.25rem',
+        marginBottom: '1.5rem',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '0.75rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span>✨</span>
           <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
@@ -105,27 +114,44 @@ export function AiProposalCopilot({
         </div>
 
         {analysis && (
-          <span style={{
-            fontSize: '0.75rem',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 700,
-            padding: '0.2rem 0.5rem',
-            borderRadius: '4px',
-            color: getTierColor(analysis.tier),
-            border: `1px solid ${getTierColor(analysis.tier)}`,
-          }}>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              padding: '0.2rem 0.5rem',
+              borderRadius: '4px',
+              color: getTierColor(analysis.tier),
+              border: `1px solid ${getTierColor(analysis.tier)}`,
+            }}
+          >
             {analysis.score}% MATCH ({analysis.tier})
           </span>
         )}
       </div>
 
       {analysis && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: 1.4 }}>
+        <div
+          style={{
+            fontSize: '0.8rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '0.75rem',
+            lineHeight: 1.4,
+          }}
+        >
           {analysis.explanation}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+        }}
+      >
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {analysis?.matchedSkills.map((skill) => (
             <span

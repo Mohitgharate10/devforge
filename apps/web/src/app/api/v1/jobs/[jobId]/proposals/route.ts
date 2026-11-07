@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { createProposalRequestSchema } from '@devforge/api-contracts';
-import {
-  validateCoverLetter,
-  validateBidAmount,
-  DomainError,
-} from '@devforge/domain';
+import { validateCoverLetter, validateBidAmount, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 import { demoStore, DEMO_FREELANCERS, DEMO_CLIENTS } from '@/server/engagement/demo-data';
@@ -106,8 +102,8 @@ export async function POST(
       jobId === 'job-bridge-audit'
         ? 'EVM & Substrate Cross-Chain Bridge Security Audit'
         : jobId === 'job-zk-circuit'
-        ? 'ZK-Rollup Proof Verifier Circuit Optimization'
-        : 'Smart Contract Engagement';
+          ? 'ZK-Rollup Proof Verifier Circuit Optimization'
+          : 'Smart Contract Engagement';
 
     const newDemoProposal = {
       id: `prop-${crypto.randomUUID().slice(0, 8)}`,
@@ -147,7 +143,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'VALIDATION_FAILED', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'VALIDATION_FAILED',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

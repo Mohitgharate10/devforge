@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma, type MessageType } from '@devforge/database';
 import { sendMessageRequestSchema } from '@devforge/api-contracts';
-import {
-  validateMessageContent,
-  sanitizeMessageContent,
-  DomainError,
-} from '@devforge/domain';
+import { validateMessageContent, sanitizeMessageContent, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 import { demoStore, type DemoMessage } from '@/server/engagement/demo-data';
@@ -46,7 +42,9 @@ export async function GET(
       // Database offline - fallback to demo store
     }
 
-    const demoConv = demoStore.getConversations().find((c) => c.id === conversationId || c.contractId === conversationId);
+    const demoConv = demoStore
+      .getConversations()
+      .find((c) => c.id === conversationId || c.contractId === conversationId);
     if (!demoConv) {
       return failure(
         { code: 'NOT_FOUND', message: 'Conversation not found.', status: 404 },
@@ -124,7 +122,9 @@ export async function POST(
     }
 
     // Determine target demo conversation
-    let targetConv = demoStore.getConversations().find((c) => c.id === conversationId || c.contractId === conversationId);
+    let targetConv = demoStore
+      .getConversations()
+      .find((c) => c.id === conversationId || c.contractId === conversationId);
     if (!targetConv) {
       targetConv = demoStore.getConversationByContractId(conversationId);
     }
@@ -146,7 +146,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'VALIDATION_FAILED', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'VALIDATION_FAILED',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

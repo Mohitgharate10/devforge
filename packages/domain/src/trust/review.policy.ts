@@ -47,8 +47,15 @@ export function validateReviewSubmission(input: ReviewSubmissionInput): void {
 
   const optionalRatings = [input.qualityRating, input.communicationRating, input.deadlineRating];
   for (const subRating of optionalRatings) {
-    if (subRating !== undefined && (!Number.isInteger(subRating) || subRating < 1 || subRating > 5)) {
-      throw new DomainError('Sub-ratings must be integers between 1 and 5', 'VALIDATION_FAILED', 400);
+    if (
+      subRating !== undefined &&
+      (!Number.isInteger(subRating) || subRating < 1 || subRating > 5)
+    ) {
+      throw new DomainError(
+        'Sub-ratings must be integers between 1 and 5',
+        'VALIDATION_FAILED',
+        400,
+      );
     }
   }
 }

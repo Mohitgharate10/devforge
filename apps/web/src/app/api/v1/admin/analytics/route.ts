@@ -16,7 +16,10 @@ export async function GET(request: Request): Promise<NextResponse> {
         prisma.user.count(),
       ]);
 
-      const totalVolume = escrows.reduce((sum, e) => sum + parseFloat(e.amount.toString() || '0'), 0);
+      const totalVolume = escrows.reduce(
+        (sum, e) => sum + parseFloat(e.amount.toString() || '0'),
+        0,
+      );
       const avgRating =
         reviews.length > 0
           ? Number((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1))

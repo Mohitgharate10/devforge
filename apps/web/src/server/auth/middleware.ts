@@ -65,10 +65,7 @@ export async function resolveActor(): Promise<Actor | null> {
       // If user was not found by UUID directly, check if targetUserId was an email or handle
       const userByEmail = await prisma.user.findFirst({
         where: {
-          OR: [
-            { email: targetUserId },
-            { displayName: targetUserId },
-          ],
+          OR: [{ email: targetUserId }, { displayName: targetUserId }],
         },
         include: {
           userRoles: {

@@ -29,7 +29,9 @@ export default function SignUpPage() {
       '0x388C818CA8B9251b393131C08a73683246A73134',
       '0x1234567890abcdef1234567890abcdef12345678',
     ];
-    const picked = sampleAddresses[Math.floor(Math.random() * sampleAddresses.length)] ?? '0x71C84164b3c915122e265646cD8266395A344e45';
+    const picked =
+      sampleAddresses[Math.floor(Math.random() * sampleAddresses.length)] ??
+      '0x71C84164b3c915122e265646cD8266395A344e45';
     setWalletAddress(picked);
   };
 
@@ -76,7 +78,9 @@ export default function SignUpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setErrorMessage(data?.error?.message || 'Could not create account. Please check your inputs.');
+        setErrorMessage(
+          data?.error?.message || 'Could not create account. Please check your inputs.',
+        );
         setIsSubmitting(false);
         return;
       }
@@ -84,14 +88,17 @@ export default function SignUpPage() {
       const createdUser = data?.data?.user;
 
       // Prime auth state with registered user
-      signIn({
-        id: createdUser?.id || ('user-' + userHandle),
-        email: createdUser?.email || email,
-        displayName: createdUser?.displayName || displayName || userHandle,
-        role: role,
-        handle: userHandle,
-        walletAddress: walletAddress || null,
-      }, true);
+      signIn(
+        {
+          id: createdUser?.id || 'user-' + userHandle,
+          email: createdUser?.email || email,
+          displayName: createdUser?.displayName || displayName || userHandle,
+          role: role,
+          handle: userHandle,
+          walletAddress: walletAddress || null,
+        },
+        true,
+      );
 
       setSuccessMessage(
         `Account created successfully as ${role === 'client' ? 'Protocol / Client Team' : 'Technical Specialist'}! Redirecting...`,
@@ -249,7 +256,10 @@ export default function SignUpPage() {
       )}
 
       {/* Profile Creation Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+      >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div>
             <label
@@ -570,7 +580,14 @@ export default function SignUpPage() {
           </>
         )}
 
-        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div
+          style={{
+            marginTop: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Link
             href="/auth/sign-in"
             style={{

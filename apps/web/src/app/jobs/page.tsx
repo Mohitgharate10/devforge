@@ -5,13 +5,23 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Open Roles & Bounties | DevForge',
-  description: 'Explore technical contracts, auditing scopes, and protocol development bounties with on-chain milestone escrow.',
+  description:
+    'Explore technical contracts, auditing scopes, and protocol development bounties with on-chain milestone escrow.',
 };
 
 export default function JobsPage() {
   return (
     <main style={{ padding: '4rem 2.5rem', maxWidth: '84rem', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '3rem',
+          flexWrap: 'wrap',
+          gap: '1.5rem',
+        }}
+      >
         <div>
           <div className="hero-meta-strip">
             <span>02 / MARKETPLACE</span>
@@ -29,7 +39,14 @@ export default function JobsPage() {
           >
             Open Roles & Bounties
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '0.75rem', maxWidth: '44rem' }}>
+          <p
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '1.1rem',
+              marginTop: '0.75rem',
+              maxWidth: '44rem',
+            }}
+          >
             Work directly with verified Web3 protocols, research funds, and decentralized teams.
             Every deliverable is backed by 100% pre-funded on-chain escrow.
           </p>

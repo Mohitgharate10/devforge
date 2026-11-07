@@ -36,13 +36,7 @@ export class InvalidDeliveryTransitionError extends DomainError {
 export type ContractStatusType = 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'DISPUTED';
 export type ParticipantRoleType = 'CLIENT' | 'FREELANCER' | 'ARBITRATOR' | 'OBSERVER';
 export type MilestoneStatusType =
-  | 'PENDING'
-  | 'FUNDED'
-  | 'IN_PROGRESS'
-  | 'SUBMITTED'
-  | 'APPROVED'
-  | 'DISPUTED'
-  | 'REFUNDED';
+  'PENDING' | 'FUNDED' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'DISPUTED' | 'REFUNDED';
 export type DeliveryStatusType = 'SUBMITTED' | 'ACCEPTED' | 'REJECTED';
 
 const VALID_CONTRACT_TRANSITIONS: Record<ContractStatusType, ContractStatusType[]> = {
@@ -134,7 +128,9 @@ export function assertContractRole(
 ): void {
   const role = assertContractParticipant(actorUserId, participants);
   if (role !== requiredRole) {
-    throw new ForbiddenError(`Only contract participants with role '${requiredRole}' can perform this action.`);
+    throw new ForbiddenError(
+      `Only contract participants with role '${requiredRole}' can perform this action.`,
+    );
   }
 }
 

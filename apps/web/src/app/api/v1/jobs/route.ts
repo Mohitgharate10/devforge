@@ -39,7 +39,12 @@ const DEFAULT_VERIFIED_JOBS = [
     status: 'PUBLISHED' as const,
     skills: [
       { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'REQUIRED' as const },
-      { skillId: 's-substrate', name: 'Substrate', slug: 'substrate', requirementLevel: 'REQUIRED' as const },
+      {
+        skillId: 's-substrate',
+        name: 'Substrate',
+        slug: 'substrate',
+        requirementLevel: 'REQUIRED' as const,
+      },
       { skillId: 's-frame', name: 'FRAME', slug: 'frame', requirementLevel: 'PREFERRED' as const },
     ],
     publishedAt: new Date(Date.now() - 3600 * 1000 * 2).toISOString(),
@@ -65,8 +70,18 @@ const DEFAULT_VERIFIED_JOBS = [
     currency: 'USDC',
     status: 'PUBLISHED' as const,
     skills: [
-      { skillId: 's-solidity', name: 'Solidity', slug: 'solidity', requirementLevel: 'REQUIRED' as const },
-      { skillId: 's-foundry', name: 'Foundry', slug: 'foundry', requirementLevel: 'REQUIRED' as const },
+      {
+        skillId: 's-solidity',
+        name: 'Solidity',
+        slug: 'solidity',
+        requirementLevel: 'REQUIRED' as const,
+      },
+      {
+        skillId: 's-foundry',
+        name: 'Foundry',
+        slug: 'foundry',
+        requirementLevel: 'REQUIRED' as const,
+      },
       { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'PREFERRED' as const },
     ],
     publishedAt: new Date(Date.now() - 3600 * 1000 * 4).toISOString(),
@@ -92,7 +107,12 @@ const DEFAULT_VERIFIED_JOBS = [
     currency: 'USDC',
     status: 'PUBLISHED' as const,
     skills: [
-      { skillId: 's-zk', name: 'Zero-Knowledge', slug: 'zero-knowledge', requirementLevel: 'REQUIRED' as const },
+      {
+        skillId: 's-zk',
+        name: 'Zero-Knowledge',
+        slug: 'zero-knowledge',
+        requirementLevel: 'REQUIRED' as const,
+      },
       { skillId: 's-rust', name: 'Rust', slug: 'rust', requirementLevel: 'REQUIRED' as const },
       { skillId: 's-viem', name: 'Viem', slug: 'viem', requirementLevel: 'PREFERRED' as const },
     ],
@@ -206,11 +226,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     const body = await request.json();
 
     const title = (body.title || 'Web3 Engineering Scope').trim();
-    const description = (body.description || 'Deliverables and technical specification for milestone escrow.').trim();
+    const description = (
+      body.description || 'Deliverables and technical specification for milestone escrow.'
+    ).trim();
     const budgetMin = body.budgetMin !== undefined ? BigInt(body.budgetMin) : BigInt(1000000);
     const budgetMax = body.budgetMax !== undefined ? BigInt(body.budgetMax) : BigInt(2000000);
     const currency = body.currency || 'USDC';
-    const clientName = body.client || body.organization || body.clientName || 'Protocol / Client Team';
+    const clientName =
+      body.client || body.organization || body.clientName || 'Protocol / Client Team';
 
     // 1. Resolve or create client user in Supabase
     let userId = actor?.userId;
@@ -250,13 +273,19 @@ export async function POST(request: Request): Promise<NextResponse> {
       where: {
         OR: [
           { name: { contains: categoryName, mode: 'insensitive' } },
-          { slug: { contains: categoryName.toLowerCase().replace(/[^a-z0-9]/g, '-'), mode: 'insensitive' } },
+          {
+            slug: {
+              contains: categoryName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+              mode: 'insensitive',
+            },
+          },
         ],
       },
     });
 
     if (!category) {
-      category = (await prisma.jobCategory.findFirst()) ??
+      category =
+        (await prisma.jobCategory.findFirst()) ??
         (await prisma.jobCategory.create({
           data: {
             name: categoryName,
@@ -268,10 +297,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // 4. Resolve skills
     const rawSkills: string[] = Array.isArray(body.skills)
-      ? body.skills.map((s: unknown) => (typeof s === 'string' ? s : (s as { name?: string })?.name ?? ''))
+      ? body.skills.map((s: unknown) =>
+          typeof s === 'string' ? s : ((s as { name?: string })?.name ?? ''),
+        )
       : typeof body.skills === 'string'
-      ? body.skills.split(',').map((s: string) => s.trim())
-      : ['Solidity', 'Web3'];
+        ? body.skills.split(',').map((s: string) => s.trim())
+        : ['Solidity', 'Web3'];
 
     const skillRecords = await Promise.all(
       rawSkills.filter(Boolean).map(async (name: string) => {

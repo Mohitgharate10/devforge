@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { submitDeliveryRequestSchema } from '@devforge/api-contracts';
-import {
-  assertCanTransitionMilestoneStatus,
-  DomainError,
-} from '@devforge/domain';
+import { assertCanTransitionMilestoneStatus, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
 import { demoStore, type DemoDelivery } from '@/server/engagement/demo-data';
@@ -120,7 +117,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'VALIDATION_FAILED', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'VALIDATION_FAILED',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

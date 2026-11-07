@@ -133,7 +133,11 @@ export async function POST(
     }
   } catch (error) {
     return failure(
-      { code: 'VALIDATION_FAILED', message: error instanceof Error ? error.message : 'Invalid review submission.', status: 400 },
+      {
+        code: 'VALIDATION_FAILED',
+        message: error instanceof Error ? error.message : 'Invalid review submission.',
+        status: 400,
+      },
       requestId,
     );
   }

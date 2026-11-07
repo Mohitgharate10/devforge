@@ -65,7 +65,10 @@ export interface DemoContract {
   client: DemoClient;
   freelancer: DemoFreelancer;
   milestones: DemoMilestone[];
-  participants: Array<{ userId: string; role: 'CLIENT' | 'FREELANCER' | 'ARBITRATOR' | 'OBSERVER' }>;
+  participants: Array<{
+    userId: string;
+    role: 'CLIENT' | 'FREELANCER' | 'ARBITRATOR' | 'OBSERVER';
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -112,7 +115,6 @@ export interface DemoReport {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   createdAt: string;
 }
-
 
 export const DEMO_FREELANCERS: Record<string, DemoFreelancer> = {
   'freelancer-elena': {
@@ -202,7 +204,8 @@ const initialContracts: DemoContract[] = [
         contractId: 'contract-bridge-audit',
         sequence: 1,
         title: 'Phase 1: Architecture Review & Threat Modeling',
-        description: 'Comprehensive analysis of EIP-712 token bridge endpoints, replay attacks, and state invariants.',
+        description:
+          'Comprehensive analysis of EIP-712 token bridge endpoints, replay attacks, and state invariants.',
         amount: 500000,
         dueDate: new Date(Date.now() - 3600 * 1000 * 24 * 7).toISOString(),
         status: 'APPROVED',
@@ -211,7 +214,8 @@ const initialContracts: DemoContract[] = [
             id: 'del-bridge-1',
             milestoneId: 'ms-bridge-1',
             freelancerProfileId: 'freelancer-elena',
-            description: 'Delivered initial threat modeling matrix and identified 2 medium-severity replay edge cases.',
+            description:
+              'Delivered initial threat modeling matrix and identified 2 medium-severity replay edge cases.',
             status: 'ACCEPTED',
             feedback: 'Exceptional work. Findings verified by protocol engineering team.',
             submittedAt: new Date(Date.now() - 3600 * 1000 * 24 * 8).toISOString(),
@@ -235,7 +239,8 @@ const initialContracts: DemoContract[] = [
             id: 'del-bridge-2',
             milestoneId: 'ms-bridge-2',
             freelancerProfileId: 'freelancer-elena',
-            description: 'Submitted PR #48 with 12 state invariants and 500k Foundry fuzz iterations with 0 property breaks.',
+            description:
+              'Submitted PR #48 with 12 state invariants and 500k Foundry fuzz iterations with 0 property breaks.',
             status: 'SUBMITTED',
             feedback: null,
             submittedAt: new Date(Date.now() - 3600 * 1000 * 8).toISOString(),
@@ -250,7 +255,8 @@ const initialContracts: DemoContract[] = [
         contractId: 'contract-bridge-audit',
         sequence: 3,
         title: 'Phase 3: Final Audit Report & Remediation Verification',
-        description: 'Executive summary report, re-test of remediated contracts, and public cryptographic disclosure.',
+        description:
+          'Executive summary report, re-test of remediated contracts, and public cryptographic disclosure.',
         amount: 500000,
         dueDate: new Date(Date.now() + 3600 * 1000 * 24 * 14).toISOString(),
         status: 'FUNDED',
@@ -288,7 +294,13 @@ export interface DemoConversation {
 export interface DemoNotification {
   id: string;
   userId: string;
-  type: 'PROPOSAL_RECEIVED' | 'PROPOSAL_ACCEPTED' | 'DELIVERY_SUBMITTED' | 'MILESTONE_APPROVED' | 'MESSAGE_RECEIVED' | 'DISPUTE_OPENED';
+  type:
+    | 'PROPOSAL_RECEIVED'
+    | 'PROPOSAL_ACCEPTED'
+    | 'DELIVERY_SUBMITTED'
+    | 'MILESTONE_APPROVED'
+    | 'MESSAGE_RECEIVED'
+    | 'DISPUTE_OPENED';
   title: string;
   message: string;
   linkUrl: string | null;
@@ -312,7 +324,8 @@ const initialConversations: DemoConversation[] = [
         senderId: 'user-parity',
         senderName: 'Parity Ecosystem Fund',
         senderAvatar: null,
-        content: 'Welcome Elena! Phase 1 is officially funded. Looking forward to your architecture and threat modeling report.',
+        content:
+          'Welcome Elena! Phase 1 is officially funded. Looking forward to your architecture and threat modeling report.',
         type: 'TEXT',
         createdAt: new Date(Date.now() - 3600 * 1000 * 24 * 10).toISOString(),
       },
@@ -322,7 +335,8 @@ const initialConversations: DemoConversation[] = [
         senderId: 'user-elena',
         senderName: 'Elena Rostova',
         senderAvatar: null,
-        content: 'Thank you team. I have initiated the invariant test fuzzing and identified two replay attack vectors in the EIP-712 token handler.',
+        content:
+          'Thank you team. I have initiated the invariant test fuzzing and identified two replay attack vectors in the EIP-712 token handler.',
         type: 'TEXT',
         createdAt: new Date(Date.now() - 3600 * 1000 * 24 * 8).toISOString(),
       },
@@ -342,7 +356,8 @@ const initialConversations: DemoConversation[] = [
         senderId: 'user-elena',
         senderName: 'Elena Rostova',
         senderAvatar: null,
-        content: 'PR #48 is submitted with 500k Foundry fuzz iterations. Ready for Phase 2 verification review.',
+        content:
+          'PR #48 is submitted with 500k Foundry fuzz iterations. Ready for Phase 2 verification review.',
         type: 'DELIVERY_SUBMITTED',
         createdAt: new Date(Date.now() - 3600 * 1000 * 4).toISOString(),
       },
@@ -426,7 +441,8 @@ const initialReviews: DemoReview[] = [
     authorName: 'Parity Ecosystem Fund',
     targetId: 'user-elena',
     rating: 5,
-    feedback: 'Elena is one of the top security researchers in the Web3 ecosystem. Found critical flaws before mainnet.',
+    feedback:
+      'Elena is one of the top security researchers in the Web3 ecosystem. Found critical flaws before mainnet.',
     qualityRating: 5,
     communicationRating: 5,
     deadlineRating: 5,
@@ -488,7 +504,6 @@ if (!globalStore.__devforge_reports) {
   globalStore.__devforge_reports = [...initialReports];
 }
 
-
 export const demoStore = {
   getProposals: () => globalStore.__devforge_proposals!,
   getContracts: () => globalStore.__devforge_contracts!,
@@ -542,11 +557,11 @@ export const demoStore = {
       n.isRead = true;
     }
   },
-  
+
   addProposal: (proposal: DemoProposal) => {
     globalStore.__devforge_proposals!.unshift(proposal);
   },
-  
+
   updateProposalStatus: (proposalId: string, status: DemoProposal['status']) => {
     const prop = globalStore.__devforge_proposals!.find((p) => p.id === proposalId);
     if (prop) {
@@ -668,8 +683,13 @@ export const demoStore = {
 
     const activeContractsCount = contracts.filter((c) => c.status === 'ACTIVE').length;
     const totalVolume = escrows.reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
-    const disputesCount = contracts.filter((c) => c.status === 'DISPUTED').length + reports.filter((r) => r.status === 'PENDING').length;
-    const avgRating = reviews.length > 0 ? Number((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)) : 5.0;
+    const disputesCount =
+      contracts.filter((c) => c.status === 'DISPUTED').length +
+      reports.filter((r) => r.status === 'PENDING').length;
+    const avgRating =
+      reviews.length > 0
+        ? Number((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1))
+        : 5.0;
 
     return {
       activeContractsCount,
@@ -682,4 +702,3 @@ export const demoStore = {
     };
   },
 };
-

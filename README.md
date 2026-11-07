@@ -29,6 +29,7 @@
 Freelance platforms have traditionally centralized trust, fees, and dispute resolution. Clients worry about paying prior to verifiable delivery, while freelancers face non-payment risks after work completion.
 
 **DevForge** bridges this trust gap by combining the speed and usability of a modern SaaS application with the verifiable safety of decentralized, non-custodial smart contracts:
+
 - **Milestone-Based Escrow**: Funds are locked on-chain in an audited escrow contract when a contract starts and released only upon explicit client approval.
 - **AI-Assisted Collaboration**: Natural language project drafting and talent matching that empowers users without overriding financial authorization.
 - **Enterprise-Grade Monorepo**: Built using domain-driven design (DDD), type-safe API contracts, and modular services designed to scale independently.
@@ -37,15 +38,15 @@ Freelance platforms have traditionally centralized trust, fees, and dispute reso
 
 ## Key Features
 
-| Feature | Description |
-| :--- | :--- |
-| **Job Scoping & Posting** | Clients can publish detailed project specs, required Web3/Web2 skill tags, budgets, and milestone breakdowns. |
-| **Tailored Proposals** | Freelancers submit bids with custom milestone estimates, portfolio attachments, and verifiable identity. |
-| **Non-Custodial Escrow** | Milestone funds are secured via `DevForgeEscrow.sol`. Funds remain protected with transparent release and refund flows. |
-| **Web3 & Web2 Auth** | Flexible sign-in supporting credentials (email/password via Argon2) and Web3 wallet address verification (MetaMask / EIP-712). |
-| **Project Management** | Interactive dashboards for clients and freelancers to track project milestones, deliverable submissions, and payouts. |
-| **Collaboration & Messaging** | Realtime updates, deliverable submissions, revisions, and status tracking across the job lifecycle. |
-| **Dispute & Safety Handling** | Structured dispute escalation workflows and audit logging to protect both parties. |
+| Feature                       | Description                                                                                                                    |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| **Job Scoping & Posting**     | Clients can publish detailed project specs, required Web3/Web2 skill tags, budgets, and milestone breakdowns.                  |
+| **Tailored Proposals**        | Freelancers submit bids with custom milestone estimates, portfolio attachments, and verifiable identity.                       |
+| **Non-Custodial Escrow**      | Milestone funds are secured via `DevForgeEscrow.sol`. Funds remain protected with transparent release and refund flows.        |
+| **Web3 & Web2 Auth**          | Flexible sign-in supporting credentials (email/password via Argon2) and Web3 wallet address verification (MetaMask / EIP-712). |
+| **Project Management**        | Interactive dashboards for clients and freelancers to track project milestones, deliverable submissions, and payouts.          |
+| **Collaboration & Messaging** | Realtime updates, deliverable submissions, revisions, and status tracking across the job lifecycle.                            |
+| **Dispute & Safety Handling** | Structured dispute escalation workflows and audit logging to protect both parties.                                             |
 
 ---
 
@@ -54,7 +55,7 @@ Freelance platforms have traditionally centralized trust, fees, and dispute reso
 ```mermaid
 flowchart TD
     Client["Client / Freelancer (Browser + MetaMask)"]
-    
+
     subgraph Edge ["Application Boundary"]
         NextWeb["Next.js 16 Web & API Routes (apps/web)"]
         Auth["Better-Auth + Argon2 (Password & Wallet Sign-In)"]
@@ -119,22 +120,26 @@ devforge/
 ## Tech Stack
 
 ### Frontend & Application Layer
+
 - **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Server Components)
 - **UI & Styling**: [React 19](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), Radix UI
 - **Type Safety**: [TypeScript 5.9](https://www.typescriptlang.org/), [Zod 4](https://zod.dev/)
 
 ### Backend & Persistence
+
 - **Runtime**: [Node.js 22+](https://nodejs.org/)
 - **Database**: [PostgreSQL 16](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
 - **Caching & Queues**: [Redis](https://redis.io/)
 - **Authentication**: [Better-Auth](https://better-auth.com/) with [@node-rs/argon2](https://github.com/napi-rs/node-rs) password hashing and Web3 wallet linking
 
 ### Blockchain & Smart Contracts
+
 - **Smart Contract Language**: [Solidity 0.8+](https://soliditylang.org/)
 - **Development Toolchain**: [Hardhat](https://hardhat.org/) & [TypeChain](https://github.com/dethcrypto/TypeChain)
 - **Contract Interface**: `DevForgeEscrow.sol` for milestone locking, release, and resolution
 
 ### Quality & Tooling
+
 - **Package Manager**: [pnpm 11](https://pnpm.io/)
 - **Testing**: [Vitest](https://vitest.dev/) with V8 coverage
 - **Linting & Formatting**: ESLint 9 (Flat config) & Prettier
@@ -144,6 +149,7 @@ devforge/
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
+
 - [Node.js](https://nodejs.org/) `>= 22.0.0`
 - [pnpm](https://pnpm.io/) `>= 11.0.0`
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for local PostgreSQL & Redis)
@@ -154,13 +160,16 @@ Before you begin, ensure you have the following installed:
 ## Getting Started
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/Mohitgharate10/devforge.git
 cd devforge
 ```
 
 ### 2. Configure environment variables
+
 Copy the example environment configuration:
+
 ```bash
 cp .env.example .env.local
 ```
@@ -168,23 +177,28 @@ cp .env.example .env.local
 Edit `.env.local` to configure your database URL, session secrets, and wallet settings.
 
 ### 3. Start local dependencies
+
 Spin up PostgreSQL and Redis using Docker Compose:
+
 ```bash
 docker compose -f docker/compose.yml up -d
 ```
 
 ### 4. Install dependencies
+
 ```bash
 pnpm install
 ```
 
 ### 5. Run database migrations and seed data
+
 ```bash
 pnpm db:migrate:dev
 pnpm db:seed
 ```
 
 ### 6. Start the development server
+
 ```bash
 pnpm dev
 ```
@@ -198,14 +212,14 @@ Check service readiness at [http://localhost:3000/api/v1/health](http://localhos
 
 Create a `.env.local` file in the root directory based on `.env.example`:
 
-| Variable | Description | Example Value |
-| :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/devforge?schema=public` |
-| `REDIS_URL` | Redis instance URL | `redis://localhost:6379` |
-| `BETTER_AUTH_SECRET` | Secret key for auth token signing | `your-secure-random-32-byte-string` |
-| `BETTER_AUTH_URL` | Base application URL | `http://localhost:3000` |
-| `NEXT_PUBLIC_APP_URL` | Client application URL | `http://localhost:3000` |
-| `NEXT_PUBLIC_CHAIN_ID` | EVM network chain ID (e.g., Sepolia) | `11155111` |
+| Variable               | Description                          | Example Value                                                          |
+| :--------------------- | :----------------------------------- | :--------------------------------------------------------------------- |
+| `DATABASE_URL`         | PostgreSQL connection string         | `postgresql://postgres:postgres@localhost:5432/devforge?schema=public` |
+| `REDIS_URL`            | Redis instance URL                   | `redis://localhost:6379`                                               |
+| `BETTER_AUTH_SECRET`   | Secret key for auth token signing    | `your-secure-random-32-byte-string`                                    |
+| `BETTER_AUTH_URL`      | Base application URL                 | `http://localhost:3000`                                                |
+| `NEXT_PUBLIC_APP_URL`  | Client application URL               | `http://localhost:3000`                                                |
+| `NEXT_PUBLIC_CHAIN_ID` | EVM network chain ID (e.g., Sepolia) | `11155111`                                                             |
 
 ---
 
@@ -251,17 +265,17 @@ pnpm --filter @devforge/contracts deploy
 
 ## Available Scripts
 
-| Command | Action |
-| :--- | :--- |
-| `pnpm dev` | Starts the Next.js web application in development mode with hot reloading |
-| `pnpm build` | Compiles production build of the web application and all workspace packages |
-| `pnpm check` | Runs full quality suite: code formatting, linting, type-checking, and tests |
-| `pnpm test` | Runs unit tests across all monorepo packages |
-| `pnpm test:coverage` | Generates detailed unit test coverage report |
-| `pnpm lint` | Runs ESLint across all workspaces |
-| `pnpm typecheck` | Validates TypeScript types across the entire project |
-| `pnpm format` | Formats all files with Prettier |
-| `pnpm format:check` | Checks formatting without modifying files |
+| Command              | Action                                                                      |
+| :------------------- | :-------------------------------------------------------------------------- |
+| `pnpm dev`           | Starts the Next.js web application in development mode with hot reloading   |
+| `pnpm build`         | Compiles production build of the web application and all workspace packages |
+| `pnpm check`         | Runs full quality suite: code formatting, linting, type-checking, and tests |
+| `pnpm test`          | Runs unit tests across all monorepo packages                                |
+| `pnpm test:coverage` | Generates detailed unit test coverage report                                |
+| `pnpm lint`          | Runs ESLint across all workspaces                                           |
+| `pnpm typecheck`     | Validates TypeScript types across the entire project                        |
+| `pnpm format`        | Formats all files with Prettier                                             |
+| `pnpm format:check`  | Checks formatting without modifying files                                   |
 
 ---
 

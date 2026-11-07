@@ -107,10 +107,7 @@ export async function POST(
 
     const res = demoStore.approveDelivery(deliveryId, feedback);
     if (!res) {
-      return failure(
-        { code: 'NOT_FOUND', message: 'Delivery not found.', status: 404 },
-        requestId,
-      );
+      return failure({ code: 'NOT_FOUND', message: 'Delivery not found.', status: 404 }, requestId);
     }
 
     return success(
@@ -126,7 +123,11 @@ export async function POST(
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'STATE_TRANSITION_INVALID', message: error.message, status: error.statusCode },
+        {
+          code: error.code as 'STATE_TRANSITION_INVALID',
+          message: error.message,
+          status: error.statusCode,
+        },
         requestId,
       );
     }

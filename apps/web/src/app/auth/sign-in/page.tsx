@@ -76,7 +76,9 @@ function SignInContent() {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        setErrorMessage(errJson?.error?.message || 'Invalid email or password. Please check your credentials.');
+        setErrorMessage(
+          errJson?.error?.message || 'Invalid email or password. Please check your credentials.',
+        );
         setIsSubmitting(false);
         return;
       }
@@ -90,13 +92,15 @@ function SignInContent() {
             role: json.data.user.roles?.includes('client')
               ? 'client'
               : json.data.user.roles?.includes('freelancer')
-              ? 'freelancer'
-              : role,
+                ? 'freelancer'
+                : role,
           }
         : fallbackUser;
 
       signIn(authedUser, keepSignedIn);
-      setSuccessMessage(`Authenticated successfully as ${authedUser.role.toUpperCase()}! Redirecting...`);
+      setSuccessMessage(
+        `Authenticated successfully as ${authedUser.role.toUpperCase()}! Redirecting...`,
+      );
       setTimeout(() => router.push(authedUser.role === 'client' ? '/jobs/create' : '/jobs'), 800);
     } catch {
       setErrorMessage('Network error during sign-in. Please try again.');
@@ -202,15 +206,17 @@ function SignInContent() {
       </div>
 
       {user && (
-        <div style={{
-          padding: '1rem 1.25rem',
-          borderRadius: '8px',
-          background: 'rgba(59, 130, 246, 0.1)',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
-          color: '#3B82F6',
-          fontSize: '0.875rem',
-          marginBottom: '1.5rem',
-        }}>
+        <div
+          style={{
+            padding: '1rem 1.25rem',
+            borderRadius: '8px',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            color: '#3B82F6',
+            fontSize: '0.875rem',
+            marginBottom: '1.5rem',
+          }}
+        >
           Currently signed in as <strong>{user.displayName}</strong> ({user.role.toUpperCase()}).
         </div>
       )}
@@ -260,8 +266,6 @@ function SignInContent() {
         </div>
       )}
 
-
-
       {/* Web3 SIWE Option */}
       <button
         type="button"
@@ -289,7 +293,11 @@ function SignInContent() {
             width: 8,
             height: 8,
             borderRadius: '50%',
-            background: walletConnected ? 'var(--status-live)' : (role === 'client' ? '#E6007A' : '#10B981'),
+            background: walletConnected
+              ? 'var(--status-live)'
+              : role === 'client'
+                ? '#E6007A'
+                : '#10B981',
           }}
         />
         {walletConnected
@@ -314,7 +322,10 @@ function SignInContent() {
       </div>
 
       {/* Standard Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+      >
         <div>
           <label
             style={{
@@ -392,12 +403,22 @@ function SignInContent() {
             onChange={(e) => setKeepSignedIn(e.target.checked)}
             style={{ cursor: 'pointer', accentColor: '#E6007A' }}
           />
-          <label htmlFor="keepSignedIn" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <label
+            htmlFor="keepSignedIn"
+            style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', cursor: 'pointer' }}
+          >
             Keep me signed in on this device (Persistent session)
           </label>
         </div>
 
-        <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div
+          style={{
+            marginTop: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Link
             href="/auth/sign-up"
             style={{
@@ -416,7 +437,9 @@ function SignInContent() {
             className="btn-pill-primary"
             style={{ minWidth: '130px', opacity: isSubmitting ? 0.7 : 1 }}
           >
-            {isSubmitting ? 'Authenticating...' : `Sign In as ${role === 'client' ? 'Client' : 'Freelancer'} →`}
+            {isSubmitting
+              ? 'Authenticating...'
+              : `Sign In as ${role === 'client' ? 'Client' : 'Freelancer'} →`}
           </button>
         </div>
       </form>
@@ -426,11 +449,15 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={
-      <div style={{ padding: '4rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Loading Sign In...
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div
+          style={{ padding: '4rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}
+        >
+          Loading Sign In...
+        </div>
+      }
+    >
       <SignInContent />
     </Suspense>
   );

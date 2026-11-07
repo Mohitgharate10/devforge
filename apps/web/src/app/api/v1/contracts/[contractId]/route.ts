@@ -90,10 +90,7 @@ export async function GET(
 
     const demo = demoStore.getContractById(contractId);
     if (!demo) {
-      return failure(
-        { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
-        requestId,
-      );
+      return failure({ code: 'NOT_FOUND', message: 'Contract not found.', status: 404 }, requestId);
     }
 
     return success(

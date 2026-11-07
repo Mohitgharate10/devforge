@@ -149,7 +149,8 @@ export default async function FreelancerProfilePage({
         {
           id: 'p3',
           title: 'ZK-SNARK State Verifier',
-          description: 'Optimized on-chain proof verification reducing gas consumption by 38% across Layer 2 settlements.',
+          description:
+            'Optimized on-chain proof verification reducing gas consumption by 38% across Layer 2 settlements.',
           projectUrl: 'https://zksync.io',
           repositoryUrl: 'https://github.com/matter-labs/zksync-era',
           coverImageUrl: null,
@@ -198,7 +199,8 @@ export default async function FreelancerProfilePage({
         {
           id: 'p4',
           title: 'Decentralized Milestone Escrow Interface',
-          description: 'A Polkadot-aesthetic web terminal connecting clients and builders with multi-chain smart contracts.',
+          description:
+            'A Polkadot-aesthetic web terminal connecting clients and builders with multi-chain smart contracts.',
           projectUrl: 'https://polkadot.network',
           repositoryUrl: 'https://github.com/polkadot-js/apps',
           coverImageUrl: null,
@@ -242,7 +244,8 @@ export default async function FreelancerProfilePage({
         {
           id: `p-${handle}`,
           title: 'Decentralized Milestone Escrow Integration',
-          description: 'Deployed and verified non-custodial milestone deliverables on Sepolia testnet.',
+          description:
+            'Deployed and verified non-custodial milestone deliverables on Sepolia testnet.',
           projectUrl: 'https://sepolia.etherscan.io',
           repositoryUrl: 'https://github.com/OpenZeppelin/openzeppelin-contracts',
           coverImageUrl: null,

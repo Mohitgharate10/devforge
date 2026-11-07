@@ -58,9 +58,7 @@ export function NotificationCenter() {
   const handleMarkRead = async (id: string) => {
     try {
       await fetch(`/api/v1/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {
       // Ignore
@@ -184,7 +182,14 @@ export function NotificationCenter() {
 
           <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
             {notifications.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.85rem',
+                }}
+              >
                 No notifications yet.
               </div>
             ) : (
@@ -200,7 +205,14 @@ export function NotificationCenter() {
                     transition: 'background 0.15s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
                     {!n.isRead && (
                       <span
                         style={{
@@ -212,11 +224,20 @@ export function NotificationCenter() {
                         }}
                       />
                     )}
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <div
+                      style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}
+                    >
                       {n.title}
                     </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '0.35rem' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--text-secondary)',
+                      lineHeight: 1.4,
+                      marginBottom: '0.35rem',
+                    }}
+                  >
                     {n.message}
                   </div>
                   {n.linkUrl && (

@@ -18,17 +18,12 @@ export function validateMessageContent(content: string): string {
   return trimmed;
 }
 
-export function assertConversationMember(
-  actorUserId: string,
-  memberUserIds: string[],
-): void {
+export function assertConversationMember(actorUserId: string, memberUserIds: string[]): void {
   if (!memberUserIds.includes(actorUserId)) {
     throw new ForbiddenError('You are not an authorized participant in this conversation.');
   }
 }
 
 export function sanitizeMessageContent(content: string): string {
-  return content
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .trim();
+  return content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
 }

@@ -2,7 +2,8 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Protocol Documentation | DevForge',
-  description: 'Technical architecture, REST API standards, and smart contract integration documentation.',
+  description:
+    'Technical architecture, REST API standards, and smart contract integration documentation.',
 };
 
 export default function DocsPage() {
@@ -51,8 +52,16 @@ export default function DocsPage() {
         >
           DevForge Technical Docs
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.15rem', maxWidth: '48rem', lineHeight: 1.6 }}>
-          Comprehensive architecture, REST API envelope specifications, and smart contract integration guide.
+        <p
+          style={{
+            color: 'var(--text-secondary)',
+            fontSize: '1.15rem',
+            maxWidth: '48rem',
+            lineHeight: 1.6,
+          }}
+        >
+          Comprehensive architecture, REST API envelope specifications, and smart contract
+          integration guide.
         </p>
       </div>
 
@@ -67,7 +76,13 @@ export default function DocsPage() {
                 marginBottom: '1.25rem',
               }}
             >
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--accent-magenta)' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.8rem',
+                  color: 'var(--accent-magenta)',
+                }}
+              >
                 SECTION {s.num}
               </span>
               <span className="status-pill" style={{ fontSize: '0.65rem' }}>
@@ -75,11 +90,25 @@ export default function DocsPage() {
               </span>
             </div>
 
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '0.75rem' }}>
+            <h2
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                marginBottom: '0.75rem',
+              }}
+            >
               {s.title}
             </h2>
 
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+            <p
+              style={{
+                fontSize: '0.9rem',
+                color: 'var(--text-secondary)',
+                marginBottom: '1.5rem',
+                lineHeight: 1.6,
+              }}
+            >
               {s.desc}
             </p>
 
@@ -105,7 +134,13 @@ export default function DocsPage() {
           gap: '1rem',
         }}
       >
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
           DevForge Core Architecture Specification v0.4.0
         </span>
         <div style={{ display: 'flex', gap: '1rem' }}>

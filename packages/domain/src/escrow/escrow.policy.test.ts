@@ -50,7 +50,12 @@ describe('escrow.policy', () => {
     const clientCtx = { userId: 'u1', isClient: true, isFreelancer: false, isAdmin: false };
     const freelancerCtx = { userId: 'u2', isClient: false, isFreelancer: true, isAdmin: false };
     const adminCtx = { userId: 'admin', isClient: false, isFreelancer: false, isAdmin: true };
-    const strangerCtx = { userId: 'stranger', isClient: false, isFreelancer: false, isAdmin: false };
+    const strangerCtx = {
+      userId: 'stranger',
+      isClient: false,
+      isFreelancer: false,
+      isAdmin: false,
+    };
 
     it('validates deposit permissions', () => {
       expect(canDepositEscrow(clientCtx, 'PENDING')).toBe(true);

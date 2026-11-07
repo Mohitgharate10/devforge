@@ -93,7 +93,9 @@ const INITIAL_BOUNTIES: BountyItem[] = [
 
 export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: boolean }) {
   const [bounties, setBounties] = useState<BountyItem[]>(INITIAL_BOUNTIES);
-  const [selectedTab, setSelectedTab] = useState<'ALL' | 'BOUNTY' | 'AUDIT CONTEST' | 'GRANT'>('ALL');
+  const [selectedTab, setSelectedTab] = useState<'ALL' | 'BOUNTY' | 'AUDIT CONTEST' | 'GRANT'>(
+    'ALL',
+  );
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
   const [activeSubmissionBounty, setActiveSubmissionBounty] = useState<BountyItem | null>(null);
 
@@ -192,7 +194,8 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
               lineHeight: 1.5,
             }}
           >
-            Fixed-scope Web3 tasks, security audits, and developer grants. Pre-funded in smart contract vaults on Sepolia with guaranteed payouts.
+            Fixed-scope Web3 tasks, security audits, and developer grants. Pre-funded in smart
+            contract vaults on Sepolia with guaranteed payouts.
           </p>
         </div>
 
@@ -420,10 +423,7 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
 
             {/* Title & Description */}
             <div>
-              <Link
-                href={bounty.linkUrl}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
+              <Link href={bounty.linkUrl} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <h3
                   style={{
                     fontSize: '1.2rem',
@@ -493,7 +493,9 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                   }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981' }} />
+                    <span
+                      style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981' }}
+                    />
                     {bounty.deadlineDaysLeft} days left
                   </span>
                   <span>{bounty.submissionsCount} submissions</span>
@@ -569,7 +571,14 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '1.25rem',
+              }}
+            >
               <div>
                 <span
                   style={{
@@ -600,7 +609,8 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  Prize Pool: ${activeSubmissionBounty.rewardUsdc.toLocaleString()} USDC • Sepolia Smart Escrow
+                  Prize Pool: ${activeSubmissionBounty.rewardUsdc.toLocaleString()} USDC • Sepolia
+                  Smart Escrow
                 </p>
               </div>
 
@@ -639,7 +649,14 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                 >
                   ✓
                 </div>
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+                <h4
+                  style={{
+                    fontSize: '1.2rem',
+                    fontWeight: 800,
+                    color: '#FFFFFF',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   Work Submission Received!
                 </h4>
                 <p
@@ -650,7 +667,9 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                     marginBottom: '1.5rem',
                   }}
                 >
-                  Your submission has been registered and timestamped. The sponsor council will evaluate pull request invariants when the bounty concludes in {activeSubmissionBounty.deadlineDaysLeft} days.
+                  Your submission has been registered and timestamped. The sponsor council will
+                  evaluate pull request invariants when the bounty concludes in{' '}
+                  {activeSubmissionBounty.deadlineDaysLeft} days.
                 </p>
                 <button
                   type="button"
@@ -662,7 +681,10 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmitWork} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <form
+                onSubmit={handleSubmitWork}
+                style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}
+              >
                 <div>
                   <label
                     style={{

@@ -129,9 +129,16 @@ export async function POST(request: Request): Promise<NextResponse> {
         create: {
           userId: user.id,
           handle,
-          title: typeof body.title === 'string' && body.title ? body.title : 'Web3 Technical Specialist',
-          bio: typeof body.bio === 'string' && body.bio ? body.bio : 'Verified technical specialist on DevForge.',
-          hourlyRate: typeof body.hourlyRate === 'string' && !isNaN(Number(body.hourlyRate)) ? Math.round(Number(body.hourlyRate) * 100) : 15000,
+          title:
+            typeof body.title === 'string' && body.title ? body.title : 'Web3 Technical Specialist',
+          bio:
+            typeof body.bio === 'string' && body.bio
+              ? body.bio
+              : 'Verified technical specialist on DevForge.',
+          hourlyRate:
+            typeof body.hourlyRate === 'string' && !isNaN(Number(body.hourlyRate))
+              ? Math.round(Number(body.hourlyRate) * 100)
+              : 15000,
         },
       });
     }

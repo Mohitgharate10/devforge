@@ -3,3 +3,7 @@ node_modules/
 dist/
 coverage/
 pnpm-lock.yaml
+.pnpm-store/
+packages/contracts/artifacts/
+packages/contracts/cache/
+packages/contracts/typechain-types/

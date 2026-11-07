@@ -8,7 +8,6 @@
     "typecheck": "hardhat compile",
     "lint": "echo 'no lint configured'"
   },
-
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.0.2",

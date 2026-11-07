@@ -571,7 +571,10 @@ export type ReleaseEscrowRequest = z.infer<typeof releaseEscrowRequestSchema>;
 export const raiseDisputeEscrowRequestSchema = z.object({
   milestoneId: z.string().uuid(),
   reason: z.string().min(10),
-  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+  txHash: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{64}$/)
+    .optional(),
 });
 export type RaiseDisputeEscrowRequest = z.infer<typeof raiseDisputeEscrowRequestSchema>;
 
@@ -704,4 +707,3 @@ export const adminAnalyticsResponseSchema = z.object({
   totalUsersCount: z.number(),
 });
 export type AdminAnalyticsResponse = z.infer<typeof adminAnalyticsResponseSchema>;
-

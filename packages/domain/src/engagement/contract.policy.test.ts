@@ -92,8 +92,12 @@ describe('Contract & Milestone Policy', () => {
 
     it('validates specific contract roles', () => {
       expect(() => assertContractRole('user-client', participants, 'CLIENT')).not.toThrow();
-      expect(() => assertContractRole('user-freelancer', participants, 'CLIENT')).toThrow(ForbiddenError);
-      expect(() => assertContractRole('user-client', participants, 'FREELANCER')).toThrow(ForbiddenError);
+      expect(() => assertContractRole('user-freelancer', participants, 'CLIENT')).toThrow(
+        ForbiddenError,
+      );
+      expect(() => assertContractRole('user-client', participants, 'FREELANCER')).toThrow(
+        ForbiddenError,
+      );
     });
   });
 

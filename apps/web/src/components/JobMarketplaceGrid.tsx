@@ -110,32 +110,37 @@ export function JobMarketplaceGrid() {
         const res = await fetch('/api/v1/jobs');
         const json = await res.json();
         if (!ignore && json?.data?.items && Array.isArray(json.data.items)) {
-          const mapped: JobCard[] = json.data.items.map((j: {
-            id: string;
-            title: string;
-            description: string;
-            category?: { name: string };
-            client?: { organizationName: string };
-            budgetMin?: number | null;
-            budgetMax?: number | null;
-            currency?: string;
-            skills?: Array<{ name?: string; slug?: string }>;
-            publishedAt?: string | null;
-            isDatabaseRecord?: boolean;
-          }) => ({
-            id: j.id,
-            title: j.title,
-            description: j.description,
-            category: j.category?.name || 'Full Stack Web3',
-            client: j.client?.organizationName || 'Protocol Team',
-            budget: j.budgetMin && j.budgetMax
-              ? `$${(j.budgetMin / 100).toLocaleString()} – $${(j.budgetMax / 100).toLocaleString()}`
-              : `$10,000 – $20,000`,
-            currency: j.currency || 'USDC',
-            skills: j.skills?.map((s) => s.name || s.slug || 'Web3') || ['Solidity', 'Rust'],
-            publishedAt: j.publishedAt ? new Date(j.publishedAt).toLocaleDateString() : 'Just now',
-            isLocalNew: !!j.isDatabaseRecord,
-          }));
+          const mapped: JobCard[] = json.data.items.map(
+            (j: {
+              id: string;
+              title: string;
+              description: string;
+              category?: { name: string };
+              client?: { organizationName: string };
+              budgetMin?: number | null;
+              budgetMax?: number | null;
+              currency?: string;
+              skills?: Array<{ name?: string; slug?: string }>;
+              publishedAt?: string | null;
+              isDatabaseRecord?: boolean;
+            }) => ({
+              id: j.id,
+              title: j.title,
+              description: j.description,
+              category: j.category?.name || 'Full Stack Web3',
+              client: j.client?.organizationName || 'Protocol Team',
+              budget:
+                j.budgetMin && j.budgetMax
+                  ? `$${(j.budgetMin / 100).toLocaleString()} – $${(j.budgetMax / 100).toLocaleString()}`
+                  : `$10,000 – $20,000`,
+              currency: j.currency || 'USDC',
+              skills: j.skills?.map((s) => s.name || s.slug || 'Web3') || ['Solidity', 'Rust'],
+              publishedAt: j.publishedAt
+                ? new Date(j.publishedAt).toLocaleDateString()
+                : 'Just now',
+              isLocalNew: !!j.isDatabaseRecord,
+            }),
+          );
           setRemoteJobs(mapped);
         }
       } catch (err) {
@@ -166,7 +171,13 @@ export function JobMarketplaceGrid() {
   }
   const allJobs = Array.from(uniqueMap.values());
 
-  const categories = ['ALL', 'Smart Contract Auditing', 'Zero Knowledge & Cryptography', 'Full Stack Web3', 'Infrastructure & DevOps'];
+  const categories = [
+    'ALL',
+    'Smart Contract Auditing',
+    'Zero Knowledge & Cryptography',
+    'Full Stack Web3',
+    'Infrastructure & DevOps',
+  ];
 
   const filteredJobs = allJobs.filter((job) => {
     const matchesCategory = selectedCategory === 'ALL' || job.category === selectedCategory;
@@ -219,8 +230,12 @@ export function JobMarketplaceGrid() {
               style={{
                 padding: '0.4rem 1rem',
                 borderRadius: '9999px',
-                border: selectedCategory === cat ? '1px solid var(--accent-magenta)' : '1px solid var(--border-hairline)',
-                background: selectedCategory === cat ? 'rgba(230, 0, 122, 0.1)' : 'var(--bg-surface)',
+                border:
+                  selectedCategory === cat
+                    ? '1px solid var(--accent-magenta)'
+                    : '1px solid var(--border-hairline)',
+                background:
+                  selectedCategory === cat ? 'rgba(230, 0, 122, 0.1)' : 'var(--bg-surface)',
                 color: selectedCategory === cat ? 'var(--accent-magenta)' : 'var(--text-secondary)',
                 fontSize: '0.8rem',
                 fontFamily: 'var(--font-mono)',
@@ -261,9 +276,23 @@ export function JobMarketplaceGrid() {
                 transition: 'transform 0.2s ease, border-color 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '0.75rem',
+                }}
+              >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
                     <span
                       style={{
                         fontFamily: 'var(--font-mono)',
@@ -278,31 +307,73 @@ export function JobMarketplaceGrid() {
                       {job.client}
                     </span>
                     {job.isLocalNew && (
-                      <span className="skill-tag" style={{ fontSize: '0.65rem', borderColor: 'var(--status-live)', color: 'var(--status-live)' }}>
+                      <span
+                        className="skill-tag"
+                        style={{
+                          fontSize: '0.65rem',
+                          borderColor: 'var(--status-live)',
+                          color: 'var(--status-live)',
+                        }}
+                      >
                         NEW BOUNTY
                       </span>
                     )}
                   </div>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                  <h2
+                    style={{
+                      fontSize: '1.4rem',
+                      fontWeight: 600,
+                      letterSpacing: '-0.02em',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     {job.title}
                   </h2>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--status-live)' }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      color: 'var(--status-live)',
+                    }}
+                  >
                     {job.budget}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--text-muted)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
                     {job.currency} ESCROW
                   </div>
                 </div>
               </div>
 
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              <p
+                style={{
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.95rem',
+                  lineHeight: 1.6,
+                  marginBottom: '1.25rem',
+                }}
+              >
                 {job.description}
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-hairline)', paddingTop: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderTop: '1px solid var(--border-hairline)',
+                  paddingTop: '1rem',
+                }}
+              >
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {job.skills.map((s) => (
                     <span key={s} className="skill-tag accent" style={{ fontSize: '0.75rem' }}>
@@ -310,7 +381,13 @@ export function JobMarketplaceGrid() {
                     </span>
                   ))}
                 </div>
-                <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   Posted {job.publishedAt} →
                 </span>
               </div>

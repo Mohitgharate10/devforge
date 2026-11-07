@@ -20,7 +20,11 @@ export function validateNotificationPayload(title: string, message: string): voi
 }
 
 export function isChannelEnabledForUser(
-  preferences: Array<{ type: NotificationTypeEnum; channel: NotificationChannelEnum; isEnabled: boolean }>,
+  preferences: Array<{
+    type: NotificationTypeEnum;
+    channel: NotificationChannelEnum;
+    isEnabled: boolean;
+  }>,
   type: NotificationTypeEnum,
   channel: NotificationChannelEnum,
 ): boolean {
