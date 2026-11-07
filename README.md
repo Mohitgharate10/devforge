@@ -1,4 +1,4 @@
-# ⚡ DevForge
+# DevForge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -11,29 +11,29 @@
 
 > **A decentralized marketplace for technical Web3 freelance work secured by non-custodial milestone smart-contract escrow.**
 
-[🌐 Live Application](https://devforge-web-8bv4.vercel.app/) • [📖 Architecture Guide](docs/ARCHITECTURE.md) • [📋 Product Requirements](docs/PRD.md) • [🗺️ Roadmap](docs/ROADMAP.md) • [🤝 Contributing](CONTRIBUTING.md)
+[Live Application](https://devforge-web-8bv4.vercel.app/) • [Architecture Guide](docs/ARCHITECTURE.md) • [Product Requirements](docs/PRD.md) • [Roadmap](docs/ROADMAP.md) • [Contributing](CONTRIBUTING.md)
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Monorepo Workspace Layout](#-monorepo-workspace-layout)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Getting Started](#-getting-started)
-- [Environment Configuration](#-environment-configuration)
-- [Database Management](#-database-management)
-- [Smart Contracts](#-smart-contracts)
-- [Available Scripts](#-available-scripts)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Monorepo Workspace Layout](#monorepo-workspace-layout)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Database Management](#database-management)
+- [Smart Contracts](#smart-contracts)
+- [Available Scripts](#available-scripts)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 🌟 Overview
+## Overview
 
 Freelance platforms have traditionally centralized trust, fees, and dispute resolution. Clients worry about paying prior to verifiable delivery, while freelancers face non-payment risks after work completion.
 
@@ -44,21 +44,21 @@ Freelance platforms have traditionally centralized trust, fees, and dispute reso
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | Feature | Description |
 | :--- | :--- |
-| **💼 Job Scoping & Posting** | Clients can publish detailed project specs, required Web3/Web2 skill tags, budgets, and milestone breakdowns. |
-| **🎯 Tailored Proposals** | Freelancers submit bids with custom milestone estimates, portfolio attachments, and verifiable identity. |
-| **🔒 Non-Custodial Escrow** | Milestone funds are secured via `DevForgeEscrow.sol`. Funds remain protected with transparent release and refund flows. |
-| **🛡️ Web3 & Web2 Auth** | Flexible sign-in supporting credentials (email/password via Argon2) and Web3 wallet address verification (MetaMask / EIP-712). |
-| **📊 Project Management** | Interactive dashboards for clients and freelancers to track project milestones, deliverable submissions, and payouts. |
-| **💬 Collaboration & Messaging** | Realtime updates, deliverable submissions, revisions, and status tracking across the job lifecycle. |
-| **⚖️ Dispute & Safety Handling** | Structured dispute escalation workflows and audit logging to protect both parties. |
+| **Job Scoping & Posting** | Clients can publish detailed project specs, required Web3/Web2 skill tags, budgets, and milestone breakdowns. |
+| **Tailored Proposals** | Freelancers submit bids with custom milestone estimates, portfolio attachments, and verifiable identity. |
+| **Non-Custodial Escrow** | Milestone funds are secured via `DevForgeEscrow.sol`. Funds remain protected with transparent release and refund flows. |
+| **Web3 & Web2 Auth** | Flexible sign-in supporting credentials (email/password via Argon2) and Web3 wallet address verification (MetaMask / EIP-712). |
+| **Project Management** | Interactive dashboards for clients and freelancers to track project milestones, deliverable submissions, and payouts. |
+| **Collaboration & Messaging** | Realtime updates, deliverable submissions, revisions, and status tracking across the job lifecycle. |
+| **Dispute & Safety Handling** | Structured dispute escalation workflows and audit logging to protect both parties. |
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-## 📦 Monorepo Workspace Layout
+## Monorepo Workspace Layout
 
 DevForge is organized as a modular pnpm monorepo:
 
@@ -125,7 +125,7 @@ devforge/
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 ### Frontend & Application Layer
 - **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Server Components)
@@ -150,17 +150,17 @@ devforge/
 
 ---
 
-## ⚙️ Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) `>= 22.0.0`
-- [pnpm](https://pnpm.io/) `>= 11.0.0` (`corepack enable && corepack prepare pnpm@latest --activate`)
+- [pnpm](https://pnpm.io/) `>= 11.0.0`
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for local PostgreSQL & Redis)
 - [Git](https://git-scm.com/)
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 ```bash
@@ -186,7 +186,6 @@ docker compose -f docker/compose.yml up -d
 ```bash
 pnpm install
 ```
-*(This automatically runs Prisma Client generation via the post-install hook).*
 
 ### 5. Run database migrations and seed data
 ```bash
@@ -204,7 +203,7 @@ Check service readiness at [http://localhost:3000/api/v1/health](http://localhos
 
 ---
 
-## 🔐 Environment Configuration
+## Environment Configuration
 
 Create a `.env.local` file in the root directory based on `.env.example`:
 
@@ -219,7 +218,7 @@ Create a `.env.local` file in the root directory based on `.env.example`:
 
 ---
 
-## 🗄️ Database Management
+## Database Management
 
 DevForge uses Prisma ORM inside the `@devforge/database` package:
 
@@ -242,7 +241,7 @@ pnpm db:seed
 
 ---
 
-## ⛓️ Smart Contracts
+## Smart Contracts
 
 The smart contracts package is located at `packages/contracts`:
 
@@ -259,7 +258,7 @@ pnpm --filter @devforge/contracts deploy
 
 ---
 
-## 🛠️ Available Scripts
+## Available Scripts
 
 | Command | Action |
 | :--- | :--- |
@@ -275,19 +274,18 @@ pnpm --filter @devforge/contracts deploy
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions, issues, and feature requests are welcome!  
-Please read our [Contributing Guide](CONTRIBUTING.md) for details on code style, branch conventions, and the pull request process.
+Contributions, issues, and feature requests are welcome. Please read our [Contributing Guide](CONTRIBUTING.md) for details on code style, branch conventions, and the pull request process.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for more information.
 
 ---
 
 <p align="center">
-  Crafted with ❤️ by <a href="https://github.com/Mohitgharate10">Mohit Gharate</a>
+  Maintained by <a href="https://github.com/Mohitgharate10">Mohit Gharate</a>
 </p>

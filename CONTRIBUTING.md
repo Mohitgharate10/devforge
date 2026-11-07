@@ -1,10 +1,10 @@
 # Contributing to DevForge
 
-Thank you for your interest in contributing to **DevForge**! We are building a secure, decentralized freelance marketplace and appreciate contributions of all kinds — bug fixes, documentation, new features, and design improvements.
+Thank you for your interest in contributing to **DevForge**. We are building a secure, decentralized freelance marketplace and appreciate contributions of all kinds: bug fixes, documentation, new features, and design improvements.
 
 ---
 
-## 📜 Table of Contents
+## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
 - [How Can I Contribute?](#how-can-i-contribute)
@@ -16,13 +16,13 @@ Thank you for your interest in contributing to **DevForge**! We are building a s
 
 ---
 
-## 🤝 Code of Conduct
+## Code of Conduct
 
 We are committed to providing a welcoming, inclusive, and harassment-free environment for everyone. Please be respectful, considerate, and constructive in all interactions.
 
 ---
 
-## 💡 How Can I Contribute?
+## How Can I Contribute?
 
 ### 1. Reporting Bugs
 - Search existing [GitHub Issues](https://github.com/Mohitgharate10/devforge/issues) to ensure the issue hasn't already been reported.
@@ -40,7 +40,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 
 ---
 
-## 🛠️ Development Setup
+## Development Setup
 
 1. **Fork and Clone**
    ```bash
@@ -85,7 +85,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 
 ---
 
-## 🏛️ Monorepo Architecture Guidelines
+## Monorepo Architecture Guidelines
 
 DevForge follows clean architecture and modular monolith principles:
 
@@ -97,12 +97,12 @@ DevForge follows clean architecture and modular monolith principles:
 
 **Dependency Rules:**
 - `apps/web` can depend on `@devforge/domain`, `@devforge/api-contracts`, `@devforge/database`, and `@devforge/observability`.
-- `@devforge/domain` must NEVER depend on Next.js, Prisma, or HTTP libraries.
+- `@devforge/domain` must not depend on Next.js, Prisma, or HTTP libraries.
 - Keep dependencies one-directional to avoid circular imports.
 
 ---
 
-## 📝 Git Commit Guidelines
+## Git Commit Guidelines
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
@@ -128,7 +128,7 @@ git commit -m "docs(readme): add setup walkthrough and architecture diagram"
 
 ---
 
-## 🔍 Pull Request Process
+## Pull Request Process
 
 1. **Verify Quality Suite Locally**
    Before pushing, ensure all checks pass:
@@ -148,13 +148,13 @@ git commit -m "docs(readme): add setup walkthrough and architecture diagram"
 
 3. **Open a Pull Request**
    - Provide a clear summary of changes.
-   - Reference related issues (e.g., `Closes #12`).
-   - Include before/after screenshots for UI updates.
+   - Reference related issues (for example, `Closes #12`).
+   - Include clear notes for UI updates.
    - Ensure CI checks pass.
 
 ---
 
-## 📐 Coding Standards
+## Coding Standards
 
 - **TypeScript**: Strict mode is enabled. Avoid `any`; use strongly typed generics or Zod-inferred types.
 - **Components**: Use React 19 functional components with explicit props interfaces.
@@ -164,4 +164,4 @@ git commit -m "docs(readme): add setup walkthrough and architecture diagram"
 
 ---
 
-Thank you for contributing to DevForge! 🚀
+Thank you for contributing to DevForge.
