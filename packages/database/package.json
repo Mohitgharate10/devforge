@@ -19,6 +19,7 @@
     "lint": "echo 'no lint configured'"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.0",
     "@prisma/client": "^6.9.0"
   },
   "devDependencies": {

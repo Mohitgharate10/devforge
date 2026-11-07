@@ -25,6 +25,18 @@ function SignInContent() {
       : null;
   });
 
+  const handleDemoFill = (demoRole: 'freelancer' | 'client') => {
+    if (demoRole === 'freelancer') {
+      setRole('freelancer');
+      setEmail('specialist@devforge.network');
+      setPassword('Password123!');
+    } else {
+      setRole('client');
+      setEmail('client@devforge.network');
+      setPassword('Password123!');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -115,6 +127,93 @@ function SignInContent() {
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6 }}>
           Sign in to manage your DevForge account and marketplace activity.
         </p>
+      </div>
+
+      {/* Recruiter / Quick Demo Access */}
+      <div
+        style={{
+          marginBottom: '2rem',
+          padding: '1.1rem 1.25rem',
+          background: 'rgba(230, 0, 122, 0.05)',
+          border: '1px solid rgba(230, 0, 122, 0.2)',
+          borderRadius: '12px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '0.5rem',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: '#E6007A',
+            }}
+          >
+            ⚡ Recruiter & Evaluator Demo Access
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+            Password: <code>Password123!</code>
+          </span>
+        </div>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+          Click a pre-seeded account to auto-fill credentials and test role-specific marketplace
+          workflows:
+        </p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => handleDemoFill('freelancer')}
+            style={{
+              padding: '0.45rem 0.85rem',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background:
+                role === 'freelancer' && email === 'specialist@devforge.network'
+                  ? 'rgba(230, 0, 122, 0.25)'
+                  : 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <span>👤</span> Specialist (satoshi_core)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDemoFill('client')}
+            style={{
+              padding: '0.45rem 0.85rem',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background:
+                role === 'client' && email === 'client@devforge.network'
+                  ? 'rgba(230, 0, 122, 0.25)'
+                  : 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <span>🏢</span> Protocol Lead (DevForge Labs)
+          </button>
+        </div>
       </div>
 
       {/* Role Selection Tabs */}

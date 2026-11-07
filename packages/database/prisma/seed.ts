@@ -131,7 +131,132 @@ async function main() {
     });
   }
 
-  console.log('Seeded skills and job categories successfully.');
+  console.log('Seeding recruiter demo accounts...');
+  const { hash } = await import('@node-rs/argon2');
+  const demoPasswordHash = await hash('Password123!');
+
+  // 1. Seed Specialist Demo Account (Freelancer)
+  const specialistUser = await prisma.user.upsert({
+    where: { email: 'specialist@devforge.network' },
+    update: {
+      displayName: 'Elena Rostova (Specialist Demo)',
+      passwordHash: demoPasswordHash,
+      status: 'ACTIVE',
+    },
+    create: {
+      email: 'specialist@devforge.network',
+      displayName: 'Elena Rostova (Specialist Demo)',
+      passwordHash: demoPasswordHash,
+      status: 'ACTIVE',
+    },
+  });
+
+  const freelancerRole = roleMap.get('freelancer');
+  if (freelancerRole) {
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: specialistUser.id,
+          roleId: freelancerRole,
+        },
+      },
+      update: {},
+      create: {
+        userId: specialistUser.id,
+        roleId: freelancerRole,
+      },
+    });
+  }
+
+  const specialistProfile = await prisma.freelancerProfile.upsert({
+    where: { userId: specialistUser.id },
+    update: {
+      handle: 'satoshi_core',
+      title: 'Principal Rust & Substrate Engineer',
+      bio: 'Core protocol engineer with 7+ years building high-throughput consensus pallets, zero-knowledge verification circuits, and cross-chain bridge logic.',
+      availability: 'AVAILABLE',
+    },
+    create: {
+      userId: specialistUser.id,
+      handle: 'satoshi_core',
+      title: 'Principal Rust & Substrate Engineer',
+      bio: 'Core protocol engineer with 7+ years building high-throughput consensus pallets, zero-knowledge verification circuits, and cross-chain bridge logic.',
+      availability: 'AVAILABLE',
+    },
+  });
+
+  // Link skills to specialist
+  const seededSkills = await prisma.skill.findMany({
+    where: { slug: { in: ['rust', 'solidity', 'smart-contract-auditing'] } },
+  });
+  for (const skill of seededSkills) {
+    await prisma.freelancerSkill.upsert({
+      where: {
+        freelancerProfileId_skillId: {
+          freelancerProfileId: specialistProfile.id,
+          skillId: skill.id,
+        },
+      },
+      update: { proficiency: 'EXPERT' },
+      create: {
+        freelancerProfileId: specialistProfile.id,
+        skillId: skill.id,
+        proficiency: 'EXPERT',
+      },
+    });
+  }
+
+  // 2. Seed Protocol Lead Demo Account (Client)
+  const clientUser = await prisma.user.upsert({
+    where: { email: 'client@devforge.network' },
+    update: {
+      displayName: 'DevForge Labs (Client Demo)',
+      passwordHash: demoPasswordHash,
+      status: 'ACTIVE',
+    },
+    create: {
+      email: 'client@devforge.network',
+      displayName: 'DevForge Labs (Client Demo)',
+      passwordHash: demoPasswordHash,
+      status: 'ACTIVE',
+    },
+  });
+
+  const clientRole = roleMap.get('client');
+  if (clientRole) {
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: clientUser.id,
+          roleId: clientRole,
+        },
+      },
+      update: {},
+      create: {
+        userId: clientUser.id,
+        roleId: clientRole,
+      },
+    });
+  }
+
+  await prisma.clientProfile.upsert({
+    where: { userId: clientUser.id },
+    update: {
+      organizationName: 'DevForge Labs',
+      slug: 'devforge-labs',
+      description:
+        'Leading research and development guild building decentralized developer tooling and verified smart-contract primitives.',
+    },
+    create: {
+      userId: clientUser.id,
+      organizationName: 'DevForge Labs',
+      slug: 'devforge-labs',
+      description:
+        'Leading research and development guild building decentralized developer tooling and verified smart-contract primitives.',
+    },
+  });
+
+  console.log('Seeded skills, job categories, and demo recruiter accounts successfully.');
 }
 
 main()
