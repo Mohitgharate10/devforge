@@ -28,22 +28,59 @@ interface ContractItem {
   updatedAt: string;
 }
 
+interface ProposalSummary {
+  id: string;
+  jobId: string;
+  jobTitle?: string;
+  freelancer?: {
+    id: string;
+    displayName: string;
+    handle: string;
+    title: string;
+    avatarUrl: string | null;
+  };
+  bidAmount: number;
+  currency: string;
+  coverLetter: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function ContractsDashboardPage() {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractItem[]>([]);
+  const [pendingProposals, setPendingProposals] = useState<ProposalSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'DISPUTED'>(
     'ALL',
   );
 
   useEffect(() => {
-    async function fetchContracts() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const res = await fetch('/api/v1/contracts');
-        const json = await res.json();
-        if (json.data?.items) {
-          setContracts(json.data.items);
+        const headers: Record<string, string> = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+
+        const [cRes, pRes] = await Promise.all([
+          fetch('/api/v1/contracts', { headers }),
+          fetch('/api/v1/proposals', { headers }),
+        ]);
+
+        const [cJson, pJson] = await Promise.all([
+          cRes.json().catch(() => ({})),
+          pRes.json().catch(() => ({})),
+        ]);
+
+        if (cJson.data?.items) {
+          setContracts(cJson.data.items);
+        }
+        if (pJson.data?.items) {
+          setPendingProposals(
+            pJson.data.items.filter((p: ProposalSummary) => p.status === 'SUBMITTED'),
+          );
         }
       } catch {
         // Ignore
@@ -51,8 +88,8 @@ export default function ContractsDashboardPage() {
         setLoading(false);
       }
     }
-    fetchContracts();
-  }, []);
+    fetchData();
+  }, [user?.id]);
 
   const filteredContracts = contracts.filter((c) => {
     if (statusFilter === 'ALL') return true;
@@ -236,13 +273,165 @@ export default function ContractsDashboardPage() {
             className="btn-pill-secondary"
             style={{ fontSize: '0.85rem' }}
           >
-            ← Bids & Proposals
+            ← Bids & Proposals {pendingProposals.length > 0 ? `(${pendingProposals.length})` : ''}
           </Link>
           <Link href="/jobs" className="btn-pill-primary" style={{ fontSize: '0.85rem' }}>
             Find New Engagement →
           </Link>
         </div>
       </div>
+
+      {/* Pending Candidate Applications (Client / Evaluator View) */}
+      {pendingProposals.length > 0 && (
+        <div
+          style={{
+            marginBottom: '2.5rem',
+            background: 'rgba(230, 0, 122, 0.04)',
+            border: '1px solid rgba(230, 0, 122, 0.25)',
+            borderRadius: '16px',
+            padding: '1.75rem 2rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.25rem',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.35rem',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#E6007A',
+                    boxShadow: '0 0 8px #E6007A',
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    color: '#E6007A',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Candidate Applications Awaiting Review ({pendingProposals.length})
+                </span>
+              </div>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0 }}>
+                Specialists Applied to Your Technical Listings
+              </h2>
+            </div>
+            <Link
+              href="/dashboard/proposals"
+              className="btn-pill-primary"
+              style={{ fontSize: '0.85rem', padding: '0.45rem 1.1rem' }}
+            >
+              Review All in Proposals Workbench →
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            {pendingProposals.map((proposal) => (
+              <div
+                key={proposal.id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: '12px',
+                  padding: '1.25rem 1.5rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                      {proposal.jobTitle ?? 'Technical Engagement'}
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '9999px',
+                        background: 'rgba(230, 0, 122, 0.12)',
+                        color: '#E6007A',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      ● PENDING REVIEW
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-secondary)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    Candidate:{' '}
+                    <strong style={{ color: 'var(--text-primary)' }}>
+                      {proposal.freelancer?.displayName ?? 'Specialist'}
+                    </strong>{' '}
+                    ({proposal.freelancer?.title ?? 'Web3 Engineer'})
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: '1.1rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-mono)',
+                        color: '#E6007A',
+                      }}
+                    >
+                      ${(proposal.bidAmount / 100).toLocaleString()} {proposal.currency}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                      Proposed Escrow
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard/proposals"
+                    className="btn-pill-primary"
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
+                  >
+                    Review & Hire →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div

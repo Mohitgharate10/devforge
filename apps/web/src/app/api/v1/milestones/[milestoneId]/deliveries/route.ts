@@ -3,7 +3,6 @@ import { prisma } from '@devforge/database';
 import { submitDeliveryRequestSchema } from '@devforge/api-contracts';
 import { assertCanTransitionMilestoneStatus, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
 import { demoStore, type DemoDelivery } from '@/server/engagement/demo-data';
 
 export async function POST(
@@ -17,28 +16,19 @@ export async function POST(
     const body = await request.json();
     const parsed = submitDeliveryRequestSchema.parse(body);
 
-    const actor = await optionalSession();
-
     try {
-      if (actor) {
-        const milestone = await prisma.milestone.findUnique({
-          where: { id: milestoneId },
-          include: {
-            contract: {
-              include: {
-                freelancerProfile: true,
-              },
+      const milestone = await prisma.milestone.findUnique({
+        where: { id: milestoneId },
+        include: {
+          contract: {
+            include: {
+              freelancerProfile: true,
             },
           },
-        });
+        },
+      });
 
-        if (!milestone) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Milestone not found.', status: 404 },
-            requestId,
-          );
-        }
-
+      if (milestone) {
         // Allow funded or in_progress milestone to transition to submitted
         assertCanTransitionMilestoneStatus(milestone.status, 'SUBMITTED');
 
@@ -76,8 +66,18 @@ export async function POST(
           201,
         );
       }
-    } catch {
-      // Database offline - fallback to demo store
+    } catch (dbErr) {
+      if (dbErr instanceof DomainError) {
+        return failure(
+          {
+            code: dbErr.code as 'VALIDATION_FAILED',
+            message: dbErr.message,
+            status: dbErr.statusCode,
+          },
+          requestId,
+        );
+      }
+      console.warn('Prisma delivery submission fell back or encountered error:', dbErr);
     }
 
     const demoDelivery: DemoDelivery = {

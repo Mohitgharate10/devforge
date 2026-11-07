@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import { ProjectChat } from '@/components/ProjectChat';
 import { TransactionModal } from '@/components/TransactionModal';
 
@@ -91,6 +92,7 @@ export default function ContractWorkbenchPage({
   params: Promise<{ contractId: string }>;
 }) {
   const { contractId } = use(params);
+  const { user } = useAuth();
   const [contract, setContract] = useState<ContractDetail | null>(null);
   const [escrows, setEscrows] = useState<EscrowRecord[]>([]);
   const [reviews, setReviews] = useState<ReviewRecord[]>([]);
@@ -177,18 +179,29 @@ export default function ContractWorkbenchPage({
     e.preventDefault();
     try {
       setSubmitting(true);
+      setActionMessage(null);
       const res = await fetch(`/api/v1/milestones/${milestoneId}/deliveries`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.id ? { 'x-user-id': user.id } : {}),
+        },
         body: JSON.stringify({ description: deliveryDescription }),
       });
+      const json = await res.json().catch(() => ({}));
       if (res.ok) {
         setActiveDeliveryMilestoneId(null);
         setDeliveryDescription('');
+        setActionMessage('Milestone deliverable transmitted successfully for client review!');
         await reloadData();
+      } else {
+        setActionMessage(
+          `Failed to transmit deliverable: ${json?.error?.message || res.statusText || 'Unable to record deliverable'}`,
+        );
       }
     } catch (err) {
       console.error(err);
+      setActionMessage('Network error occurred while transmitting deliverable.');
     } finally {
       setSubmitting(false);
     }
@@ -442,6 +455,20 @@ export default function ContractWorkbenchPage({
 
   const approvedCount = contract.milestones.filter((m) => m.status === 'APPROVED').length;
   const progressPercent = Math.round((approvedCount / contract.milestones.length) * 100);
+
+  const isClient =
+    user?.role === 'client' ||
+    user?.role === 'admin' ||
+    contract.participants.some((p) => p.userId === user?.id && p.role === 'CLIENT') ||
+    (user?.displayName &&
+      contract.client.organizationName.toLowerCase().includes(user.displayName.toLowerCase()));
+
+  const isFreelancer =
+    user?.role === 'freelancer' ||
+    contract.participants.some((p) => p.userId === user?.id && p.role === 'FREELANCER') ||
+    (user?.displayName &&
+      contract.freelancer.displayName.toLowerCase().includes(user.displayName.toLowerCase())) ||
+    !isClient;
 
   return (
     <main style={{ padding: '3.5rem 2rem', maxWidth: '78rem', margin: '0 auto' }}>
@@ -917,46 +944,71 @@ export default function ContractWorkbenchPage({
                           </p>
 
                           {/* Client Approval / Escrow Release */}
-                          {delivery.status === 'SUBMITTED' && (
-                            <div
-                              style={{
-                                marginTop: '1rem',
-                                display: 'flex',
-                                gap: '0.75rem',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <input
-                                type="text"
-                                placeholder="Review notes for release..."
-                                value={approvalFeedback}
-                                onChange={(e) => setApprovalFeedback(e.target.value)}
+                          {delivery.status === 'SUBMITTED' &&
+                            (isClient ? (
+                              <div
                                 style={{
-                                  flex: 1,
-                                  padding: '0.5rem 0.75rem',
-                                  background: 'var(--bg-card)',
-                                  border: '1px solid var(--border-hairline)',
-                                  borderRadius: '6px',
-                                  color: 'var(--text-primary)',
-                                  fontSize: '0.85rem',
+                                  marginTop: '1rem',
+                                  display: 'flex',
+                                  gap: '0.75rem',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap',
                                 }}
-                              />
-                              <button
-                                onClick={() => handleApproveDelivery(delivery.id)}
-                                disabled={submitting}
-                                className="btn-pill-primary"
-                                style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
                               >
-                                {submitting ? 'Saving approval...' : 'Approve delivery'}
-                              </button>
-                            </div>
-                          )}
+                                <input
+                                  type="text"
+                                  placeholder="Review notes for release..."
+                                  value={approvalFeedback}
+                                  onChange={(e) => setApprovalFeedback(e.target.value)}
+                                  style={{
+                                    flex: 1,
+                                    minWidth: '220px',
+                                    padding: '0.5rem 0.75rem',
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-hairline)',
+                                    borderRadius: '6px',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '0.85rem',
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleApproveDelivery(delivery.id)}
+                                  disabled={submitting}
+                                  className="btn-pill-primary"
+                                  style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
+                                >
+                                  {submitting ? 'Saving approval...' : 'Approve delivery'}
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  marginTop: '0.75rem',
+                                  padding: '0.45rem 0.75rem',
+                                  background: 'rgba(16, 185, 129, 0.08)',
+                                  borderRadius: '6px',
+                                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                                  fontSize: '0.8rem',
+                                  color: '#10B981',
+                                  fontFamily: 'var(--font-mono)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                }}
+                              >
+                                <span>●</span>
+                                <span>
+                                  Deliverable submitted. Awaiting client review and milestone
+                                  approval.
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Freelancer Delivery Submission Action */}
+                  {/* Milestone Delivery Submission Action (Freelancers Only) */}
                   {(milestone.status === 'FUNDED' || milestone.status === 'IN_PROGRESS') && (
                     <div
                       style={{
@@ -965,68 +1017,91 @@ export default function ContractWorkbenchPage({
                         borderTop: '1px solid var(--border-hairline)',
                       }}
                     >
-                      {activeDeliveryMilestoneId === milestone.id ? (
-                        <form
-                          onSubmit={(e) => handleSubmitDelivery(e, milestone.id)}
-                          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
-                        >
-                          <div
-                            style={{
-                              fontSize: '0.75rem',
-                              fontFamily: 'var(--font-mono)',
-                              color: 'var(--text-secondary)',
-                            }}
+                      {isFreelancer ? (
+                        activeDeliveryMilestoneId === milestone.id ? (
+                          <form
+                            onSubmit={(e) => handleSubmitDelivery(e, milestone.id)}
+                            style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
                           >
-                            SUBMIT WORK FOR REVIEW & ON-CHAIN ESCROW RELEASE
-                          </div>
-                          <textarea
-                            required
-                            rows={3}
-                            placeholder="Detail completed deliverables, PR links, deployment contracts, or IPFS artifacts..."
-                            value={deliveryDescription}
-                            onChange={(e) => setDeliveryDescription(e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '0.75rem 1rem',
-                              background: 'rgba(0,0,0,0.4)',
-                              border: '1px solid var(--border-hairline)',
-                              borderRadius: '8px',
-                              color: 'var(--text-primary)',
-                              fontFamily: 'inherit',
-                              fontSize: '0.9rem',
-                              outline: 'none',
-                            }}
-                          />
-                          <div
-                            style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}
+                            <div
+                              style={{
+                                fontSize: '0.75rem',
+                                fontFamily: 'var(--font-mono)',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              SUBMIT WORK FOR REVIEW & ON-CHAIN ESCROW RELEASE
+                            </div>
+                            <textarea
+                              required
+                              rows={3}
+                              placeholder="Detail completed deliverables, PR links, deployment contracts, or IPFS artifacts..."
+                              value={deliveryDescription}
+                              onChange={(e) => setDeliveryDescription(e.target.value)}
+                              style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem',
+                                background: 'rgba(0,0,0,0.4)',
+                                border: '1px solid var(--border-hairline)',
+                                borderRadius: '8px',
+                                color: 'var(--text-primary)',
+                                fontFamily: 'inherit',
+                                fontSize: '0.9rem',
+                                outline: 'none',
+                              }}
+                            />
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '0.75rem',
+                              }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setActiveDeliveryMilestoneId(null)}
+                                className="btn-pill-secondary"
+                                style={{ fontSize: '0.8rem' }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={submitting}
+                                className="btn-pill-primary"
+                                style={{ fontSize: '0.8rem' }}
+                              >
+                                {submitting ? 'Submitting...' : 'Transmit Deliverable →'}
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            onClick={() => setActiveDeliveryMilestoneId(milestone.id)}
+                            className="btn-pill-primary"
+                            style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
                           >
-                            <button
-                              type="button"
-                              onClick={() => setActiveDeliveryMilestoneId(null)}
-                              className="btn-pill-secondary"
-                              style={{ fontSize: '0.8rem' }}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={submitting}
-                              className="btn-pill-primary"
-                              style={{ fontSize: '0.8rem' }}
-                            >
-                              {submitting ? 'Submitting...' : 'Transmit Deliverable →'}
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <button
-                          onClick={() => setActiveDeliveryMilestoneId(milestone.id)}
-                          className="btn-pill-primary"
-                          style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
+                            + Submit Milestone Deliverable
+                          </button>
+                        )
+                      ) : /* Client View: Show status if no deliveries submitted yet */
+                      milestone.deliveries.length === 0 ? (
+                        <div
+                          style={{
+                            fontSize: '0.85rem',
+                            color: 'var(--text-secondary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
                         >
-                          + Submit Milestone Deliverable
-                        </button>
-                      )}
+                          <span>⏳</span>
+                          <span>
+                            Awaiting specialist ({contract.freelancer.displayName}) to submit
+                            deliverables for this milestone.
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>

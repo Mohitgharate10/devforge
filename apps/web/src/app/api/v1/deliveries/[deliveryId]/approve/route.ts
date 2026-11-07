@@ -7,7 +7,6 @@ import {
   DomainError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
 
 export async function POST(
@@ -27,33 +26,24 @@ export async function POST(
       // Body is optional
     }
 
-    const actor = await optionalSession();
-
     try {
-      if (actor) {
-        const delivery = await prisma.delivery.findUnique({
-          where: { id: deliveryId },
-          include: {
-            milestone: {
-              include: {
-                contract: {
-                  include: {
-                    milestones: true,
-                    clientProfile: true,
-                  },
+      const delivery = await prisma.delivery.findUnique({
+        where: { id: deliveryId },
+        include: {
+          milestone: {
+            include: {
+              contract: {
+                include: {
+                  milestones: true,
+                  clientProfile: true,
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (!delivery) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Delivery not found.', status: 404 },
-            requestId,
-          );
-        }
-
+      if (delivery) {
         assertCanTransitionDeliveryStatus(delivery.status, 'ACCEPTED');
         assertCanTransitionMilestoneStatus(delivery.milestone.status, 'APPROVED');
 
@@ -101,8 +91,18 @@ export async function POST(
           requestId,
         );
       }
-    } catch {
-      // Database offline - fallback to demo store
+    } catch (dbErr) {
+      if (dbErr instanceof DomainError) {
+        return failure(
+          {
+            code: dbErr.code as 'VALIDATION_FAILED',
+            message: dbErr.message,
+            status: dbErr.statusCode,
+          },
+          requestId,
+        );
+      }
+      console.warn('Prisma delivery approval fell back or encountered error:', dbErr);
     }
 
     const res = demoStore.approveDelivery(deliveryId, feedback);

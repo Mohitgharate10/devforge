@@ -46,6 +46,7 @@ describe('Contract & Milestone Policy', () => {
     it('allows lifecycle progression', () => {
       expect(canTransitionMilestoneStatus('PENDING', 'FUNDED')).toBe(true);
       expect(canTransitionMilestoneStatus('FUNDED', 'IN_PROGRESS')).toBe(true);
+      expect(canTransitionMilestoneStatus('FUNDED', 'SUBMITTED')).toBe(true);
       expect(canTransitionMilestoneStatus('IN_PROGRESS', 'SUBMITTED')).toBe(true);
       expect(canTransitionMilestoneStatus('SUBMITTED', 'APPROVED')).toBe(true);
       expect(canTransitionMilestoneStatus('SUBMITTED', 'IN_PROGRESS')).toBe(true);

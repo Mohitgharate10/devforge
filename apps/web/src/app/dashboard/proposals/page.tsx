@@ -555,33 +555,64 @@ export default function ProposalsDashboardPage() {
                   })}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
                   {proposal.status === 'SUBMITTED' && (
                     <>
-                      <button
-                        onClick={() => handleWithdraw(proposal.id)}
-                        disabled={actionInProgress === proposal.id}
-                        className="btn-pill-secondary"
-                        style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}
-                      >
-                        Withdraw
-                      </button>
-                      <button
-                        onClick={() => handleReject(proposal.id)}
-                        disabled={actionInProgress === proposal.id}
-                        className="btn-pill-secondary"
-                        style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem', color: '#EF4444' }}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => openAcceptModal(proposal)}
-                        disabled={actionInProgress === proposal.id}
-                        className="btn-pill-primary"
-                        style={{ fontSize: '0.8rem', padding: '0.4rem 1.2rem' }}
-                      >
-                        Accept & Hire Candidate →
-                      </button>
+                      {user?.role === 'freelancer' ? (
+                        <>
+                          <div
+                            style={{
+                              fontSize: '0.8rem',
+                              fontFamily: 'var(--font-mono)',
+                              color: 'var(--text-secondary)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                            }}
+                          >
+                            <span>⏳</span>
+                            <span>Awaiting Client Decision</span>
+                          </div>
+                          <button
+                            onClick={() => handleWithdraw(proposal.id)}
+                            disabled={actionInProgress === proposal.id}
+                            className="btn-pill-secondary"
+                            style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem' }}
+                          >
+                            Withdraw Proposal
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleReject(proposal.id)}
+                            disabled={actionInProgress === proposal.id}
+                            className="btn-pill-secondary"
+                            style={{
+                              fontSize: '0.8rem',
+                              padding: '0.4rem 0.9rem',
+                              color: '#EF4444',
+                            }}
+                          >
+                            Reject Candidate
+                          </button>
+                          <button
+                            onClick={() => openAcceptModal(proposal)}
+                            disabled={actionInProgress === proposal.id}
+                            className="btn-pill-primary"
+                            style={{ fontSize: '0.8rem', padding: '0.4rem 1.2rem' }}
+                          >
+                            Accept & Hire Candidate →
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
 
