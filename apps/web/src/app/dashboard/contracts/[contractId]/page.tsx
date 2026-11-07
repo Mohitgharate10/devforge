@@ -254,6 +254,35 @@ export default function ContractWorkbenchPage({
     }
   };
 
+  const handleRejectDelivery = async (deliveryId: string) => {
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/api/v1/deliveries/${deliveryId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feedback:
+            approvalFeedback ||
+            'Revisions requested by client. Please address comments and submit updated deliverable.',
+        }),
+      });
+      if (res.ok) {
+        setApprovalFeedback('');
+        setActionMessage(
+          'Revisions requested. Milestone returned to In Progress for specialist updates.',
+        );
+        await reloadData();
+      } else {
+        const json = await res.json().catch(() => null);
+        setActionMessage(json?.error?.message || 'Failed to request revisions on deliverable.');
+      }
+    } catch {
+      setActionMessage('Network error occurred while requesting revisions.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleOpenDispute = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowDisputeModal(false);
@@ -914,13 +943,22 @@ export default function ContractWorkbenchPage({
                                 background:
                                   delivery.status === 'ACCEPTED'
                                     ? 'rgba(16, 185, 129, 0.15)'
-                                    : 'rgba(230, 0, 122, 0.15)',
-                                color: delivery.status === 'ACCEPTED' ? '#10B981' : '#E6007A',
+                                    : delivery.status === 'REJECTED'
+                                      ? 'rgba(239, 68, 68, 0.15)'
+                                      : 'rgba(230, 0, 122, 0.15)',
+                                color:
+                                  delivery.status === 'ACCEPTED'
+                                    ? '#10B981'
+                                    : delivery.status === 'REJECTED'
+                                      ? '#EF4444'
+                                      : '#E6007A',
                                 fontFamily: 'var(--font-mono)',
                                 fontWeight: 600,
                               }}
                             >
-                              {delivery.status}
+                              {delivery.status === 'REJECTED'
+                                ? 'REVISIONS REQUESTED'
+                                : delivery.status}
                             </span>
                             <span
                               style={{
@@ -942,6 +980,37 @@ export default function ContractWorkbenchPage({
                           >
                             {delivery.description}
                           </p>
+
+                          {/* Client Feedback / Revision Notes */}
+                          {delivery.feedback && (
+                            <div
+                              style={{
+                                marginTop: '0.5rem',
+                                marginBottom: '0.5rem',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: '6px',
+                                background:
+                                  delivery.status === 'REJECTED'
+                                    ? 'rgba(239, 68, 68, 0.08)'
+                                    : 'rgba(16, 185, 129, 0.08)',
+                                border: `1px solid ${
+                                  delivery.status === 'REJECTED'
+                                    ? 'rgba(239, 68, 68, 0.25)'
+                                    : 'rgba(16, 185, 129, 0.25)'
+                                }`,
+                                fontSize: '0.8rem',
+                                color: delivery.status === 'REJECTED' ? '#EF4444' : '#10B981',
+                                fontFamily: 'var(--font-mono)',
+                              }}
+                            >
+                              <strong>
+                                {delivery.status === 'REJECTED'
+                                  ? '⚠️ Client Revision Notes:'
+                                  : '✓ Client Approval Notes:'}
+                              </strong>{' '}
+                              {delivery.feedback}
+                            </div>
+                          )}
 
                           {/* Client Approval / Escrow Release */}
                           {delivery.status === 'SUBMITTED' &&
@@ -971,14 +1040,33 @@ export default function ContractWorkbenchPage({
                                     fontSize: '0.85rem',
                                   }}
                                 />
-                                <button
-                                  onClick={() => handleApproveDelivery(delivery.id)}
-                                  disabled={submitting}
-                                  className="btn-pill-primary"
-                                  style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
-                                >
-                                  {submitting ? 'Saving approval...' : 'Approve delivery'}
-                                </button>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <button
+                                    onClick={() => handleApproveDelivery(delivery.id)}
+                                    disabled={submitting}
+                                    className="btn-pill-primary"
+                                    style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
+                                  >
+                                    {submitting ? 'Saving...' : '✓ Approve & Release'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectDelivery(delivery.id)}
+                                    disabled={submitting}
+                                    type="button"
+                                    style={{
+                                      fontSize: '0.8rem',
+                                      padding: '0.5rem 1rem',
+                                      borderRadius: '9999px',
+                                      background: 'rgba(239, 68, 68, 0.12)',
+                                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                                      color: '#EF4444',
+                                      cursor: submitting ? 'not-allowed' : 'pointer',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {submitting ? 'Saving...' : '✗ Request Revisions'}
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <div
@@ -1081,7 +1169,9 @@ export default function ContractWorkbenchPage({
                             className="btn-pill-primary"
                             style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
                           >
-                            + Submit Milestone Deliverable
+                            {milestone.status === 'IN_PROGRESS'
+                              ? '↻ Submit Revised Deliverable'
+                              : '+ Submit Milestone Deliverable'}
                           </button>
                         )
                       ) : /* Client View: Show status if no deliveries submitted yet */

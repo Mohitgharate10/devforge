@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface ChatMessage {
   id: string;
@@ -14,6 +15,7 @@ interface ChatMessage {
 }
 
 export function ProjectChat({ contractId }: { contractId: string }) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
@@ -57,10 +59,21 @@ export function ProjectChat({ contractId }: { contractId: string }) {
     setSending(true);
 
     try {
+      const senderName =
+        user?.displayName || (user?.role === 'client' ? 'Meghraj (Client)' : 'Specialist');
       const res = await fetch(`/api/v1/conversations/${contractId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, type: 'TEXT' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id ?? '',
+          'x-user-name': senderName,
+        },
+        body: JSON.stringify({
+          content,
+          type: 'TEXT',
+          senderName,
+          senderId: user?.id,
+        }),
       });
       const json = await res.json();
       if (json.data) {

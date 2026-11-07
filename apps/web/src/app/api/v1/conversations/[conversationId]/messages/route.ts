@@ -129,11 +129,18 @@ export async function POST(
       targetConv = demoStore.getConversationByContractId(conversationId);
     }
 
+    const customSenderName =
+      (body as { senderName?: string }).senderName ||
+      request.headers.get('x-user-name') ||
+      'DevForge Contributor';
+    const customSenderId =
+      request.headers.get('x-user-id') || (body as { senderId?: string }).senderId || 'user-active';
+
     const newMessage: DemoMessage = {
       id: `msg-${crypto.randomUUID().slice(0, 8)}`,
       conversationId: targetConv.id,
-      senderId: 'user-elena',
-      senderName: 'Elena Rostova',
+      senderId: customSenderId,
+      senderName: customSenderName,
       senderAvatar: null,
       content: sanitized,
       type: parsed.type as DemoMessage['type'],

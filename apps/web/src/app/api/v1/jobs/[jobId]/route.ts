@@ -19,6 +19,7 @@ import {
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { requireSession } from '@/server/auth/middleware';
+import { findCanonicalBounty } from '@/lib/canonical-marketplace';
 
 type JobWithRelations = Job & {
   category: JobCategory;
@@ -53,6 +54,31 @@ export async function GET(
     }
 
     if (!job) {
+      const canonical = findCanonicalBounty(jobId);
+      if (canonical) {
+        return success(
+          {
+            id: canonical.id,
+            title: canonical.title,
+            description: canonical.description,
+            category: canonical.category,
+            client: canonical.client,
+            budgetMin: canonical.budgetMin,
+            budgetMax: canonical.budgetMax,
+            currency: canonical.currency,
+            status: 'PUBLISHED',
+            skills: canonical.skills.map((s, idx) => ({
+              skillId: `skill-${idx}`,
+              name: s,
+              slug: s.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              requirementLevel: 'REQUIRED',
+            })),
+            publishedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          },
+          requestId,
+        );
+      }
       throw new NotFoundError('Job');
     }
 

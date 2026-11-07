@@ -54,6 +54,7 @@ export default function ContractsDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'DISPUTED'>(
     'ALL',
   );
+  const isClient = user?.role === 'client' || user?.displayName === 'Meghraj';
 
   useEffect(() => {
     async function fetchData() {
@@ -282,7 +283,7 @@ export default function ContractsDashboardPage() {
       </div>
 
       {/* Pending Candidate Applications (Client / Evaluator View) */}
-      {pendingProposals.length > 0 && (
+      {isClient && pendingProposals.length > 0 && (
         <div
           style={{
             marginBottom: '2.5rem',
@@ -413,7 +414,7 @@ export default function ContractsDashboardPage() {
                         color: '#E6007A',
                       }}
                     >
-                      ${(proposal.bidAmount / 100).toLocaleString()} {proposal.currency}
+                      ${proposal.bidAmount.toLocaleString()} {proposal.currency}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
                       Proposed Escrow
@@ -425,6 +426,159 @@ export default function ContractsDashboardPage() {
                     style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
                   >
                     Review & Hire →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Proposals Section (For Freelancers) */}
+      {!isClient && pendingProposals.length > 0 && (
+        <div
+          style={{
+            marginBottom: '2.5rem',
+            background:
+              'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(20, 20, 25, 0.6) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
+            borderRadius: '16px',
+            padding: '1.75rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.25rem',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.35rem',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#10B981',
+                    boxShadow: '0 0 8px #10B981',
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    color: '#10B981',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Your Active Bids & Applications ({pendingProposals.length})
+                </span>
+              </div>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0 }}>
+                Awaiting Hiring Client Decision
+              </h2>
+            </div>
+            <Link
+              href="/dashboard/proposals"
+              className="btn-pill-secondary"
+              style={{ fontSize: '0.85rem', padding: '0.45rem 1.1rem' }}
+            >
+              Manage Your Bids in Proposals Tab →
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            {pendingProposals.map((proposal) => (
+              <div
+                key={proposal.id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: '12px',
+                  padding: '1.25rem 1.5rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                      {proposal.jobTitle ?? 'Technical Engagement'}
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '9999px',
+                        background: 'rgba(230, 0, 122, 0.12)',
+                        color: '#E6007A',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      ● PENDING REVIEW
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-secondary)',
+                      margin: 0,
+                      maxWidth: '36rem',
+                      lineHeight: 1.4,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {proposal.coverLetter}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: '1.1rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-mono)',
+                        color: '#E6007A',
+                      }}
+                    >
+                      ${proposal.bidAmount.toLocaleString()} {proposal.currency}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                      Your Proposed Bid
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard/proposals"
+                    className="btn-pill-primary"
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 1rem' }}
+                  >
+                    View Status →
                   </Link>
                 </div>
               </div>

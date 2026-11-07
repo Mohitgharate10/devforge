@@ -617,6 +617,24 @@ export const demoStore = {
     return null;
   },
 
+  rejectDelivery: (deliveryId: string, feedback?: string) => {
+    for (const contract of globalStore.__devforge_contracts!) {
+      for (const ms of contract.milestones) {
+        const delivery = ms.deliveries.find((d) => d.id === deliveryId);
+        if (delivery) {
+          delivery.status = 'REJECTED';
+          delivery.feedback = feedback ?? 'Revisions requested by client.';
+          delivery.reviewedAt = new Date().toISOString();
+          ms.status = 'IN_PROGRESS';
+          ms.updatedAt = new Date().toISOString();
+          contract.updatedAt = new Date().toISOString();
+          return { contract, milestone: ms, delivery };
+        }
+      }
+    }
+    return null;
+  },
+
   openDispute: (contractId: string, _reason: string) => {
     const contract = globalStore.__devforge_contracts!.find((c) => c.id === contractId);
     if (contract) {
