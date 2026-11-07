@@ -369,7 +369,10 @@ export default function ContractWorkbenchPage({
     try {
       setSubmitting(true);
       const authorName = user?.displayName || 'Client Reviewer';
-      const targetId = contract?.freelancer?.id || '00000000-0000-0000-0000-000000000002';
+      const targetId =
+        contract?.freelancer?.id && contract.freelancer.id.length === 36
+          ? contract.freelancer.id
+          : '00000000-0000-4000-8000-000000000002';
       const res = await fetch(`/api/v1/contracts/${contractId}/reviews`, {
         method: 'POST',
         headers: {

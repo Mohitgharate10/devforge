@@ -60,19 +60,47 @@ export async function POST(
   const { contractId } = await params;
 
   try {
-    const body = await request.json();
-    const parsed = createReviewRequestSchema.parse(body);
+    const body = (await request.json()) as Record<string, unknown>;
+    const parsed = createReviewRequestSchema.safeParse(body);
 
     const contract = demoStore.getContractById(contractId);
     const clientId = contract ? contract.client.userId : 'user-parity';
-    const freelancerId = contract ? contract.freelancer.userId : 'user-elena';
+    const freelancerId = contract
+      ? contract.freelancer.userId
+      : '00000000-0000-4000-8000-000000000002';
     const authorId = request.headers.get('x-user-id') || clientId;
     const authorName =
       request.headers.get('x-user-name') ||
       (contract ? contract.client.organizationName : 'Client Reviewer');
-    const targetId = parsed.targetId || freelancerId;
 
-    if (!Number.isInteger(parsed.rating) || parsed.rating < 1 || parsed.rating > 5) {
+    let rating: number;
+    let feedback: string;
+    let targetId: string;
+    let qualityRating: number | undefined;
+    let communicationRating: number | undefined;
+    let deadlineRating: number | undefined;
+
+    if (parsed.success) {
+      rating = parsed.data.rating;
+      feedback = parsed.data.feedback;
+      targetId = parsed.data.targetId;
+      qualityRating = parsed.data.qualityRating;
+      communicationRating = parsed.data.communicationRating;
+      deadlineRating = parsed.data.deadlineRating;
+    } else {
+      rating = typeof body?.rating === 'number' ? Math.round(body.rating) : 5;
+      feedback = typeof body?.feedback === 'string' ? body.feedback.trim() : '';
+      targetId =
+        typeof body?.targetId === 'string' && body.targetId.trim().length > 0
+          ? body.targetId.trim()
+          : freelancerId;
+      qualityRating = typeof body?.qualityRating === 'number' ? body.qualityRating : undefined;
+      communicationRating =
+        typeof body?.communicationRating === 'number' ? body.communicationRating : undefined;
+      deadlineRating = typeof body?.deadlineRating === 'number' ? body.deadlineRating : undefined;
+    }
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return failure(
         {
           code: 'VALIDATION_FAILED',
@@ -83,7 +111,7 @@ export async function POST(
       );
     }
 
-    if (!parsed.feedback || parsed.feedback.trim().length < 5) {
+    if (!feedback || feedback.length < 5) {
       return failure(
         {
           code: 'VALIDATION_FAILED',
@@ -100,8 +128,8 @@ export async function POST(
           contractId,
           reviewerId: authorId,
           revieweeId: targetId,
-          rating: parsed.rating,
-          comment: parsed.feedback,
+          rating,
+          comment: feedback,
         },
         include: { reviewer: true },
       });
@@ -115,9 +143,9 @@ export async function POST(
           targetId: review.revieweeId,
           rating: review.rating,
           feedback: review.comment || '',
-          qualityRating: parsed.qualityRating ?? review.rating,
-          communicationRating: parsed.communicationRating ?? review.rating,
-          deadlineRating: parsed.deadlineRating ?? review.rating,
+          qualityRating: qualityRating ?? review.rating,
+          communicationRating: communicationRating ?? review.rating,
+          deadlineRating: deadlineRating ?? review.rating,
           isRevealed: true,
           createdAt: review.createdAt.toISOString(),
         },
@@ -130,11 +158,11 @@ export async function POST(
         authorId,
         authorName,
         targetId,
-        rating: parsed.rating,
-        feedback: parsed.feedback,
-        qualityRating: parsed.qualityRating ?? parsed.rating,
-        communicationRating: parsed.communicationRating ?? parsed.rating,
-        deadlineRating: parsed.deadlineRating ?? parsed.rating,
+        rating,
+        feedback,
+        qualityRating: qualityRating ?? rating,
+        communicationRating: communicationRating ?? rating,
+        deadlineRating: deadlineRating ?? rating,
         isRevealed: true,
         createdAt: new Date().toISOString(),
       });
