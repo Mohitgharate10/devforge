@@ -36,40 +36,35 @@ export async function POST(
           },
         });
 
-        if (!proposal) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 },
+        if (proposal) {
+          assertJobClient(actor.userId, proposal.job.clientProfile.userId);
+          assertCanTransitionProposalStatus(proposal.status, 'REJECTED');
+
+          const updated = await prisma.proposal.update({
+            where: { id: proposalId },
+            data: {
+              status: 'REJECTED',
+              statusHistory: {
+                create: {
+                  fromStatus: proposal.status,
+                  toStatus: 'REJECTED',
+                  actorId: actor.userId,
+                  reason: reason ?? 'Client rejected proposal',
+                },
+              },
+            },
+          });
+
+          return success(
+            {
+              id: updated.id,
+              status: updated.status,
+              updatedAt: updated.updatedAt.toISOString(),
+              isLocalDemo: false,
+            },
             requestId,
           );
         }
-
-        assertJobClient(actor.userId, proposal.job.clientProfile.userId);
-        assertCanTransitionProposalStatus(proposal.status, 'REJECTED');
-
-        const updated = await prisma.proposal.update({
-          where: { id: proposalId },
-          data: {
-            status: 'REJECTED',
-            statusHistory: {
-              create: {
-                fromStatus: proposal.status,
-                toStatus: 'REJECTED',
-                actorId: actor.userId,
-                reason: reason ?? 'Client rejected proposal',
-              },
-            },
-          },
-        });
-
-        return success(
-          {
-            id: updated.id,
-            status: updated.status,
-            updatedAt: updated.updatedAt.toISOString(),
-            isLocalDemo: false,
-          },
-          requestId,
-        );
       }
     } catch {
       // Database offline - fallback to demo store

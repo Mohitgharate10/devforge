@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 import { prisma } from '@devforge/database';
 import { createProposalRequestSchema } from '@devforge/api-contracts';
 import { validateCoverLetter, validateBidAmount, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { optionalSession } from '@/server/auth/middleware';
-import { demoStore, DEMO_FREELANCERS, DEMO_CLIENTS } from '@/server/engagement/demo-data';
+import { demoStore } from '@/server/engagement/demo-data';
+import {
+  findCanonicalBounty,
+  getCanonicalJobUuid,
+} from '@/lib/canonical-marketplace';
+import { ensureDbJobForCanonicalBounty } from '@/lib/ensure-db-job';
 
 export async function POST(
   request: Request,
@@ -21,126 +27,190 @@ export async function POST(
     validateBidAmount(parsed.bidAmount);
 
     const actor = await optionalSession();
+    const canonicalBounty = findCanonicalBounty(jobId);
 
-    try {
-      // 1. Try PostgreSQL if available
-      let freelancerProfile = null;
-      if (actor) {
-        freelancerProfile = await prisma.freelancerProfile.findUnique({
-          where: { userId: actor.userId },
-        });
-      }
+    // Resolve or auto-ensure DB job for canonical bounty
+    let dbJob = null;
+    let targetJobUuid: string | null = null;
 
-      if (freelancerProfile) {
-        const job = await prisma.job.findUnique({
-          where: { id: jobId },
-        });
-
-        if (!job) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Job listing not found.', status: 404 },
-            requestId,
-          );
+    if (canonicalBounty) {
+      dbJob = await ensureDbJobForCanonicalBounty(canonicalBounty);
+      targetJobUuid = dbJob?.id ?? getCanonicalJobUuid(canonicalBounty.id) ?? null;
+    } else {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId);
+      if (isUuid) {
+        try {
+          dbJob = await prisma.job.findUnique({
+            where: { id: jobId },
+            include: { clientProfile: true },
+          });
+          targetJobUuid = dbJob?.id ?? null;
+        } catch {
+          // Prisma lookup error
         }
-
-        const proposal = await prisma.proposal.create({
-          data: {
-            jobId,
-            freelancerProfileId: freelancerProfile.id,
-            coverLetter: parsed.coverLetter,
-            bidAmount: BigInt(parsed.bidAmount),
-            currency: parsed.currency ?? 'USD',
-            status: 'SUBMITTED',
-            statusHistory: {
-              create: {
-                toStatus: 'SUBMITTED',
-                actorId: actor!.userId,
-                reason: 'Initial proposal submission',
-              },
-            },
-          },
-          include: {
-            job: true,
-            freelancerProfile: {
-              include: { user: true },
-            },
-          },
-        });
-
-        return success(
-          {
-            id: proposal.id,
-            jobId: proposal.jobId,
-            jobTitle: proposal.job.title,
-            freelancerProfileId: proposal.freelancerProfileId,
-            freelancer: {
-              id: proposal.freelancerProfile.id,
-              displayName: proposal.freelancerProfile.user.displayName,
-              handle: proposal.freelancerProfile.handle,
-              title: proposal.freelancerProfile.title,
-              avatarUrl: proposal.freelancerProfile.user.avatarUrl,
-            },
-            coverLetter: proposal.coverLetter,
-            bidAmount: Number(proposal.bidAmount),
-            currency: proposal.currency,
-            status: proposal.status,
-            createdAt: proposal.createdAt.toISOString(),
-            updatedAt: proposal.updatedAt.toISOString(),
-            isLocalDemo: false,
-          },
-          requestId,
-          201,
-        );
       }
-    } catch {
-      // Database offline - fall through to local demo store
     }
 
-    // Local demo store fallback
-    const fallbackFreelancer = DEMO_FREELANCERS['freelancer-elena']!;
-    const demoJobTitle =
-      jobId === 'job-bridge-audit'
-        ? 'EVM & Substrate Cross-Chain Bridge Security Audit'
-        : jobId === 'job-zk-circuit'
-          ? 'ZK-Rollup Proof Verifier Circuit Optimization'
-          : 'Smart Contract Engagement';
+    // Try PostgreSQL creation if database and target job are available
+    let createdProposal = null;
 
-    const newDemoProposal = {
-      id: `prop-${crypto.randomUUID().slice(0, 8)}`,
+    if (actor && targetJobUuid) {
+      try {
+        // Ensure user and freelancerProfile exist in Prisma
+        let user = await prisma.user.findUnique({
+          where: { id: actor.userId },
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              id: actor.userId,
+              email: `${actor.userId.slice(0, 8)}@devforge.network`,
+              displayName: 'Verified Specialist',
+              status: 'ACTIVE',
+            },
+          });
+        }
+
+        let freelancerProfile = await prisma.freelancerProfile.findUnique({
+          where: { userId: actor.userId },
+          include: { user: true },
+        });
+
+        if (!freelancerProfile) {
+          freelancerProfile = await prisma.freelancerProfile.create({
+            data: {
+              userId: actor.userId,
+              handle: `spec_${actor.userId.slice(0, 8)}`,
+              title: 'Web3 Security Researcher',
+              bio: 'Verified technical specialist submitting deliverables on DevForge.',
+            },
+            include: { user: true },
+          });
+        }
+
+        if (freelancerProfile) {
+          createdProposal = await prisma.proposal.upsert({
+            where: {
+              jobId_freelancerProfileId: {
+                jobId: targetJobUuid,
+                freelancerProfileId: freelancerProfile.id,
+              },
+            },
+            update: {
+              coverLetter: parsed.coverLetter,
+              bidAmount: BigInt(parsed.bidAmount),
+              currency: parsed.currency ?? 'USDC',
+              status: 'SUBMITTED',
+            },
+            create: {
+              jobId: targetJobUuid,
+              freelancerProfileId: freelancerProfile.id,
+              coverLetter: parsed.coverLetter,
+              bidAmount: BigInt(parsed.bidAmount),
+              currency: parsed.currency ?? 'USDC',
+              status: 'SUBMITTED',
+              statusHistory: {
+                create: {
+                  toStatus: 'SUBMITTED',
+                  actorId: actor.userId,
+                  reason: 'Initial proposal submission',
+                },
+              },
+            },
+            include: {
+              job: true,
+              freelancerProfile: {
+                include: { user: true },
+              },
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Prisma proposal creation fallback to in-memory store:', dbErr);
+      }
+    }
+
+    // Prepare unified proposal record for response & demoStore sync
+    const jobTitle =
+      canonicalBounty?.title ?? dbJob?.title ?? 'Web3 Engineering Engagement';
+    const clientName =
+      canonicalBounty?.client.organizationName ??
+      dbJob?.clientProfile?.organizationName ??
+      'Protocol / Client Team';
+    const clientSlug =
+      canonicalBounty?.client.slug ??
+      dbJob?.clientProfile?.slug ??
+      'protocol-team';
+
+    const proposalId = createdProposal?.id ?? `prop-${crypto.randomUUID().slice(0, 8)}`;
+    const freelancerDisplayName =
+      createdProposal?.freelancerProfile?.user?.displayName ??
+      (actor ? 'Verified Specialist' : 'Elena Rostova');
+    const freelancerHandle =
+      createdProposal?.freelancerProfile?.handle ??
+      (actor ? `user_${actor.userId.slice(0, 8)}` : 'elena-rostova');
+    const freelancerProfileId =
+      createdProposal?.freelancerProfileId ?? actor?.userId ?? 'freelancer-elena';
+
+    const demoRecord = {
+      id: proposalId,
       jobId,
-      jobTitle: demoJobTitle,
-      freelancerProfileId: fallbackFreelancer.id,
-      freelancer: fallbackFreelancer,
-      client: DEMO_CLIENTS['client-polka']!,
+      jobTitle,
+      freelancerProfileId,
+      freelancer: {
+        id: freelancerProfileId,
+        userId: actor?.userId ?? 'user-elena',
+        displayName: freelancerDisplayName,
+        handle: freelancerHandle,
+        title: 'Senior Web3 Security Researcher',
+        avatarUrl: null,
+      },
+      client: {
+        id: dbJob?.clientProfileId ?? 'client-polka',
+        userId: dbJob?.clientProfile?.userId ?? 'user-parity',
+        organizationName: clientName,
+        slug: clientSlug,
+      },
       coverLetter: parsed.coverLetter,
       bidAmount: parsed.bidAmount,
       currency: parsed.currency ?? 'USDC',
       status: 'SUBMITTED' as const,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: createdProposal ? createdProposal.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: createdProposal ? createdProposal.updatedAt.toISOString() : new Date().toISOString(),
     };
 
-    demoStore.addProposal(newDemoProposal);
+    demoStore.addProposal(demoRecord);
 
     return success(
       {
-        id: newDemoProposal.id,
-        jobId: newDemoProposal.jobId,
-        jobTitle: newDemoProposal.jobTitle,
-        freelancerProfileId: newDemoProposal.freelancerProfileId,
-        freelancer: newDemoProposal.freelancer,
-        coverLetter: newDemoProposal.coverLetter,
-        bidAmount: newDemoProposal.bidAmount,
-        currency: newDemoProposal.currency,
-        status: newDemoProposal.status,
-        createdAt: newDemoProposal.createdAt,
-        updatedAt: newDemoProposal.updatedAt,
-        isLocalDemo: true,
+        id: demoRecord.id,
+        jobId: demoRecord.jobId,
+        jobTitle: demoRecord.jobTitle,
+        freelancerProfileId: demoRecord.freelancerProfileId,
+        freelancer: demoRecord.freelancer,
+        coverLetter: demoRecord.coverLetter,
+        bidAmount: demoRecord.bidAmount,
+        currency: demoRecord.currency,
+        status: demoRecord.status,
+        createdAt: demoRecord.createdAt,
+        updatedAt: demoRecord.updatedAt,
+        isLocalDemo: !createdProposal,
       },
       requestId,
       201,
     );
   } catch (error) {
+    if (error instanceof ZodError) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: error.issues[0]?.message ?? 'Invalid request body format.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
     if (error instanceof DomainError) {
       return failure(
         {

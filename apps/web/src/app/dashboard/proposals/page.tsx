@@ -42,7 +42,11 @@ export default function ProposalsDashboardPage() {
 
   const reloadProposals = async () => {
     try {
-      const res = await fetch('/api/v1/proposals');
+      const headers: Record<string, string> = {};
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
+      const res = await fetch('/api/v1/proposals', { headers });
       const json = await res.json();
       if (json.data?.items) {
         setProposals(json.data.items);
@@ -56,7 +60,11 @@ export default function ProposalsDashboardPage() {
     let ignore = false;
     async function load() {
       try {
-        const res = await fetch('/api/v1/proposals');
+        const headers: Record<string, string> = {};
+        if (user?.id) {
+          headers['x-user-id'] = user.id;
+        }
+        const res = await fetch('/api/v1/proposals', { headers });
         const json = await res.json();
         if (!ignore && json.data?.items) {
           setProposals(json.data.items);
@@ -73,7 +81,7 @@ export default function ProposalsDashboardPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [user?.id]);
 
   const openAcceptModal = (proposal: ProposalItem) => {
     setAcceptingProposal(proposal);

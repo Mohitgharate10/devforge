@@ -2,11 +2,13 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import { AiProposalCopilot } from '@/components/AiProposalCopilot';
 import { findCanonicalBounty } from '@/lib/canonical-marketplace';
 
 export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
+  const { user } = useAuth();
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
   const [bidAmount, setBidAmount] = useState('14000');
   const [coverNote, setCoverNote] = useState('');
@@ -57,9 +59,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     e.preventDefault();
     try {
       setSubmittingProposal(true);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (user?.id) {
+        headers['x-user-id'] = user.id;
+      }
       await fetch(`/api/v1/jobs/${jobId}/proposals`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           bidAmount: parseInt(bidAmount, 10) || 14000,
           coverLetter:

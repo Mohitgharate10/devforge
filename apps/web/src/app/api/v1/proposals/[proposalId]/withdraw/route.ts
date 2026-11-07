@@ -26,40 +26,35 @@ export async function POST(
           include: { freelancerProfile: true },
         });
 
-        if (!proposal) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 },
+        if (proposal) {
+          assertProposalSubmitter(actor.userId, proposal.freelancerProfile.userId);
+          assertCanTransitionProposalStatus(proposal.status, 'WITHDRAWN');
+
+          const updated = await prisma.proposal.update({
+            where: { id: proposalId },
+            data: {
+              status: 'WITHDRAWN',
+              statusHistory: {
+                create: {
+                  fromStatus: proposal.status,
+                  toStatus: 'WITHDRAWN',
+                  actorId: actor.userId,
+                  reason: 'Freelancer withdrew proposal',
+                },
+              },
+            },
+          });
+
+          return success(
+            {
+              id: updated.id,
+              status: updated.status,
+              updatedAt: updated.updatedAt.toISOString(),
+              isLocalDemo: false,
+            },
             requestId,
           );
         }
-
-        assertProposalSubmitter(actor.userId, proposal.freelancerProfile.userId);
-        assertCanTransitionProposalStatus(proposal.status, 'WITHDRAWN');
-
-        const updated = await prisma.proposal.update({
-          where: { id: proposalId },
-          data: {
-            status: 'WITHDRAWN',
-            statusHistory: {
-              create: {
-                fromStatus: proposal.status,
-                toStatus: 'WITHDRAWN',
-                actorId: actor.userId,
-                reason: 'Freelancer withdrew proposal',
-              },
-            },
-          },
-        });
-
-        return success(
-          {
-            id: updated.id,
-            status: updated.status,
-            updatedAt: updated.updatedAt.toISOString(),
-            isLocalDemo: false,
-          },
-          requestId,
-        );
       }
     } catch {
       // Database offline - fallback to demo store

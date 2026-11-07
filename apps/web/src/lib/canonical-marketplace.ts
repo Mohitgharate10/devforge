@@ -349,11 +349,32 @@ export const CANONICAL_SPECIALISTS: CanonicalSpecialist[] = [
   },
 ];
 
+export const CANONICAL_JOB_UUIDS: Record<string, string> = {
+  'job-substrate-pallet': '11111111-1111-4111-a111-111111111111',
+  'job-bridge-audit': '22222222-2222-4222-a222-222222222222',
+  'job-zk-circuit': '33333333-3333-4333-a333-333333333333',
+  'job-keeper-bot': '44444444-4444-4444-a444-444444444444',
+};
+
+export function getCanonicalJobUuid(bountyId: string): string | undefined {
+  const normalized = bountyId.trim().toLowerCase();
+  return CANONICAL_JOB_UUIDS[normalized];
+}
+
 export function findCanonicalBounty(idOrSlug: string): CanonicalBounty | undefined {
   const normalized = idOrSlug.trim().toLowerCase();
   return CANONICAL_BOUNTIES.find(
-    (b) => b.id.toLowerCase() === normalized || b.slug.toLowerCase() === normalized,
+    (b) =>
+      b.id.toLowerCase() === normalized ||
+      b.slug.toLowerCase() === normalized ||
+      CANONICAL_JOB_UUIDS[b.id] === normalized,
   );
+}
+
+export function findCanonicalBountyByUuid(uuid: string): CanonicalBounty | undefined {
+  const entry = Object.entries(CANONICAL_JOB_UUIDS).find(([, u]) => u.toLowerCase() === uuid.toLowerCase());
+  if (!entry) return undefined;
+  return findCanonicalBounty(entry[0]);
 }
 
 export function findCanonicalSpecialist(handle: string): CanonicalSpecialist | undefined {
