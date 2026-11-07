@@ -1,14 +1,5 @@
 # DevForge
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8-363636?logo=solidity&logoColor=white)](https://soliditylang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20Vercel-success)](https://devforge-web-8bv4.vercel.app/)
-
 > **A decentralized marketplace for technical Web3 freelance work secured by non-custodial milestone smart-contract escrow.**
 
 [Live Application](https://devforge-web-8bv4.vercel.app/) • [Architecture Guide](docs/ARCHITECTURE.md) • [Product Requirements](docs/PRD.md) • [Roadmap](docs/ROADMAP.md) • [Contributing](CONTRIBUTING.md)
