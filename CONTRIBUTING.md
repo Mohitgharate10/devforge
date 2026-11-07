@@ -24,13 +24,13 @@ Use Node.js 22+ and pnpm 11+. See the [README](README.md) for environment detail
 
 ## Project boundaries
 
-| Area | Responsibility |
-| --- | --- |
-| `apps/web` | UI, route handlers, server actions, and application composition |
-| `packages/domain` | Entities, value objects, policies, and ports; no framework dependencies |
-| `packages/api-contracts` | Zod schemas and request/response contracts |
-| `packages/database` | Prisma schema, migrations, and persistence adapters |
-| `packages/contracts` | Solidity contracts, Hardhat configuration, and contract tests |
+| Area                     | Responsibility                                                          |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `apps/web`               | UI, route handlers, server actions, and application composition         |
+| `packages/domain`        | Entities, value objects, policies, and ports; no framework dependencies |
+| `packages/api-contracts` | Zod schemas and request/response contracts                              |
+| `packages/database`      | Prisma schema, migrations, and persistence adapters                     |
+| `packages/contracts`     | Solidity contracts, Hardhat configuration, and contract tests           |
 
 Keep dependencies one-way. In particular, domain code must not depend on Next.js, Prisma, or HTTP libraries.
 

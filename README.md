@@ -65,17 +65,17 @@ Never commit `.env.local`. Replace all development secrets before deployment, an
 
 ## Common commands
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Run the web application locally |
-| `pnpm build` | Build the web app and workspace packages |
-| `pnpm check` | Run format, lint, type, and test checks |
-| `pnpm test` | Run workspace tests |
-| `pnpm lint` / `pnpm typecheck` | Run static checks |
-| `pnpm db:migrate:dev` | Create and apply development migrations |
-| `pnpm db:migrate:deploy` | Apply production migrations |
-| `pnpm db:seed` | Seed local development data |
-| `pnpm --filter @devforge/contracts test` | Run contract tests |
+| Command                                  | Purpose                                  |
+| ---------------------------------------- | ---------------------------------------- |
+| `pnpm dev`                               | Run the web application locally          |
+| `pnpm build`                             | Build the web app and workspace packages |
+| `pnpm check`                             | Run format, lint, type, and test checks  |
+| `pnpm test`                              | Run workspace tests                      |
+| `pnpm lint` / `pnpm typecheck`           | Run static checks                        |
+| `pnpm db:migrate:dev`                    | Create and apply development migrations  |
+| `pnpm db:migrate:deploy`                 | Apply production migrations              |
+| `pnpm db:seed`                           | Seed local development data              |
+| `pnpm --filter @devforge/contracts test` | Run contract tests                       |
 
 ## Contributing
 
