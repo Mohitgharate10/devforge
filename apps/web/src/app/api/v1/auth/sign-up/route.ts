@@ -7,7 +7,7 @@ import { createSession, serializeSessionCookie } from '@/server/auth/session';
 import { enforceRateLimit, AUTH_SIGN_UP_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const rateLimitResponse = enforceRateLimit(request, AUTH_SIGN_UP_RATE_LIMIT);
+  const rateLimitResponse = await enforceRateLimit(request, AUTH_SIGN_UP_RATE_LIMIT);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }

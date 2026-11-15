@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { submitDeliveryRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import { assertCanTransitionMilestoneStatus, DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
+import { requireSession } from '@/server/auth/middleware';
 import { demoStore, type DemoDelivery } from '@/server/engagement/demo-data';
 
 export async function POST(
@@ -11,6 +13,22 @@ export async function POST(
 ): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { milestoneId } = await params;
+
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
 
   try {
     const body = await request.json();
@@ -23,12 +41,31 @@ export async function POST(
           contract: {
             include: {
               freelancerProfile: true,
+              participants: true,
             },
           },
         },
       });
 
       if (milestone) {
+        const isFreelancer =
+          milestone.contract.freelancerProfile?.userId === actor.userId ||
+          (milestone.contract.participants?.some(
+            (p) => p.userId === actor.userId && p.role === 'FREELANCER',
+          ) ??
+            false);
+
+        if (!isFreelancer) {
+          return failure(
+            {
+              code: 'FORBIDDEN',
+              message: 'Only the freelancer on this contract can submit a delivery.',
+              status: 403,
+            },
+            requestId,
+          );
+        }
+
         // Allow funded or in_progress milestone to transition to submitted
         assertCanTransitionMilestoneStatus(milestone.status, 'SUBMITTED');
 
@@ -70,7 +107,7 @@ export async function POST(
       if (dbErr instanceof DomainError) {
         return failure(
           {
-            code: dbErr.code as 'VALIDATION_FAILED',
+            code: dbErr.code as ApiErrorCode,
             message: dbErr.message,
             status: dbErr.statusCode,
           },
@@ -97,10 +134,46 @@ export async function POST(
       );
     }
 
+    const globalStore = globalThis as unknown as {
+      __devforge_contracts?: Array<{
+        milestones?: Array<{ id: string }>;
+        freelancer?: { id: string; userId: string };
+        participants?: Array<{ userId: string; role: string }>;
+      }>;
+    };
+    const demoContract = globalStore.__devforge_contracts?.find((c) =>
+      c.milestones?.some((m) => m.id === milestoneId),
+    );
+
+    if (!demoContract) {
+      return failure(
+        { code: 'NOT_FOUND', message: 'Milestone not found.', status: 404 },
+        requestId,
+      );
+    }
+
+    const isFreelancer =
+      demoContract.freelancer?.userId === actor.userId ||
+      (demoContract.participants?.some(
+        (p) => p.userId === actor.userId && p.role === 'FREELANCER',
+      ) ??
+        false);
+
+    if (!isFreelancer) {
+      return failure(
+        {
+          code: 'FORBIDDEN',
+          message: 'Only the freelancer on this contract can submit a delivery.',
+          status: 403,
+        },
+        requestId,
+      );
+    }
+
     const demoDelivery: DemoDelivery = {
       id: `del-${crypto.randomUUID().slice(0, 8)}`,
       milestoneId,
-      freelancerProfileId: 'freelancer-elena',
+      freelancerProfileId: demoContract.freelancer?.id || 'freelancer-elena',
       description: parsed.description,
       status: 'SUBMITTED',
       feedback: null,
@@ -135,7 +208,7 @@ export async function POST(
     if (error instanceof DomainError) {
       return failure(
         {
-          code: error.code as 'VALIDATION_FAILED',
+          code: error.code as ApiErrorCode,
           message: error.message,
           status: error.statusCode,
         },

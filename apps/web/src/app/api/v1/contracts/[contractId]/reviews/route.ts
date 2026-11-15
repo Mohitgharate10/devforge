@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { createReviewRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
+import { DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
+import { requireSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
 
 export async function GET(
@@ -11,7 +14,96 @@ export async function GET(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { contractId } = await params;
 
+  let actor;
   try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
+  try {
+    let contract: {
+      clientProfile?: { userId: string } | null;
+      freelancerProfile?: { userId: string } | null;
+      participants?: Array<{ userId: string; role: string }>;
+    } | null = null;
+
+    try {
+      contract = await prisma.contract.findUnique({
+        where: { id: contractId },
+        include: {
+          clientProfile: true,
+          freelancerProfile: true,
+          participants: true,
+        },
+      });
+    } catch {
+      // Database offline - fallback to demo store
+    }
+
+    if (contract) {
+      const isClientOrFreelancer =
+        contract.clientProfile?.userId === actor.userId ||
+        contract.freelancerProfile?.userId === actor.userId ||
+        (contract.participants?.some(
+          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+        ) ??
+          false);
+
+      if (!isClientOrFreelancer) {
+        return failure(
+          {
+            code: 'FORBIDDEN',
+            message: 'You must be a client or freelancer on this contract to view reviews.',
+            status: 403,
+          },
+          requestId,
+        );
+      }
+    } else {
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
+          requestId,
+        );
+      }
+
+      const demoContract = demoStore.getContractById(contractId);
+      if (!demoContract) {
+        return failure(
+          { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
+          requestId,
+        );
+      }
+
+      const isClientOrFreelancer =
+        demoContract.client.userId === actor.userId ||
+        demoContract.freelancer.userId === actor.userId ||
+        demoContract.participants.some(
+          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+        );
+
+      if (!isClientOrFreelancer) {
+        return failure(
+          {
+            code: 'FORBIDDEN',
+            message: 'You must be a client or freelancer on this contract to view reviews.',
+            status: 403,
+          },
+          requestId,
+        );
+      }
+    }
+
     try {
       const reviews = await prisma.review.findMany({
         where: { contractId },
@@ -39,7 +131,6 @@ export async function GET(
         );
       }
     } catch {
-      // Database offline - fallback to demo store
       if (process.env.DEMO_MODE !== 'true') {
         return failure(
           { code: 'INTERNAL_ERROR', message: 'Failed to retrieve reviews.', status: 500 },
@@ -69,19 +160,117 @@ export async function POST(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { contractId } = await params;
 
+  let actor;
   try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
+  try {
+    let contract: {
+      clientProfile?: { userId: string } | null;
+      freelancerProfile?: { userId: string } | null;
+      participants?: Array<{ userId: string; role: string }>;
+    } | null = null;
+
+    try {
+      contract = await prisma.contract.findUnique({
+        where: { id: contractId },
+        include: {
+          clientProfile: true,
+          freelancerProfile: true,
+          participants: true,
+        },
+      });
+    } catch {
+      // Database offline
+    }
+
+    let defaultTargetId = '00000000-0000-4000-8000-000000000002';
+    let authorName = 'Reviewer';
+
+    if (contract) {
+      const isClientOrFreelancer =
+        contract.clientProfile?.userId === actor.userId ||
+        contract.freelancerProfile?.userId === actor.userId ||
+        (contract.participants?.some(
+          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+        ) ??
+          false);
+
+      if (!isClientOrFreelancer) {
+        return failure(
+          {
+            code: 'FORBIDDEN',
+            message: 'You must be a client or freelancer on this contract to submit a review.',
+            status: 403,
+          },
+          requestId,
+        );
+      }
+
+      defaultTargetId =
+        contract.clientProfile?.userId === actor.userId
+          ? contract.freelancerProfile?.userId || defaultTargetId
+          : contract.clientProfile?.userId || defaultTargetId;
+    } else {
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
+          requestId,
+        );
+      }
+
+      const demoContract = demoStore.getContractById(contractId);
+      if (!demoContract) {
+        return failure(
+          { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
+          requestId,
+        );
+      }
+
+      const isClientOrFreelancer =
+        demoContract.client.userId === actor.userId ||
+        demoContract.freelancer.userId === actor.userId ||
+        demoContract.participants.some(
+          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+        );
+
+      if (!isClientOrFreelancer) {
+        return failure(
+          {
+            code: 'FORBIDDEN',
+            message: 'You must be a client or freelancer on this contract to submit a review.',
+            status: 403,
+          },
+          requestId,
+        );
+      }
+
+      defaultTargetId =
+        demoContract.client.userId === actor.userId
+          ? demoContract.freelancer.userId
+          : demoContract.client.userId;
+      authorName =
+        demoContract.client.userId === actor.userId
+          ? demoContract.client.organizationName
+          : demoContract.freelancer.displayName;
+    }
+
     const body = (await request.json()) as Record<string, unknown>;
     const parsed = createReviewRequestSchema.safeParse(body);
 
-    const contract = demoStore.getContractById(contractId);
-    const clientId = contract ? contract.client.userId : 'user-parity';
-    const freelancerId = contract
-      ? contract.freelancer.userId
-      : '00000000-0000-4000-8000-000000000002';
-    const authorId = request.headers.get('x-user-id') || clientId;
-    const authorName =
-      request.headers.get('x-user-name') ||
-      (contract ? contract.client.organizationName : 'Client Reviewer');
+    const authorId = actor.userId;
 
     let rating: number;
     let feedback: string;
@@ -103,7 +292,7 @@ export async function POST(
       targetId =
         typeof body?.targetId === 'string' && body.targetId.trim().length > 0
           ? body.targetId.trim()
-          : freelancerId;
+          : defaultTargetId;
       qualityRating = typeof body?.qualityRating === 'number' ? body.qualityRating : undefined;
       communicationRating =
         typeof body?.communicationRating === 'number' ? body.communicationRating : undefined;
@@ -186,6 +375,16 @@ export async function POST(
       return success(demoRev, requestId);
     }
   } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       {
         code: 'VALIDATION_FAILED',

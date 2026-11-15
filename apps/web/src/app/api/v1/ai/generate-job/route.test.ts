@@ -1,10 +1,15 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { resetRateLimits } from '@/server/shared/rate-limit';
 import { POST } from './route';
 
 describe('POST /api/v1/ai/generate-job', () => {
   beforeEach(() => {
+    vi.stubEnv('TRUST_PROXY', 'true');
     resetRateLimits();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
   it('returns 401 when unauthenticated (no session)', async () => {
     const request = new Request('http://localhost/api/v1/ai/generate-job', {

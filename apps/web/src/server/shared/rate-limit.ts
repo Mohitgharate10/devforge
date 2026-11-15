@@ -4,18 +4,22 @@ import { failure } from '@/server/shared/http/api-response';
 /**
  * Reusable Rate Limiting Module
  *
- * Serverless / Multi-Instance Deployment Notice:
- * ----------------------------------------------
- * When running on serverless environments (e.g. Next.js on Vercel, AWS Lambda) or
- * containerized deployments behind load balancers with multiple instances,
- * in-memory rate limiting operates strictly within the memory scope of each isolate/process.
- * State is not automatically shared across multiple instances or separate lambda cold starts.
+ * Distributed vs. In-Memory Strategy & Serverless Notice:
+ * --------------------------------------------------------
+ * 1. Distributed Limiter:
+ *    When UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are set, requests
+ *    are metered globally via Upstash Redis REST API pipelines (INCR + PTTL/PEXPIRE).
+ *    This ensures consistent rate limits across serverless instances (Vercel / Lambda)
+ *    and multi-container load-balanced deployments.
  *
- * For distributed production environments requiring strict global rate enforcement,
- * configure Upstash Redis via UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
- * or standard Redis via REDIS_URL. When configured, distributed rate limiting can be
- * hooked into this interface. When not configured, this module seamlessly falls back to
- * an in-memory sliding window limiter tracking requests by client IP / key.
+ * 2. In-Memory Fallback:
+ *    When Upstash credentials are not configured (e.g. local development, testing,
+ *    or fallback upon Redis network outage), the limiter uses a local sliding-window
+ *    counter with automatic expired-key pruning.
+ *
+ *    Serverless Caveat: In-memory counters are local to the running Node.js process /
+ *    lambda container and reset on cold starts. For production multi-instance topologies,
+ *    provision an Upstash Redis store to enforce global guarantees.
  */
 
 export interface RateLimitOptions {
@@ -29,40 +33,153 @@ export interface RateLimitResult {
   success: boolean;
   limit: number;
   remaining: number;
-  reset: number; // UNIX epoch timestamp in milliseconds when window resets
+  reset: number; // UNIX epoch millisecond timestamp
 }
 
 interface WindowRecord {
   timestamps: number[];
+  windowMs: number;
 }
 
 // In-memory sliding window cache
 const memoryStore = new Map<string, WindowRecord>();
 
-export const isRedisConfigured = Boolean(
-  (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
-  (process.env.REDIS_URL && process.env.REDIS_URL !== 'redis://localhost:6379'),
-);
+export function isUpstashConfigured(): boolean {
+  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
 
-export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    const firstIp = forwardedFor.split(',')[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp?.trim()) return realIp.trim();
-  const cfIp = request.headers.get('cf-connecting-ip');
-  if (cfIp?.trim()) return cfIp.trim();
-  return '127.0.0.1';
+export function getMemoryStoreSize(): number {
+  return memoryStore.size;
 }
 
 export function resetRateLimits(): void {
   memoryStore.clear();
 }
 
-export function checkRateLimit(request: Request, options: RateLimitOptions): RateLimitResult {
+/**
+ * Prunes expired keys from the in-memory map.
+ * Removes keys where all timestamps are older than their windowMs.
+ */
+export function pruneExpiredKeys(now = Date.now()): void {
+  for (const [key, record] of memoryStore.entries()) {
+    record.timestamps = record.timestamps.filter((ts) => ts > now - record.windowMs);
+    if (record.timestamps.length === 0) {
+      memoryStore.delete(key);
+    }
+  }
+}
+
+/**
+ * Resolves the client identifier for rate limiting.
+ *
+ * Proxy Trust Security:
+ * Only trusts 'x-forwarded-for', 'x-real-ip', and 'cf-connecting-ip' when
+ * process.env.TRUST_PROXY === 'true'. When TRUST_PROXY is false/unset, proxy
+ * headers are untrusted (client-spoofable), so we fall back to authenticated
+ * user ID ('user:<id>') or 'anonymous-client'.
+ */
+export function getClientIp(request: Request): string {
+  const trustProxy = process.env.TRUST_PROXY === 'true';
+
+  if (trustProxy) {
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    if (forwardedFor) {
+      const firstIp = forwardedFor.split(',')[0]?.trim();
+      if (firstIp) return firstIp;
+    }
+    const realIp = request.headers.get('x-real-ip');
+    if (realIp?.trim()) return realIp.trim();
+    const cfIp = request.headers.get('cf-connecting-ip');
+    if (cfIp?.trim()) return cfIp.trim();
+  }
+
+  // When proxy is not trusted, fall back to authenticated user ID or 'anonymous-client'
+  const userId = request.headers.get('x-user-id');
+  if (userId?.trim()) {
+    return `user:${userId.trim()}`;
+  }
+
+  return 'anonymous-client';
+}
+
+/**
+ * Executes a distributed rate limit check against the Upstash Redis REST API.
+ */
+export async function checkUpstashRateLimit(
+  key: string,
+  options: RateLimitOptions,
+): Promise<RateLimitResult | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+
+  try {
+    const baseUrl = url.replace(/\/+$/, '');
+    const pipelineRes = await fetch(`${baseUrl}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        ['INCR', key],
+        ['PTTL', key],
+      ]),
+    });
+
+    if (!pipelineRes.ok) {
+      console.warn(`Upstash rate limit pipeline returned HTTP ${pipelineRes.status}`);
+      return null;
+    }
+
+    const data = (await pipelineRes.json()) as Array<{ result: number }>;
+    const count = data[0]?.result ?? 1;
+    let pttl = data[1]?.result ?? -1;
+
+    // If key had no expiration (-1 or <= 0), establish window TTL
+    if (pttl <= 0) {
+      pttl = options.windowMs;
+      await fetch(`${baseUrl}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([['PEXPIRE', key, options.windowMs]]),
+      });
+    }
+
+    const reset = Date.now() + Math.max(0, pttl);
+
+    if (count > options.max) {
+      return {
+        success: false,
+        limit: options.max,
+        remaining: 0,
+        reset,
+      };
+    }
+
+    return {
+      success: true,
+      limit: options.max,
+      remaining: Math.max(0, options.max - count),
+      reset,
+    };
+  } catch (err) {
+    console.warn('Upstash rate limit request failed, falling back to memory store:', err);
+    return null;
+  }
+}
+
+/**
+ * Checks in-memory sliding window rate limits, automatically pruning expired keys.
+ */
+export function checkMemoryRateLimit(request: Request, options: RateLimitOptions): RateLimitResult {
   const now = Date.now();
+  // Automatically prune expired keys on each request
+  pruneExpiredKeys(now);
+
   const windowMs = options.windowMs;
   const max = options.max;
   const key = options.keyGenerator
@@ -71,11 +188,13 @@ export function checkRateLimit(request: Request, options: RateLimitOptions): Rat
 
   let record = memoryStore.get(key);
   if (!record) {
-    record = { timestamps: [] };
+    record = { timestamps: [], windowMs };
     memoryStore.set(key, record);
+  } else {
+    record.windowMs = windowMs;
   }
 
-  // Filter out timestamps outside the sliding window
+  // Filter timestamps within current sliding window
   const windowStart = now - windowMs;
   record.timestamps = record.timestamps.filter((ts) => ts > windowStart);
 
@@ -103,6 +222,27 @@ export function checkRateLimit(request: Request, options: RateLimitOptions): Rat
   };
 }
 
+/**
+ * Primary rate limit check: prefers Upstash Redis if configured, otherwise in-memory sliding window.
+ */
+export async function checkRateLimit(
+  request: Request,
+  options: RateLimitOptions,
+): Promise<RateLimitResult> {
+  if (isUpstashConfigured()) {
+    const key = options.keyGenerator
+      ? options.keyGenerator(request)
+      : `${options.keyPrefix ?? 'rl'}:${getClientIp(request)}`;
+
+    const upstashResult = await checkUpstashRateLimit(key, options);
+    if (upstashResult) {
+      return upstashResult;
+    }
+  }
+
+  return checkMemoryRateLimit(request, options);
+}
+
 export function setRateLimitHeaders(headers: Headers, result: RateLimitResult): void {
   const retryAfterSeconds = Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
   headers.set('Retry-After', String(retryAfterSeconds));
@@ -114,8 +254,14 @@ export function setRateLimitHeaders(headers: Headers, result: RateLimitResult): 
   headers.set('RateLimit-Reset', String(retryAfterSeconds));
 }
 
-export function enforceRateLimit(request: Request, options: RateLimitOptions): NextResponse | null {
-  const result = checkRateLimit(request, options);
+/**
+ * Middleware helper returning 429 response with retry headers when limit exceeded, or null when allowed.
+ */
+export async function enforceRateLimit(
+  request: Request,
+  options: RateLimitOptions,
+): Promise<NextResponse | null> {
+  const result = await checkRateLimit(request, options);
   if (!result.success) {
     const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
     const response = failure(

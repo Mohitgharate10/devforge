@@ -13,10 +13,12 @@ import { POST } from './route';
 
 describe('POST /api/v1/auth/sign-in rate limiting', () => {
   beforeEach(() => {
+    vi.stubEnv('TRUST_PROXY', 'true');
     resetRateLimits();
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     resetRateLimits();
   });
 
