@@ -8,6 +8,9 @@ export default defineConfig({
     },
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    env: {
+      DEMO_MODE: 'true',
+    },
   },
   resolve: {
     alias: {

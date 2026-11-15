@@ -709,14 +709,16 @@ export const demoStore = {
         ? Number((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1))
         : 5.0;
 
+    const resolvedDisputesCount = reports.filter((r) => r.status === 'RESOLVED').length;
+
     return {
       activeContractsCount,
       totalEscrowVolumeEth: Number(totalVolume.toFixed(2)),
       totalDisputesCount: disputesCount,
-      resolvedDisputesCount: 1,
+      resolvedDisputesCount,
       platformFeeEth: Number((totalVolume * 0.025).toFixed(4)),
       averageRating: avgRating,
-      totalUsersCount: 24,
+      totalUsersCount: 0,
     };
   },
 };

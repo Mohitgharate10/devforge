@@ -3,8 +3,14 @@ import { passwordForgotRequestSchema } from '@devforge/api-contracts';
 import { prisma } from '@devforge/database';
 import { normalizeEmail } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
+import { enforceRateLimit, AUTH_PASSWORD_FORGOT_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const rateLimitResponse = enforceRateLimit(request, AUTH_PASSWORD_FORGOT_RATE_LIMIT);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {

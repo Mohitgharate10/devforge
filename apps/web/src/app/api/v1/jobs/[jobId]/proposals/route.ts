@@ -126,7 +126,24 @@ export async function POST(
         }
       } catch (dbErr) {
         console.warn('Prisma proposal creation fallback to in-memory store:', dbErr);
+        if (process.env.DEMO_MODE !== 'true') {
+          return failure(
+            {
+              code: 'INTERNAL_ERROR',
+              message: 'Failed to create proposal in database.',
+              status: 500,
+            },
+            requestId,
+          );
+        }
       }
+    }
+
+    if (!createdProposal && process.env.DEMO_MODE !== 'true') {
+      return failure(
+        { code: 'INTERNAL_ERROR', message: 'Failed to create proposal.', status: 500 },
+        requestId,
+      );
     }
 
     // Prepare unified proposal record for response & demoStore sync

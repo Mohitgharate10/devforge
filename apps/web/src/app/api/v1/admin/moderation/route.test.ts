@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const database = vi.hoisted(() => ({
   reportFindMany: vi.fn(),
@@ -24,6 +24,11 @@ describe('/api/v1/admin/moderation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     database.sessionFindFirst.mockResolvedValue(null);
+    vi.stubEnv('DEMO_MODE', 'true');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   describe('GET', () => {
@@ -86,6 +91,45 @@ describe('/api/v1/admin/moderation', () => {
       expect(Array.isArray(json.data)).toBe(true);
       expect(json.data.length).toBe(1);
       expect(json.data[0].id).toBe('report-1');
+    });
+
+    it('returns 500 when database fails and DEMO_MODE !== "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'false');
+      database.reportFindMany.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/moderation', {
+        method: 'GET',
+        headers: {
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(500);
+
+      const json = await response.json();
+      expect(json.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('falls back to demo reports when database fails and DEMO_MODE === "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'true');
+      database.reportFindMany.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/moderation', {
+        method: 'GET',
+        headers: {
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+
+      const json = await response.json();
+      expect(json.data).toBeDefined();
+      expect(Array.isArray(json.data)).toBe(true);
     });
   });
 
@@ -181,6 +225,55 @@ describe('/api/v1/admin/moderation', () => {
 
       const json = await response.json();
       expect(json.error.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('returns 500 when database update fails and DEMO_MODE !== "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'false');
+      database.reportUpdate.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/moderation', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+        body: JSON.stringify({
+          reportId: 'report-1',
+          status: 'RESOLVED',
+        }),
+      });
+
+      const response = await PATCH(request);
+      expect(response.status).toBe(500);
+
+      const json = await response.json();
+      expect(json.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('falls back to demo store when database update fails and DEMO_MODE === "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'true');
+      database.reportUpdate.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/moderation', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+        body: JSON.stringify({
+          reportId: 'rep-1',
+          status: 'RESOLVED',
+        }),
+      });
+
+      const response = await PATCH(request);
+      expect(response.status).toBe(200);
+
+      const json = await response.json();
+      expect(json.data).toBeDefined();
+      expect(json.data.status).toBe('RESOLVED');
     });
   });
 });

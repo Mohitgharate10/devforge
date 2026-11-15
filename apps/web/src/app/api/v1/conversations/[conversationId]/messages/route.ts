@@ -44,6 +44,19 @@ export async function GET(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve messages.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure(
+        { code: 'NOT_FOUND', message: 'Conversation not found.', status: 404 },
+        requestId,
+      );
     }
 
     let demoConv = demoStore
@@ -143,6 +156,19 @@ export async function POST(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve messages.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure(
+        { code: 'NOT_FOUND', message: 'Conversation not found.', status: 404 },
+        requestId,
+      );
     }
 
     // Determine target demo conversation

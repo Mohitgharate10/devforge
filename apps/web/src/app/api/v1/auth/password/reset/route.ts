@@ -4,8 +4,14 @@ import { prisma } from '@devforge/database';
 import { passwordSchema } from '@devforge/domain';
 import { failure } from '@/server/shared/http/api-response';
 import { auth } from '@/server/auth/index';
+import { enforceRateLimit, AUTH_PASSWORD_RESET_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const rateLimitResponse = enforceRateLimit(request, AUTH_PASSWORD_RESET_RATE_LIMIT);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {

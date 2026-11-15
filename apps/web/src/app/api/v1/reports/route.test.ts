@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const database = vi.hoisted(() => ({
   reportFindMany: vi.fn(),
@@ -24,6 +24,11 @@ describe('/api/v1/reports', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     database.sessionFindFirst.mockResolvedValue(null);
+    vi.stubEnv('DEMO_MODE', 'true');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   describe('GET', () => {
@@ -157,6 +162,45 @@ describe('/api/v1/reports', () => {
       expect(json.data[0].reporterId).toBe(reporterA);
       expect(json.data[1].reporterId).toBe(reporterB);
     });
+
+    it('returns 500 when database fails and DEMO_MODE !== "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'false');
+      database.reportFindMany.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/reports', {
+        method: 'GET',
+        headers: {
+          'x-user-id': '00000000-0000-4000-a000-000000000001',
+          'x-user-role': 'freelancer',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(500);
+
+      const json = await response.json();
+      expect(json.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('falls back to demo reports when database fails and DEMO_MODE === "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'true');
+      database.reportFindMany.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/reports', {
+        method: 'GET',
+        headers: {
+          'x-user-id': 'user-parity',
+          'x-user-role': 'client',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+
+      const json = await response.json();
+      expect(json.data).toBeDefined();
+      expect(Array.isArray(json.data)).toBe(true);
+    });
   });
 
   describe('POST', () => {
@@ -191,6 +235,53 @@ describe('/api/v1/reports', () => {
       const json = await response.json();
       expect(json.data).toBeDefined();
       expect(json.data.id).toBe('rep-created');
+    });
+
+    it('returns 500 when database report creation fails and DEMO_MODE !== "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'false');
+      database.reportCreate.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'JOB',
+          targetId: '00000000-0000-4000-a000-000000000010',
+          category: 'SPAM',
+          reason: 'Suspicious job posting',
+          severity: 'MEDIUM',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(500);
+
+      const json = await response.json();
+      expect(json.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('falls back to demoStore when database creation fails and DEMO_MODE === "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'true');
+      database.reportCreate.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'JOB',
+          targetId: '00000000-0000-4000-a000-000000000010',
+          category: 'SPAM',
+          reason: 'Suspicious job posting',
+          severity: 'MEDIUM',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(200);
+
+      const json = await response.json();
+      expect(json.data).toBeDefined();
+      expect(json.data.category).toBe('SPAM');
     });
   });
 });

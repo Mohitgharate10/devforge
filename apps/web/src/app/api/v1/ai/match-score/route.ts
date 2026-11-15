@@ -4,8 +4,14 @@ import { aiSkillMatchRequestSchema } from '@devforge/api-contracts';
 import type { ApiErrorCode } from '@devforge/api-contracts';
 import { success, failure } from '@/server/shared/http/api-response';
 import { requireSession } from '@/server/auth/middleware';
+import { enforceRateLimit, AI_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const rateLimitResponse = enforceRateLimit(request, AI_RATE_LIMIT);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {

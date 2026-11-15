@@ -19,7 +19,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         where,
         orderBy: { createdAt: 'desc' },
       });
-      if (reports.length > 0) {
+      if (reports.length > 0 || process.env.DEMO_MODE !== 'true') {
         const filtered = isAdmin ? reports : reports.filter((r) => r.reporterId === actor.userId);
         return success(
           filtered.map((r) => ({
@@ -37,14 +37,27 @@ export async function GET(request: Request): Promise<NextResponse> {
         );
       }
     } catch {
-      // Fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve reports from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
     }
 
-    let demoReports = demoStore.getReports();
-    if (!isAdmin) {
-      demoReports = demoReports.filter((r) => r.reporterId === actor.userId);
+    if (process.env.DEMO_MODE === 'true') {
+      let demoReports = demoStore.getReports();
+      if (!isAdmin) {
+        demoReports = demoReports.filter((r) => r.reporterId === actor.userId);
+      }
+      return success(demoReports, requestId);
     }
-    return success(demoReports, requestId);
+
+    return success([], requestId);
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
@@ -99,19 +112,30 @@ export async function POST(request: Request): Promise<NextResponse> {
         requestId,
       );
     } catch {
-      const demoRep = demoStore.addReport({
-        id: `rep-${Date.now()}`,
-        reporterId,
-        targetType: parsed.targetType,
-        targetId: parsed.targetId,
-        category: parsed.category,
-        reason: parsed.reason,
-        status: 'PENDING',
-        severity: parsed.severity,
-        createdAt: new Date().toISOString(),
-      });
+      if (process.env.DEMO_MODE === 'true') {
+        const demoRep = demoStore.addReport({
+          id: `rep-${Date.now()}`,
+          reporterId,
+          targetType: parsed.targetType,
+          targetId: parsed.targetId,
+          category: parsed.category,
+          reason: parsed.reason,
+          status: 'PENDING',
+          severity: parsed.severity,
+          createdAt: new Date().toISOString(),
+        });
 
-      return success(demoRep, requestId);
+        return success(demoRep, requestId);
+      }
+
+      return failure(
+        {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to create report in database.',
+          status: 500,
+        },
+        requestId,
+      );
     }
   } catch (error) {
     return failure(

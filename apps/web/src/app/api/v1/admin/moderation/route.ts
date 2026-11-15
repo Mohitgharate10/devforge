@@ -23,15 +23,28 @@ export async function GET(request: Request): Promise<NextResponse> {
       const reports = await prisma.report.findMany({
         orderBy: { createdAt: 'desc' },
       });
-      if (reports.length > 0) {
+      if (reports.length > 0 || process.env.DEMO_MODE !== 'true') {
         return success(reports, requestId);
       }
     } catch {
-      // Fallback
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve moderation queue from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
     }
 
-    const demoReports = demoStore.getReports();
-    return success(demoReports, requestId);
+    if (process.env.DEMO_MODE === 'true') {
+      const demoReports = demoStore.getReports();
+      return success(demoReports, requestId);
+    }
+
+    return success([], requestId);
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
@@ -66,8 +79,24 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       });
       return success(updated, requestId);
     } catch {
-      const updatedDemo = demoStore.updateReportStatus(parsed.reportId, parsed.status);
-      return success(updatedDemo, requestId);
+      if (process.env.DEMO_MODE === 'true') {
+        const updatedDemo = demoStore.updateReportStatus(parsed.reportId, parsed.status);
+        if (!updatedDemo) {
+          return failure(
+            { code: 'NOT_FOUND', message: 'Report not found.', status: 404 },
+            requestId,
+          );
+        }
+        return success(updatedDemo, requestId);
+      }
+      return failure(
+        {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to update report in database.',
+          status: 500,
+        },
+        requestId,
+      );
     }
   } catch (error) {
     if (error instanceof DomainError) {

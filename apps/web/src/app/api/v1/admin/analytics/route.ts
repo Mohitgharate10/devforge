@@ -13,13 +13,15 @@ export async function GET(request: Request): Promise<NextResponse> {
     await requireRole('admin', request.headers);
 
     try {
-      const [activeContracts, escrows, reports, reviews, usersCount] = await Promise.all([
-        prisma.contract.count({ where: { status: 'ACTIVE' } }),
-        prisma.escrow.findMany({ select: { amount: true } }),
-        prisma.report.count({ where: { status: 'PENDING' } }),
-        prisma.review.findMany({ select: { rating: true } }),
-        prisma.user.count(),
-      ]);
+      const [activeContracts, escrows, pendingReports, resolvedReports, reviews, usersCount] =
+        await Promise.all([
+          prisma.contract.count({ where: { status: 'ACTIVE' } }),
+          prisma.escrow.findMany({ select: { amount: true } }),
+          prisma.report.count({ where: { status: 'PENDING' } }),
+          prisma.report.count({ where: { status: 'RESOLVED' } }),
+          prisma.review.findMany({ select: { rating: true } }),
+          prisma.user.count(),
+        ]);
 
       const totalVolume = escrows.reduce(
         (sum, e) => sum + parseFloat(e.amount.toString() || '0'),
@@ -34,20 +36,37 @@ export async function GET(request: Request): Promise<NextResponse> {
         {
           activeContractsCount: activeContracts,
           totalEscrowVolumeEth: Number(totalVolume.toFixed(2)),
-          totalDisputesCount: reports,
-          resolvedDisputesCount: 1,
+          totalDisputesCount: pendingReports,
+          resolvedDisputesCount: resolvedReports,
           platformFeeEth: Number((totalVolume * 0.025).toFixed(4)),
           averageRating: avgRating,
-          totalUsersCount: usersCount || 24,
+          totalUsersCount: usersCount,
         },
         requestId,
       );
     } catch {
-      // Fallback to demo store analytics
+      // Fallback to demo store analytics only if DEMO_MODE === 'true'
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve analytics from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
     }
 
-    const demoAnalytics = demoStore.getAnalytics();
-    return success(demoAnalytics, requestId);
+    if (process.env.DEMO_MODE === 'true') {
+      const demoAnalytics = demoStore.getAnalytics();
+      return success(demoAnalytics, requestId);
+    }
+
+    return failure(
+      { code: 'INTERNAL_ERROR', message: 'Failed to retrieve analytics.', status: 500 },
+      requestId,
+    );
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(

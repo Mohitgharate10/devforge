@@ -4,7 +4,14 @@ node_modules/
 .next/
 dist/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
+
+# Hardhat and smart contract build artifacts
+artifacts/
+cache/
+typechain-types/
 
 # Local environment and tooling
 .env

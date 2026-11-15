@@ -57,6 +57,20 @@ export async function GET(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve proposal from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
     const demo = demoStore.getProposals().find((p) => p.id === proposalId);
@@ -169,6 +183,20 @@ export async function PATCH(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve proposal from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
     const demo = demoStore.getProposals().find((p) => p.id === proposalId);

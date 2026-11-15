@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const database = vi.hoisted(() => ({
   contractCount: vi.fn(),
@@ -26,6 +26,11 @@ describe('/api/v1/admin/analytics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     database.sessionFindFirst.mockResolvedValue(null);
+    vi.stubEnv('DEMO_MODE', 'true');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('returns 401 UNAUTHENTICATED when called without a session', async () => {
@@ -56,10 +61,11 @@ describe('/api/v1/admin/analytics', () => {
     expect(json.error.code).toBe('FORBIDDEN');
   });
 
-  it('returns 200 with platform analytics when called by an admin', async () => {
+  it('returns 200 with real platform analytics when called by an admin', async () => {
     database.contractCount.mockResolvedValue(5);
     database.escrowFindMany.mockResolvedValue([{ amount: '10.5' }, { amount: '2.5' }]);
-    database.reportCount.mockResolvedValue(2);
+    // reportCount called twice: for PENDING and RESOLVED
+    database.reportCount.mockResolvedValueOnce(2).mockResolvedValueOnce(1);
     database.reviewFindMany.mockResolvedValue([{ rating: 5 }, { rating: 4 }]);
     database.userCount.mockResolvedValue(30);
 
@@ -79,7 +85,50 @@ describe('/api/v1/admin/analytics', () => {
     expect(json.data.activeContractsCount).toBe(5);
     expect(json.data.totalEscrowVolumeEth).toBe(13);
     expect(json.data.totalDisputesCount).toBe(2);
+    expect(json.data.resolvedDisputesCount).toBe(1);
     expect(json.data.averageRating).toBe(4.5);
     expect(json.data.totalUsersCount).toBe(30);
+  });
+
+  describe('Demo Mode Gating', () => {
+    it('returns 500 when database fails and DEMO_MODE !== "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'false');
+      database.contractCount.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/analytics', {
+        method: 'GET',
+        headers: {
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(500);
+
+      const json = await response.json();
+      expect(json.error.code).toBe('INTERNAL_ERROR');
+      expect(json.error.message).toContain('Failed to retrieve analytics');
+    });
+
+    it('falls back to demoStore when database fails and DEMO_MODE === "true"', async () => {
+      vi.stubEnv('DEMO_MODE', 'true');
+      database.contractCount.mockRejectedValue(new Error('Database offline'));
+
+      const request = new Request('http://localhost/api/v1/admin/analytics', {
+        method: 'GET',
+        headers: {
+          'x-user-id': '00000000-0000-4000-a000-000000000099',
+          'x-user-role': 'admin',
+        },
+      });
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+
+      const json = await response.json();
+      expect(json.data).toBeDefined();
+      expect(typeof json.data.activeContractsCount).toBe('number');
+    });
   });
 });

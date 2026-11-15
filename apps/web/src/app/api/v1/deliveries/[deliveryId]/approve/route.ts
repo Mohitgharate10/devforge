@@ -111,6 +111,16 @@ export async function POST(
         );
       }
       console.warn('Prisma delivery approval fell back or encountered error:', dbErr);
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to approve deliverable.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure({ code: 'NOT_FOUND', message: 'Delivery not found.', status: 404 }, requestId);
     }
 
     const contracts = demoStore.getContracts();

@@ -47,6 +47,12 @@ export async function GET(
       });
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve escrow records.', status: 500 },
+          requestId,
+        );
+      }
     }
 
     if (contract) {
@@ -69,6 +75,12 @@ export async function GET(
         );
       }
     } else {
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'NOT_FOUND', message: 'Contract not found.', status: 404 },
+          requestId,
+        );
+      }
       const demoContract = demoStore.getContractById(contractId);
       if (!demoContract) {
         return failure(
@@ -128,6 +140,16 @@ export async function GET(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve escrow records.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return success([], requestId);
     }
 
     const demoEscrows = demoStore.getEscrowsByContractId(contractId);

@@ -21,6 +21,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to mark all notifications as read in database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return success({ success: true, isLocalDemo: false }, requestId);
     }
 
     demoStore.markAllNotificationsRead();
