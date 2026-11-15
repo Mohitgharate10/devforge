@@ -2,7 +2,7 @@ import {
   AccountClosedError,
   AccountSuspendedError,
   ForbiddenError,
-  UnauthenticatedError,
+  UnauthorizedError,
 } from './auth.errors';
 
 export type Actor = {
@@ -14,7 +14,7 @@ export type Actor = {
 
 export function requireActiveUser(actor: Actor | null): asserts actor is Actor {
   if (!actor) {
-    throw new UnauthenticatedError();
+    throw new UnauthorizedError();
   }
   if (actor.status === 'SUSPENDED') {
     throw new AccountSuspendedError();

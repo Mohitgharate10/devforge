@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { z } from 'zod';
+import { DomainError } from '@devforge/domain';
+import { type ApiErrorCode } from '@devforge/api-contracts';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
+import { requireRole } from '@/server/auth/middleware';
 
 const updateModerationSchema = z.object({
   reportId: z.string(),
@@ -14,6 +17,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
+    await requireRole('admin', request.headers);
+
     try {
       const reports = await prisma.report.findMany({
         orderBy: { createdAt: 'desc' },
@@ -27,7 +32,17 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const demoReports = demoStore.getReports();
     return success(demoReports, requestId);
-  } catch {
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       { code: 'INTERNAL_ERROR', message: 'Failed to retrieve moderation queue.', status: 500 },
       requestId,
@@ -39,6 +54,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
+    await requireRole('admin', request.headers);
+
     const body = await request.json();
     const parsed = updateModerationSchema.parse(body);
 
@@ -53,6 +70,16 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       return success(updatedDemo, requestId);
     }
   } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       {
         code: 'VALIDATION_FAILED',

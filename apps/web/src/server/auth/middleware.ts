@@ -5,6 +5,9 @@ import {
   requireActiveUser,
   requireRole as domainRequireRole,
   requirePermission as domainRequirePermission,
+  DomainError,
+  AccountSuspendedError,
+  AccountClosedError,
 } from '@devforge/domain';
 import { getSessionToken, hashSessionToken } from './session';
 
@@ -42,7 +45,13 @@ export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | n
         },
       });
 
-      if (session && session.user.status === 'ACTIVE') {
+      if (session) {
+        if (session.user.status === 'SUSPENDED') {
+          throw new AccountSuspendedError();
+        }
+        if (session.user.status === 'CLOSED') {
+          throw new AccountClosedError();
+        }
         return {
           userId: session.user.id,
           status: session.user.status,
@@ -61,10 +70,18 @@ export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | n
     if (process.env.NODE_ENV === 'test') {
       const testUserId = reqHeaders.get('x-user-id');
       if (testUserId) {
+        const testUserRole = reqHeaders.get('x-user-role');
+        const roles = testUserRole
+          ? testUserRole
+              .split(',')
+              .map((r) => r.trim())
+              .filter(Boolean)
+          : ['freelancer', 'client'];
+
         return {
           userId: testUserId,
           status: 'ACTIVE',
-          roles: ['freelancer', 'client'],
+          roles,
           permissions: ['jobs:create', 'proposals:create'],
         };
       }
@@ -72,6 +89,9 @@ export async function resolveActor(overrideHeaders?: Headers): Promise<Actor | n
 
     return null;
   } catch (err) {
+    if (err instanceof DomainError) {
+      throw err;
+    }
     console.error('Failed to resolve authenticated session:', err);
     throw err;
   }

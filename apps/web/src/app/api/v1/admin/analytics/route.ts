@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
+import { DomainError } from '@devforge/domain';
+import { type ApiErrorCode } from '@devforge/api-contracts';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
+import { requireRole } from '@/server/auth/middleware';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
+    await requireRole('admin', request.headers);
+
     try {
       const [activeContracts, escrows, reports, reviews, usersCount] = await Promise.all([
         prisma.contract.count({ where: { status: 'ACTIVE' } }),
@@ -43,7 +48,17 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const demoAnalytics = demoStore.getAnalytics();
     return success(demoAnalytics, requestId);
-  } catch {
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       { code: 'INTERNAL_ERROR', message: 'Failed to retrieve analytics.', status: 500 },
       requestId,

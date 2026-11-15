@@ -1,20 +1,28 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
-import { createReportRequestSchema } from '@devforge/api-contracts';
+import { createReportRequestSchema, type ApiErrorCode } from '@devforge/api-contracts';
+import { DomainError, hasRole } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
+import { requireSession } from '@/server/auth/middleware';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {
+    const actor = await requireSession(request.headers);
+    const isAdmin = hasRole(actor, 'admin');
+
     try {
+      const where = isAdmin ? {} : { reporterId: actor.userId };
       const reports = await prisma.report.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
       });
       if (reports.length > 0) {
+        const filtered = isAdmin ? reports : reports.filter((r) => r.reporterId === actor.userId);
         return success(
-          reports.map((r) => ({
+          filtered.map((r) => ({
             id: r.id,
             reporterId: r.reporterId,
             targetType: r.targetType,
@@ -32,9 +40,22 @@ export async function GET(request: Request): Promise<NextResponse> {
       // Fallback to demo store
     }
 
-    const demoReports = demoStore.getReports();
+    let demoReports = demoStore.getReports();
+    if (!isAdmin) {
+      demoReports = demoReports.filter((r) => r.reporterId === actor.userId);
+    }
     return success(demoReports, requestId);
-  } catch {
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       { code: 'INTERNAL_ERROR', message: 'Failed to retrieve reports.', status: 500 },
       requestId,

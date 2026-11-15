@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@devforge/database';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import {
   assertCanTransitionDeliveryStatus,
   assertCanTransitionMilestoneStatus,
   DomainError,
+  ForbiddenError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
+import { requireSession } from '@/server/auth/middleware';
 
 const rejectDeliverySchema = z.object({
   feedback: z.string().max(1000).optional(),
@@ -22,6 +25,8 @@ export async function POST(
   const { deliveryId } = await params;
 
   try {
+    const actor = await requireSession(request.headers);
+
     let feedback: string | undefined;
     try {
       const body = await request.json();
@@ -37,13 +42,21 @@ export async function POST(
         include: {
           milestone: {
             include: {
-              contract: true,
+              contract: {
+                include: {
+                  clientProfile: true,
+                },
+              },
             },
           },
         },
       });
 
       if (delivery) {
+        if (delivery.milestone.contract.clientProfile.userId !== actor.userId) {
+          throw new ForbiddenError('Only the contract client can reject deliveries.');
+        }
+
         assertCanTransitionDeliveryStatus(delivery.status, 'REJECTED');
         assertCanTransitionMilestoneStatus(delivery.milestone.status, 'IN_PROGRESS');
 
@@ -86,7 +99,7 @@ export async function POST(
       if (dbErr instanceof DomainError) {
         return failure(
           {
-            code: dbErr.code as 'VALIDATION_FAILED',
+            code: dbErr.code as ApiErrorCode,
             message: dbErr.message,
             status: dbErr.statusCode,
           },
@@ -94,6 +107,16 @@ export async function POST(
         );
       }
       console.warn('Prisma delivery rejection fell back or encountered error:', dbErr);
+    }
+
+    const contracts = demoStore.getContracts();
+    const demoContract = contracts.find((c) =>
+      c.milestones.some((m) => m.deliveries.some((d) => d.id === deliveryId)),
+    );
+    if (demoContract) {
+      if (demoContract.client.userId !== actor.userId) {
+        throw new ForbiddenError('Only the contract client can reject deliveries.');
+      }
     }
 
     const res = demoStore.rejectDelivery(deliveryId, feedback);
@@ -115,7 +138,7 @@ export async function POST(
     if (error instanceof DomainError) {
       return failure(
         {
-          code: error.code as 'STATE_TRANSITION_INVALID',
+          code: error.code as ApiErrorCode,
           message: error.message,
           status: error.statusCode,
         },
