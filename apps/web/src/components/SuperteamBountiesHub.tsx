@@ -170,7 +170,6 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(user.id ? { 'x-user-id': user.id } : {}),
         },
         body: JSON.stringify({
           bountyId: activeSubmissionBounty.id,

@@ -116,7 +116,6 @@ export function ProjectChat({ contractId }: { contractId: string }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id ?? '',
           'x-user-name': senderName,
         },
         body: JSON.stringify({

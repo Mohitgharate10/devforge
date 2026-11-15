@@ -212,7 +212,6 @@ export default function ContractWorkbenchPage({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(user?.id ? { 'x-user-id': user.id } : {}),
         },
         body: JSON.stringify({ description: deliveryDescription }),
       });
@@ -377,7 +376,6 @@ export default function ContractWorkbenchPage({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id ?? '',
           'x-user-name': authorName,
         },
         body: JSON.stringify({

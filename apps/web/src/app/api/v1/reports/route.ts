@@ -5,6 +5,7 @@ import { DomainError, hasRole } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
 import { demoStore } from '@/server/engagement/demo-data';
 import { requireSession } from '@/server/auth/middleware';
+import { enforceRateLimit, REPORT_POST_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
@@ -78,6 +79,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
+
+  // Rate limiting check
+  const rateLimitRes = await enforceRateLimit(request, REPORT_POST_RATE_LIMIT);
+  if (rateLimitRes) {
+    return rateLimitRes;
+  }
 
   try {
     const body = await request.json();

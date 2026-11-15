@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { acceptProposalRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import {
   assertCanTransitionProposalStatus,
   assertJobClient,
@@ -8,7 +9,7 @@ import {
   DomainError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
 import { demoStore, type DemoContract, type DemoMilestone } from '@/server/engagement/demo-data';
 
 export async function POST(
@@ -18,113 +19,128 @@ export async function POST(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { proposalId } = await params;
 
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = acceptProposalRequestSchema.parse(body);
 
-    const actor = await optionalSession();
-
     try {
-      if (actor) {
-        const proposal = await prisma.proposal.findUnique({
-          where: { id: proposalId },
-          include: {
-            job: {
-              include: { clientProfile: true },
-            },
-            freelancerProfile: {
-              include: { user: true },
-            },
+      const proposal = await prisma.proposal.findUnique({
+        where: { id: proposalId },
+        include: {
+          job: {
+            include: { clientProfile: true },
           },
-        });
+          freelancerProfile: {
+            include: { user: true },
+          },
+        },
+      });
 
-        if (proposal) {
-          assertJobClient(actor.userId, proposal.job.clientProfile.userId);
-          assertCanTransitionProposalStatus(proposal.status, 'ACCEPTED');
+      if (proposal) {
+        assertJobClient(actor.userId, proposal.job.clientProfile.userId);
+        assertCanTransitionProposalStatus(proposal.status, 'ACCEPTED');
 
-          // Verify milestone sums equal proposal bid
-          const milestoneAmounts = parsed.milestones.map((m) => m.amount);
-          assertMilestonesSum(milestoneAmounts, Number(proposal.bidAmount));
+        // Verify milestone sums equal proposal bid
+        const milestoneAmounts = parsed.milestones.map((m) => m.amount);
+        assertMilestonesSum(milestoneAmounts, Number(proposal.bidAmount));
 
-          // Transactional execution
-          const contract = await prisma.$transaction(async (tx) => {
-            await tx.proposal.update({
-              where: { id: proposalId },
-              data: {
-                status: 'ACCEPTED',
-                statusHistory: {
-                  create: {
-                    fromStatus: proposal.status,
-                    toStatus: 'ACCEPTED',
-                    actorId: actor.userId,
-                    reason: 'Client accepted proposal and initiated contract',
-                  },
+        // Transactional execution
+        const contract = await prisma.$transaction(async (tx) => {
+          await tx.proposal.update({
+            where: { id: proposalId },
+            data: {
+              status: 'ACCEPTED',
+              statusHistory: {
+                create: {
+                  fromStatus: proposal.status,
+                  toStatus: 'ACCEPTED',
+                  actorId: actor.userId,
+                  reason: 'Client accepted proposal and initiated contract',
                 },
               },
-            });
-
-            // Mark job as CLOSED or IN_PROGRESS
-            await tx.job.update({
-              where: { id: proposal.jobId },
-              data: { status: 'CLOSED' },
-            });
-
-            const createdContract = await tx.contract.create({
-              data: {
-                jobId: proposal.jobId,
-                proposalId: proposal.id,
-                clientProfileId: proposal.job.clientProfileId,
-                freelancerProfileId: proposal.freelancerProfileId,
-                title: proposal.job.title,
-                totalAmount: proposal.bidAmount,
-                currency: proposal.currency,
-                status: 'ACTIVE',
-                participants: {
-                  create: [
-                    { userId: proposal.job.clientProfile.userId, role: 'CLIENT' },
-                    { userId: proposal.freelancerProfile.userId, role: 'FREELANCER' },
-                  ],
-                },
-                milestones: {
-                  create: parsed.milestones.map((m, idx) => ({
-                    sequence: idx + 1,
-                    title: m.title,
-                    description: m.description ?? null,
-                    amount: BigInt(m.amount),
-                    dueDate: m.dueDate ? new Date(m.dueDate) : null,
-                    status: idx === 0 ? 'FUNDED' : 'PENDING',
-                  })),
-                },
-              },
-              include: {
-                milestones: true,
-                participants: true,
-              },
-            });
-
-            return createdContract;
+            },
           });
 
-          return success(
-            {
-              id: contract.id,
-              jobId: contract.jobId,
-              proposalId: contract.proposalId,
-              title: contract.title,
-              totalAmount: Number(contract.totalAmount),
-              currency: contract.currency,
-              status: contract.status,
-              milestonesCount: contract.milestones.length,
-              createdAt: contract.createdAt.toISOString(),
-              updatedAt: contract.updatedAt.toISOString(),
-              isLocalDemo: false,
+          // Mark job as CLOSED or IN_PROGRESS
+          await tx.job.update({
+            where: { id: proposal.jobId },
+            data: { status: 'CLOSED' },
+          });
+
+          const createdContract = await tx.contract.create({
+            data: {
+              jobId: proposal.jobId,
+              proposalId: proposal.id,
+              clientProfileId: proposal.job.clientProfileId,
+              freelancerProfileId: proposal.freelancerProfileId,
+              title: proposal.job.title,
+              totalAmount: proposal.bidAmount,
+              currency: proposal.currency,
+              status: 'ACTIVE',
+              participants: {
+                create: [
+                  { userId: proposal.job.clientProfile.userId, role: 'CLIENT' },
+                  { userId: proposal.freelancerProfile.userId, role: 'FREELANCER' },
+                ],
+              },
+              milestones: {
+                create: parsed.milestones.map((m, idx) => ({
+                  sequence: idx + 1,
+                  title: m.title,
+                  description: m.description ?? null,
+                  amount: BigInt(m.amount),
+                  dueDate: m.dueDate ? new Date(m.dueDate) : null,
+                  status: idx === 0 ? 'FUNDED' : 'PENDING',
+                })),
+              },
             },
-            requestId,
-            201,
-          );
-        }
+            include: {
+              milestones: true,
+              participants: true,
+            },
+          });
+
+          return createdContract;
+        });
+
+        return success(
+          {
+            id: contract.id,
+            jobId: contract.jobId,
+            proposalId: contract.proposalId,
+            title: contract.title,
+            totalAmount: Number(contract.totalAmount),
+            currency: contract.currency,
+            status: contract.status,
+            milestonesCount: contract.milestones.length,
+            createdAt: contract.createdAt.toISOString(),
+            updatedAt: contract.updatedAt.toISOString(),
+            isLocalDemo: false,
+          },
+          requestId,
+          201,
+        );
       }
-    } catch {
+    } catch (dbErr) {
+      if (dbErr instanceof DomainError) {
+        throw dbErr;
+      }
       // Database offline - fallback to demo store
       if (process.env.DEMO_MODE !== 'true') {
         return failure(
@@ -147,6 +163,7 @@ export async function POST(
       return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
+    assertJobClient(actor.userId, demo.client.userId);
     assertCanTransitionProposalStatus(demo.status, 'ACCEPTED');
     const milestoneAmounts = parsed.milestones.map((m) => m.amount);
     assertMilestonesSum(milestoneAmounts, demo.bidAmount);
@@ -210,7 +227,7 @@ export async function POST(
     if (error instanceof DomainError) {
       return failure(
         {
-          code: error.code as 'VALIDATION_FAILED',
+          code: error.code as ApiErrorCode,
           message: error.message,
           status: error.statusCode,
         },

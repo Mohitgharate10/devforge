@@ -26,7 +26,12 @@ const mockDb = vi.hoisted(() => {
   const proposals = new Map<string, MockProposal>();
   let shouldFailTransaction = false;
 
-  const mockUserFindUnique = vi.fn(async () => null);
+  const mockUserFindUnique = vi.fn(async ({ where }: { where: { id: string } }) => ({
+    id: where.id,
+    email: `${where.id.slice(0, 8)}@devforge.network`,
+    displayName: 'Verified Specialist',
+    status: 'ACTIVE',
+  }));
   const mockUserCreate = vi.fn(
     async ({
       data,

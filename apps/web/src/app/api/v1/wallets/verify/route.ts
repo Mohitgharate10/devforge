@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { walletVerifyRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import {
   requireValidSignature,
   normalizeAddress,
@@ -11,10 +12,26 @@ import {
   TokenInvalidError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
+
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
 
   try {
     const body = await request.json();
@@ -48,88 +65,39 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     const address = normalizeAddress(nonceRecord.address);
-    const actor = await optionalSession();
-
-    if (actor) {
-      const existingWallet = await prisma.wallet.findUnique({
-        where: { chainId_address: { chainId: nonceRecord.chainId, address } },
-      });
-
-      if (existingWallet) {
-        return failure(
-          { code: 'CONFLICT', message: 'Wallet is already linked to an account.', status: 409 },
-          requestId,
-        );
-      }
-
-      const walletCount = await prisma.wallet.count({
-        where: { userId: actor.userId, chainId: nonceRecord.chainId },
-      });
-
-      const wallet = await prisma.wallet.create({
-        data: {
-          userId: actor.userId,
-          chainId: nonceRecord.chainId,
-          address,
-          isPrimary: walletCount === 0,
-        },
-      });
-
-      return success(
-        {
-          id: wallet.id,
-          chainId: wallet.chainId,
-          address: wallet.address,
-          isPrimary: wallet.isPrimary,
-          label: wallet.label,
-          createdAt: wallet.createdAt.toISOString(),
-        },
-        requestId,
-      );
-    }
 
     const existingWallet = await prisma.wallet.findUnique({
       where: { chainId_address: { chainId: nonceRecord.chainId, address } },
-      include: {
-        user: {
-          include: {
-            userRoles: { include: { role: true } },
-          },
-        },
-      },
     });
 
-    if (!existingWallet) {
+    if (existingWallet) {
       return failure(
-        {
-          code: 'NOT_FOUND',
-          message: 'No account linked to this wallet. Please sign up first.',
-          status: 404,
-        },
+        { code: 'CONFLICT', message: 'Wallet is already linked to an account.', status: 409 },
         requestId,
       );
     }
 
+    const walletCount = await prisma.wallet.count({
+      where: { userId: actor.userId, chainId: nonceRecord.chainId },
+    });
+
+    const wallet = await prisma.wallet.create({
+      data: {
+        userId: actor.userId,
+        chainId: nonceRecord.chainId,
+        address,
+        isPrimary: walletCount === 0,
+      },
+    });
+
     return success(
       {
-        user: {
-          id: existingWallet.user.id,
-          email: existingWallet.user.email,
-          displayName: existingWallet.user.displayName,
-          avatarUrl: existingWallet.user.avatarUrl,
-          emailVerified: !!existingWallet.user.emailVerifiedAt,
-          status: existingWallet.user.status,
-          roles: existingWallet.user.userRoles.map((ur) => ur.role.name),
-          createdAt: existingWallet.user.createdAt.toISOString(),
-        },
-        wallet: {
-          id: existingWallet.id,
-          chainId: existingWallet.chainId,
-          address: existingWallet.address,
-          isPrimary: existingWallet.isPrimary,
-          label: existingWallet.label,
-          createdAt: existingWallet.createdAt.toISOString(),
-        },
+        id: wallet.id,
+        chainId: wallet.chainId,
+        address: wallet.address,
+        isPrimary: wallet.isPrimary,
+        label: wallet.label,
+        createdAt: wallet.createdAt.toISOString(),
       },
       requestId,
     );
@@ -137,7 +105,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (error instanceof DomainError) {
       return failure(
         {
-          code: error.code as 'VALIDATION_FAILED',
+          code: error.code as ApiErrorCode,
           message: error.message,
           status: error.statusCode,
         },

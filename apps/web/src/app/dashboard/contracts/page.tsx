@@ -61,9 +61,6 @@ export default function ContractsDashboardPage() {
       try {
         setLoading(true);
         const headers: Record<string, string> = {};
-        if (user?.id) {
-          headers['x-user-id'] = user.id;
-        }
 
         const [cRes, pRes] = await Promise.all([
           fetch('/api/v1/contracts', { headers }),

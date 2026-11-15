@@ -42,11 +42,7 @@ export default function ProposalsDashboardPage() {
 
   const reloadProposals = async () => {
     try {
-      const headers: Record<string, string> = {};
-      if (user?.id) {
-        headers['x-user-id'] = user.id;
-      }
-      const res = await fetch('/api/v1/proposals', { headers });
+      const res = await fetch('/api/v1/proposals');
       const json = await res.json();
       if (json.data?.items) {
         setProposals(json.data.items);
@@ -60,11 +56,7 @@ export default function ProposalsDashboardPage() {
     let ignore = false;
     async function load() {
       try {
-        const headers: Record<string, string> = {};
-        if (user?.id) {
-          headers['x-user-id'] = user.id;
-        }
-        const res = await fetch('/api/v1/proposals', { headers });
+        const res = await fetch('/api/v1/proposals');
         const json = await res.json();
         if (!ignore && json.data?.items) {
           setProposals(json.data.items);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { walletNonceRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import {
   generateNonce,
   getNonceExpiresAt,
@@ -9,23 +10,38 @@ import {
   DomainError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
 import { environment } from '@/server/shared/env';
+import { enforceRateLimit, WALLET_NONCE_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
-  try {
-    const body = await request.json();
-    const parsed = walletNonceRequestSchema.parse(body);
-    const actor = await optionalSession();
+  // Rate limiting check
+  const rateLimitRes = await enforceRateLimit(request, WALLET_NONCE_RATE_LIMIT);
+  if (rateLimitRes) {
+    return rateLimitRes;
+  }
 
-    if (parsed.action === 'link' && !actor) {
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
       return failure(
-        { code: 'UNAUTHENTICATED', message: 'Session required to link a wallet.', status: 401 },
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
         requestId,
       );
     }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const parsed = walletNonceRequestSchema.parse(body);
 
     const address = normalizeAddress(parsed.address);
     const nonce = generateNonce();
@@ -34,7 +50,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     await prisma.walletNonce.create({
       data: {
-        userId: actor?.userId ?? null,
+        userId: actor.userId,
         address,
         chainId: parsed.chainId,
         nonce,
@@ -65,7 +81,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (error) {
     if (error instanceof DomainError) {
       return failure(
-        { code: error.code as 'RATE_LIMITED', message: error.message, status: error.statusCode },
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
         requestId,
       );
     }

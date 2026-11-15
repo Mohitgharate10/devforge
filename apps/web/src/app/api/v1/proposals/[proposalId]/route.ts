@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
 import { updateProposalRequestSchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import {
   validateCoverLetter,
   validateBidAmount,
@@ -8,7 +9,7 @@ import {
   DomainError,
 } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
 
 export async function GET(
@@ -18,12 +19,32 @@ export async function GET(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { proposalId } = await params;
 
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
+  const isAdmin = actor.roles.some((r) => r.toLowerCase() === 'admin');
+
   try {
     try {
       const proposal = await prisma.proposal.findUnique({
         where: { id: proposalId },
         include: {
-          job: true,
+          job: {
+            include: { clientProfile: true },
+          },
           freelancerProfile: {
             include: { user: true },
           },
@@ -31,6 +52,20 @@ export async function GET(
       });
 
       if (proposal) {
+        const isFreelancer = proposal.freelancerProfile.userId === actor.userId;
+        const isClient = proposal.job?.clientProfile?.userId === actor.userId;
+
+        if (!isFreelancer && !isClient && !isAdmin) {
+          return failure(
+            {
+              code: 'FORBIDDEN',
+              message: 'You are not authorized to view this proposal.',
+              status: 403,
+            },
+            requestId,
+          );
+        }
+
         return success(
           {
             id: proposal.id,
@@ -78,6 +113,21 @@ export async function GET(
       return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
     }
 
+    const isDemoFreelancer =
+      demo.freelancer.userId === actor.userId || demo.freelancerProfileId === actor.userId;
+    const isDemoClient = demo.client?.userId === actor.userId || demo.client?.id === actor.userId;
+
+    if (!isDemoFreelancer && !isDemoClient && !isAdmin) {
+      return failure(
+        {
+          code: 'FORBIDDEN',
+          message: 'You are not authorized to view this proposal.',
+          status: 403,
+        },
+        requestId,
+      );
+    }
+
     return success(
       {
         id: demo.id,
@@ -95,7 +145,17 @@ export async function GET(
       },
       requestId,
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        {
+          code: error.code as ApiErrorCode,
+          message: error.message,
+          status: error.statusCode,
+        },
+        requestId,
+      );
+    }
     return failure(
       { code: 'INTERNAL_ERROR', message: 'Failed to retrieve proposal.', status: 500 },
       requestId,
@@ -110,6 +170,22 @@ export async function PATCH(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { proposalId } = await params;
 
+  let actor;
+  try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = updateProposalRequestSchema.parse(body);
@@ -121,22 +197,13 @@ export async function PATCH(
       validateBidAmount(parsed.bidAmount);
     }
 
-    const actor = await optionalSession();
-
     try {
-      if (actor) {
-        const existing = await prisma.proposal.findUnique({
-          where: { id: proposalId },
-          include: { freelancerProfile: true },
-        });
+      const existing = await prisma.proposal.findUnique({
+        where: { id: proposalId },
+        include: { freelancerProfile: true },
+      });
 
-        if (!existing) {
-          return failure(
-            { code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 },
-            requestId,
-          );
-        }
-
+      if (existing) {
         assertProposalSubmitter(actor.userId, existing.freelancerProfile.userId);
 
         if (existing.status !== 'SUBMITTED') {
@@ -181,7 +248,10 @@ export async function PATCH(
           requestId,
         );
       }
-    } catch {
+    } catch (dbErr) {
+      if (dbErr instanceof DomainError) {
+        throw dbErr;
+      }
       // Database offline - fallback to demo store
       if (process.env.DEMO_MODE !== 'true') {
         return failure(
@@ -202,6 +272,19 @@ export async function PATCH(
     const demo = demoStore.getProposals().find((p) => p.id === proposalId);
     if (!demo) {
       return failure({ code: 'NOT_FOUND', message: 'Proposal not found.', status: 404 }, requestId);
+    }
+
+    assertProposalSubmitter(actor.userId, demo.freelancer.userId);
+
+    if (demo.status !== 'SUBMITTED') {
+      return failure(
+        {
+          code: 'STATE_TRANSITION_INVALID',
+          message: `Cannot edit proposal with status '${demo.status}'.`,
+          status: 422,
+        },
+        requestId,
+      );
     }
 
     if (parsed.coverLetter !== undefined) demo.coverLetter = parsed.coverLetter;
@@ -228,7 +311,7 @@ export async function PATCH(
     if (error instanceof DomainError) {
       return failure(
         {
-          code: error.code as 'VALIDATION_FAILED',
+          code: error.code as ApiErrorCode,
           message: error.message,
           status: error.statusCode,
         },

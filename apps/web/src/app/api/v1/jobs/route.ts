@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   prisma,
   type Job,
@@ -8,10 +9,51 @@ import {
   type Skill,
 } from '@devforge/database';
 import { searchJobsQuerySchema } from '@devforge/api-contracts';
+import type { ApiErrorCode } from '@devforge/api-contracts';
+import { DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
-import { optionalSession } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
+import { enforceRateLimit, JOB_CREATE_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 import { CANONICAL_BOUNTIES } from '@/lib/canonical-marketplace';
+
+const createJobBodySchema = z
+  .object({
+    title: z
+      .string({ message: 'Title is required.' })
+      .trim()
+      .min(5, 'Title must be at least 5 characters.')
+      .max(200, 'Title must be at most 200 characters.'),
+    description: z
+      .string({ message: 'Description is required.' })
+      .trim()
+      .min(20, 'Description must be at least 20 characters.')
+      .max(10000, 'Description must be at most 10000 characters.'),
+    budgetMin: z
+      .number({ message: 'budgetMin is required.' })
+      .int('budgetMin must be an integer.')
+      .positive('budgetMin must be a positive integer.'),
+    budgetMax: z
+      .number({ message: 'budgetMax is required.' })
+      .int('budgetMax must be an integer.')
+      .positive('budgetMax must be a positive integer.'),
+    currency: z.string().default('USDC'),
+    client: z.string().optional(),
+    organization: z.string().optional(),
+    clientName: z.string().optional(),
+    category: z.string().optional(),
+    categoryName: z.string().optional(),
+    skills: z
+      .union([
+        z.array(z.union([z.string(), z.object({ name: z.string().optional() })])),
+        z.string(),
+      ])
+      .optional(),
+  })
+  .refine((data) => data.budgetMin <= data.budgetMax, {
+    message: 'budgetMin must be less than or equal to budgetMax.',
+    path: ['budgetMax'],
+  });
 
 type JobWithRelations = Job & {
   category: JobCategory;
@@ -147,36 +189,81 @@ export async function GET(request: Request): Promise<NextResponse> {
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
+  // Rate limiting check
+  const rateLimitRes = await enforceRateLimit(request, JOB_CREATE_RATE_LIMIT);
+  if (rateLimitRes) {
+    return rateLimitRes;
+  }
+
+  // Authentication and client role requirement
+  let actor;
   try {
-    const actor = await optionalSession();
-    const body = await request.json();
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
 
-    const title = (body.title || 'Web3 Engineering Scope').trim();
-    const description = (
-      body.description || 'Deliverables and technical specification for milestone escrow.'
-    ).trim();
-    const budgetMin = body.budgetMin !== undefined ? BigInt(body.budgetMin) : BigInt(1000000);
-    const budgetMax = body.budgetMax !== undefined ? BigInt(body.budgetMax) : BigInt(2000000);
-    const currency = body.currency || 'USDC';
-    const clientName =
-      body.client || body.organization || body.clientName || 'Protocol / Client Team';
+  const isClient = actor.roles.some((r) => r.toLowerCase() === 'client');
+  const isAdmin = actor.roles.some((r) => r.toLowerCase() === 'admin');
+  if (!isClient && !isAdmin) {
+    return failure(
+      { code: 'FORBIDDEN', message: "Role 'client' is required to create a job.", status: 403 },
+      requestId,
+    );
+  }
 
-    // 1. Resolve or create client user in Supabase
-    let userId = actor?.userId;
-    if (!userId) {
-      const defaultClient = await prisma.user.upsert({
-        where: { email: 'client@devforge.network' },
-        update: {},
-        create: {
-          email: 'client@devforge.network',
-          displayName: clientName,
-          status: 'ACTIVE',
-        },
-      });
-      userId = defaultClient.id;
+  try {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return failure(
+        { code: 'VALIDATION_FAILED', message: 'Invalid JSON request body.', status: 400 },
+        requestId,
+      );
     }
 
-    // 2. Resolve or create ClientProfile in Supabase
+    const parsed = createJobBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return failure(
+        {
+          code: 'VALIDATION_FAILED',
+          message: parsed.error.issues[0]?.message ?? 'Invalid job creation payload.',
+          status: 400,
+        },
+        requestId,
+      );
+    }
+
+    const {
+      title,
+      description,
+      budgetMin: budgetMinNum,
+      budgetMax: budgetMaxNum,
+      currency,
+      client,
+      organization,
+      clientName: rawClientName,
+      category: bodyCategory,
+      categoryName: bodyCategoryName,
+      skills: bodySkills,
+    } = parsed.data;
+
+    const budgetMin = BigInt(budgetMinNum);
+    const budgetMax = BigInt(budgetMaxNum);
+    const clientName = client || organization || rawClientName || 'Client Team';
+    const userId = actor.userId;
+
+    // 1. Resolve or create ClientProfile in database (no shared default user)
     let clientProfile = await prisma.clientProfile.findUnique({
       where: { userId },
     });
@@ -188,13 +275,13 @@ export async function POST(request: Request): Promise<NextResponse> {
           userId,
           organizationName: clientName,
           slug,
-          description: 'Verified Web3 Protocol / Client Team',
+          description: 'Web3 Protocol / Client Team',
         },
       });
     }
 
-    // 3. Resolve category in Supabase
-    const categoryName = body.category || body.categoryName || 'Smart Contract Development';
+    // 2. Resolve category in database
+    const categoryName = bodyCategory || bodyCategoryName || 'Smart Contract Development';
     let category = await prisma.jobCategory.findFirst({
       where: {
         OR: [
@@ -221,13 +308,13 @@ export async function POST(request: Request): Promise<NextResponse> {
         }));
     }
 
-    // 4. Resolve skills
-    const rawSkills: string[] = Array.isArray(body.skills)
-      ? body.skills.map((s: unknown) =>
+    // 3. Resolve skills
+    const rawSkills: string[] = Array.isArray(bodySkills)
+      ? bodySkills.map((s: unknown) =>
           typeof s === 'string' ? s : ((s as { name?: string })?.name ?? ''),
         )
-      : typeof body.skills === 'string'
-        ? body.skills.split(',').map((s: string) => s.trim())
+      : typeof bodySkills === 'string'
+        ? bodySkills.split(',').map((s: string) => s.trim())
         : ['Solidity', 'Web3'];
 
     const skillRecords = await Promise.all(
@@ -245,7 +332,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }),
     );
 
-    // 5. Create PUBLISHED Job in Supabase
+    // 4. Create PUBLISHED Job in database
     const job = await prisma.job.create({
       data: {
         clientProfileId: clientProfile.id,

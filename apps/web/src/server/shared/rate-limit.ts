@@ -320,3 +320,33 @@ export const AI_RATE_LIMIT: RateLimitOptions = {
   max: 10,
   keyPrefix: 'ai',
 };
+
+export const JOB_CREATE_RATE_LIMIT: RateLimitOptions = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  keyPrefix: 'job:create',
+};
+
+export const MESSAGE_POST_RATE_LIMIT: RateLimitOptions = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  keyPrefix: 'msg:create',
+};
+
+export const BOUNTY_SUBMIT_RATE_LIMIT: RateLimitOptions = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  keyPrefix: 'bounty:submit',
+};
+
+export const REPORT_POST_RATE_LIMIT: RateLimitOptions = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  keyPrefix: 'report:create',
+};
+
+export const WALLET_NONCE_RATE_LIMIT: RateLimitOptions = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+  keyPrefix: 'wallet:nonce',
+};

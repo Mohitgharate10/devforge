@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
-import { resolveActor } from '@/server/auth/middleware';
+import { requireSession } from '@/server/auth/middleware';
+import type { ApiErrorCode } from '@devforge/api-contracts';
+import { DomainError } from '@devforge/domain';
 import { success, failure } from '@/server/shared/http/api-response';
+import { enforceRateLimit, BOUNTY_SUBMIT_RATE_LIMIT } from '@/server/shared/rate-limit';
 import {
   findCanonicalBounty,
   CANONICAL_BOUNTIES,
@@ -51,19 +54,33 @@ const EVM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 export async function POST(request: Request): Promise<NextResponse> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
+  // Rate limiting check
+  const rateLimitRes = await enforceRateLimit(request, BOUNTY_SUBMIT_RATE_LIMIT);
+  if (rateLimitRes) {
+    return rateLimitRes;
+  }
+
+  let actor;
   try {
-    const actor = await resolveActor(request.headers);
-    if (!actor) {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
       return failure(
-        {
-          code: 'UNAUTHENTICATED',
-          message: 'Authentication required. Please sign in to submit work for this bounty.',
-          status: 401,
-        },
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
         requestId,
       );
     }
+    return failure(
+      {
+        code: 'UNAUTHENTICATED',
+        message: 'Authentication required. Please sign in to submit work for this bounty.',
+        status: 401,
+      },
+      requestId,
+    );
+  }
 
+  try {
     const body = await request.json().catch(() => ({}));
     const { bountyId, prUrl, demoUrl, summary, payoutAddress } = body;
 
@@ -167,17 +184,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       if (dbJob) {
         const persistedProposal = await prisma.$transaction(async (tx) => {
-          let user = isUuid ? await tx.user.findUnique({ where: { id: actor.userId } }) : null;
+          const user = isUuid ? await tx.user.findUnique({ where: { id: actor.userId } }) : null;
 
           if (!user && isUuid) {
-            user = await tx.user.create({
-              data: {
-                id: actor.userId,
-                email: `${actor.userId.slice(0, 8)}@devforge.network`,
-                displayName: userRecord?.displayName || 'Verified Specialist',
-                status: 'ACTIVE',
-              },
-            });
+            return null;
           }
 
           const targetUserId = user?.id ?? actor.userId;
