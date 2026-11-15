@@ -176,8 +176,35 @@ export async function POST(
     );
   }
 
+  // Parse and strictly validate request body schema — no lenient fallback with default values
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return failure(
+      { code: 'VALIDATION_FAILED', message: 'Invalid JSON request body.', status: 400 },
+      requestId,
+    );
+  }
+
+  const parsed = createReviewRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return failure(
+      {
+        code: 'VALIDATION_FAILED',
+        message: parsed.error.issues[0]?.message ?? 'Invalid review submission.',
+        status: 400,
+      },
+      requestId,
+    );
+  }
+
+  const { rating, feedback, qualityRating, communicationRating, deadlineRating } = parsed.data;
+
   try {
     let contract: {
+      id: string;
+      status: string;
       clientProfile?: { userId: string } | null;
       freelancerProfile?: { userId: string } | null;
       participants?: Array<{ userId: string; role: string }>;
@@ -186,29 +213,34 @@ export async function POST(
     try {
       contract = await prisma.contract.findUnique({
         where: { id: contractId },
-        include: {
-          clientProfile: true,
-          freelancerProfile: true,
-          participants: true,
+        select: {
+          id: true,
+          status: true,
+          clientProfile: { select: { userId: true } },
+          freelancerProfile: { select: { userId: true } },
+          participants: { select: { userId: true, role: true } },
         },
       });
     } catch {
-      // Database offline
+      // Database offline - fallback to demo store in demo mode
     }
 
-    let defaultTargetId = '00000000-0000-4000-8000-000000000002';
+    let targetId: string;
     let authorName = 'Reviewer';
+    const authorId = actor.userId;
 
     if (contract) {
-      const isClientOrFreelancer =
-        contract.clientProfile?.userId === actor.userId ||
-        contract.freelancerProfile?.userId === actor.userId ||
-        (contract.participants?.some(
-          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
-        ) ??
-          false);
+      const clientId =
+        contract.clientProfile?.userId ??
+        contract.participants?.find((p) => p.role === 'CLIENT')?.userId;
+      const freelancerId =
+        contract.freelancerProfile?.userId ??
+        contract.participants?.find((p) => p.role === 'FREELANCER')?.userId;
 
-      if (!isClientOrFreelancer) {
+      const isClient = authorId === clientId;
+      const isFreelancer = authorId === freelancerId;
+
+      if (!isClient && !isFreelancer) {
         return failure(
           {
             code: 'FORBIDDEN',
@@ -219,10 +251,31 @@ export async function POST(
         );
       }
 
-      defaultTargetId =
-        contract.clientProfile?.userId === actor.userId
-          ? contract.freelancerProfile?.userId || defaultTargetId
-          : contract.clientProfile?.userId || defaultTargetId;
+      // Reviews can only be submitted once the contract is completed
+      if (contract.status !== 'COMPLETED') {
+        return failure(
+          {
+            code: 'STATE_TRANSITION_INVALID',
+            message: 'Reviews can only be submitted for completed contracts.',
+            status: 400,
+          },
+          requestId,
+        );
+      }
+
+      // Derive reviewee server-side as the counterparty on the contract
+      const counterpartyId = isClient ? freelancerId : clientId;
+      if (!counterpartyId) {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Unable to resolve contract counterparty for review.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
+      targetId = counterpartyId;
     } else {
       if (process.env.DEMO_MODE !== 'true') {
         return failure(
@@ -239,14 +292,12 @@ export async function POST(
         );
       }
 
-      const isClientOrFreelancer =
-        demoContract.client.userId === actor.userId ||
-        demoContract.freelancer.userId === actor.userId ||
-        demoContract.participants.some(
-          (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
-        );
+      const clientId = demoContract.client.userId;
+      const freelancerId = demoContract.freelancer.userId;
+      const isClient = authorId === clientId;
+      const isFreelancer = authorId === freelancerId;
 
-      if (!isClientOrFreelancer) {
+      if (!isClient && !isFreelancer) {
         return failure(
           {
             code: 'FORBIDDEN',
@@ -257,71 +308,44 @@ export async function POST(
         );
       }
 
-      defaultTargetId =
-        demoContract.client.userId === actor.userId
-          ? demoContract.freelancer.userId
-          : demoContract.client.userId;
-      authorName =
-        demoContract.client.userId === actor.userId
-          ? demoContract.client.organizationName
-          : demoContract.freelancer.displayName;
-    }
+      // Reviews can only be submitted once the contract is completed
+      if (demoContract.status !== 'COMPLETED') {
+        return failure(
+          {
+            code: 'STATE_TRANSITION_INVALID',
+            message: 'Reviews can only be submitted for completed contracts.',
+            status: 400,
+          },
+          requestId,
+        );
+      }
 
-    const body = (await request.json()) as Record<string, unknown>;
-    const parsed = createReviewRequestSchema.safeParse(body);
-
-    const authorId = actor.userId;
-
-    let rating: number;
-    let feedback: string;
-    let targetId: string;
-    let qualityRating: number | undefined;
-    let communicationRating: number | undefined;
-    let deadlineRating: number | undefined;
-
-    if (parsed.success) {
-      rating = parsed.data.rating;
-      feedback = parsed.data.feedback;
-      targetId = parsed.data.targetId;
-      qualityRating = parsed.data.qualityRating;
-      communicationRating = parsed.data.communicationRating;
-      deadlineRating = parsed.data.deadlineRating;
-    } else {
-      rating = typeof body?.rating === 'number' ? Math.round(body.rating) : 5;
-      feedback = typeof body?.feedback === 'string' ? body.feedback.trim() : '';
-      targetId =
-        typeof body?.targetId === 'string' && body.targetId.trim().length > 0
-          ? body.targetId.trim()
-          : defaultTargetId;
-      qualityRating = typeof body?.qualityRating === 'number' ? body.qualityRating : undefined;
-      communicationRating =
-        typeof body?.communicationRating === 'number' ? body.communicationRating : undefined;
-      deadlineRating = typeof body?.deadlineRating === 'number' ? body.deadlineRating : undefined;
-    }
-
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return failure(
-        {
-          code: 'VALIDATION_FAILED',
-          message: 'Rating must be an integer between 1 and 5.',
-          status: 400,
-        },
-        requestId,
-      );
-    }
-
-    if (!feedback || feedback.length < 5) {
-      return failure(
-        {
-          code: 'VALIDATION_FAILED',
-          message: 'Feedback must be at least 5 characters long.',
-          status: 400,
-        },
-        requestId,
-      );
+      targetId = isClient ? freelancerId : clientId;
+      authorName = isClient
+        ? demoContract.client.organizationName
+        : demoContract.freelancer.displayName;
     }
 
     try {
+      // Check duplicate review constraint in database
+      const existingReview = await prisma.review.findFirst({
+        where: {
+          contractId,
+          reviewerId: authorId,
+        },
+      });
+
+      if (existingReview) {
+        return failure(
+          {
+            code: 'CONFLICT',
+            message: 'You have already submitted a review for this contract.',
+            status: 409,
+          },
+          requestId,
+        );
+      }
+
       const review = await prisma.review.create({
         data: {
           contractId,
@@ -350,13 +374,43 @@ export async function POST(
         },
         requestId,
       );
-    } catch {
+    } catch (err: unknown) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        (err as { code: string }).code === 'P2002'
+      ) {
+        return failure(
+          {
+            code: 'CONFLICT',
+            message: 'You have already submitted a review for this contract.',
+            status: 409,
+          },
+          requestId,
+        );
+      }
+
       if (process.env.DEMO_MODE !== 'true') {
         return failure(
           { code: 'INTERNAL_ERROR', message: 'Failed to create review in database.', status: 500 },
           requestId,
         );
       }
+
+      // Check duplicate review constraint in demo store
+      const existingDemoReviews = demoStore.getReviews(contractId);
+      if (existingDemoReviews.some((r) => r.authorId === authorId)) {
+        return failure(
+          {
+            code: 'CONFLICT',
+            message: 'You have already submitted a review for this contract.',
+            status: 409,
+          },
+          requestId,
+        );
+      }
+
       const demoRev = demoStore.addReview({
         id: `rev-${Date.now()}`,
         contractId,

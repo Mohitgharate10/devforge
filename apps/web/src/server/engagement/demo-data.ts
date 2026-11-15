@@ -185,6 +185,24 @@ const initialProposals: DemoProposal[] = [
 
 const initialContracts: DemoContract[] = [
   {
+    id: 'contract-completed-audit',
+    jobId: 'job-bridge-audit',
+    proposalId: 'prop-bridge-completed',
+    title: 'Completed EVM Bridge Security Audit',
+    totalAmount: 1500000,
+    currency: 'USDC',
+    status: 'COMPLETED',
+    client: DEMO_CLIENTS['client-polka']!,
+    freelancer: DEMO_FREELANCERS['freelancer-elena']!,
+    participants: [
+      { userId: 'user-parity', role: 'CLIENT' },
+      { userId: 'user-elena', role: 'FREELANCER' },
+    ],
+    milestones: [],
+    createdAt: new Date(Date.now() - 3600 * 1000 * 24 * 30).toISOString(),
+    updatedAt: new Date(Date.now() - 3600 * 1000 * 24 * 5).toISOString(),
+  },
+  {
     id: 'contract-bridge-audit',
     jobId: 'job-bridge-audit',
     proposalId: 'prop-bridge-1',

@@ -6,6 +6,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
   review: {
     findMany: vi.fn(),
+    findFirst: vi.fn(),
     create: vi.fn(),
   },
   session: {
@@ -24,6 +25,7 @@ describe('/api/v1/contracts/:contractId/reviews', () => {
     vi.clearAllMocks();
     mockPrisma.contract.findUnique.mockReset();
     mockPrisma.review.findMany.mockReset();
+    mockPrisma.review.findFirst.mockReset();
     mockPrisma.review.create.mockReset();
   });
 
@@ -163,16 +165,6 @@ describe('/api/v1/contracts/:contractId/reviews', () => {
     });
 
     it('returns 400 when review data is invalid', async () => {
-      mockPrisma.contract.findUnique.mockResolvedValueOnce({
-        id: 'contract-1',
-        clientProfile: { userId: 'client-id' },
-        freelancerProfile: { userId: 'freelancer-id' },
-        participants: [
-          { userId: 'client-id', role: 'CLIENT' },
-          { userId: 'freelancer-id', role: 'FREELANCER' },
-        ],
-      });
-
       const request = new Request('http://localhost/api/v1/contracts/contract-1/reviews', {
         method: 'POST',
         headers: {
@@ -190,9 +182,10 @@ describe('/api/v1/contracts/:contractId/reviews', () => {
       expect(body.error.code).toBe('VALIDATION_FAILED');
     });
 
-    it('returns 200 when client submits a valid review (DB)', async () => {
+    it('returns 400 when contract is not completed (DB)', async () => {
       mockPrisma.contract.findUnique.mockResolvedValueOnce({
         id: 'contract-1',
+        status: 'ACTIVE',
         clientProfile: { userId: 'client-id' },
         freelancerProfile: { userId: 'freelancer-id' },
         participants: [
@@ -200,6 +193,166 @@ describe('/api/v1/contracts/:contractId/reviews', () => {
           { userId: 'freelancer-id', role: 'FREELANCER' },
         ],
       });
+
+      const request = new Request('http://localhost/api/v1/contracts/contract-1/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'client-id',
+        },
+        body: JSON.stringify({
+          rating: 5,
+          feedback: 'Completed review on active contract.',
+        }),
+      });
+      const params = Promise.resolve({ contractId: 'contract-1' });
+
+      const response = await POST(request, { params });
+      expect(response.status).toBe(400);
+
+      const body = await response.json();
+      expect(body.error.code).toBe('STATE_TRANSITION_INVALID');
+      expect(body.error.message).toContain('completed contracts');
+    });
+
+    it('returns 409 when client attempts to submit duplicate review (DB existing review)', async () => {
+      mockPrisma.contract.findUnique.mockResolvedValueOnce({
+        id: 'contract-1',
+        status: 'COMPLETED',
+        clientProfile: { userId: 'client-id' },
+        freelancerProfile: { userId: 'freelancer-id' },
+        participants: [
+          { userId: 'client-id', role: 'CLIENT' },
+          { userId: 'freelancer-id', role: 'FREELANCER' },
+        ],
+      });
+      mockPrisma.review.findFirst.mockResolvedValueOnce({
+        id: 'existing-rev',
+        contractId: 'contract-1',
+        reviewerId: 'client-id',
+      });
+
+      const request = new Request('http://localhost/api/v1/contracts/contract-1/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'client-id',
+        },
+        body: JSON.stringify({
+          rating: 5,
+          feedback: 'Attempting duplicate review submission.',
+        }),
+      });
+      const params = Promise.resolve({ contractId: 'contract-1' });
+
+      const response = await POST(request, { params });
+      expect(response.status).toBe(409);
+
+      const body = await response.json();
+      expect(body.error.code).toBe('CONFLICT');
+      expect(body.error.message).toContain('already submitted a review');
+    });
+
+    it('returns 409 when prisma.review.create throws P2002 unique constraint violation', async () => {
+      mockPrisma.contract.findUnique.mockResolvedValueOnce({
+        id: 'contract-1',
+        status: 'COMPLETED',
+        clientProfile: { userId: 'client-id' },
+        freelancerProfile: { userId: 'freelancer-id' },
+        participants: [
+          { userId: 'client-id', role: 'CLIENT' },
+          { userId: 'freelancer-id', role: 'FREELANCER' },
+        ],
+      });
+      mockPrisma.review.findFirst.mockResolvedValueOnce(null);
+      const uniqueError = Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+      mockPrisma.review.create.mockRejectedValueOnce(uniqueError);
+
+      const request = new Request('http://localhost/api/v1/contracts/contract-1/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'client-id',
+        },
+        body: JSON.stringify({
+          rating: 5,
+          feedback: 'Attempting review when race condition occurs.',
+        }),
+      });
+      const params = Promise.resolve({ contractId: 'contract-1' });
+
+      const response = await POST(request, { params });
+      expect(response.status).toBe(409);
+
+      const body = await response.json();
+      expect(body.error.code).toBe('CONFLICT');
+    });
+
+    it('derives reviewee server-side as the counterparty regardless of targetId in body', async () => {
+      mockPrisma.contract.findUnique.mockResolvedValueOnce({
+        id: 'contract-1',
+        status: 'COMPLETED',
+        clientProfile: { userId: 'client-id' },
+        freelancerProfile: { userId: 'freelancer-id' },
+        participants: [
+          { userId: 'client-id', role: 'CLIENT' },
+          { userId: 'freelancer-id', role: 'FREELANCER' },
+        ],
+      });
+      mockPrisma.review.findFirst.mockResolvedValueOnce(null);
+      mockPrisma.review.create.mockImplementationOnce((args) =>
+        Promise.resolve({
+          id: 'rev-safe-1',
+          contractId: 'contract-1',
+          reviewerId: 'client-id',
+          revieweeId: args.data.revieweeId,
+          rating: 5,
+          comment: args.data.comment,
+          reviewer: { displayName: 'Client Org' },
+          createdAt: new Date('2026-02-01T00:00:00Z'),
+        }),
+      );
+
+      const request = new Request('http://localhost/api/v1/contracts/contract-1/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'client-id',
+        },
+        body: JSON.stringify({
+          rating: 5,
+          feedback: 'Targeting an arbitrary user should be prevented.',
+          targetId: 'arbitrary-victim-user-id',
+        }),
+      });
+      const params = Promise.resolve({ contractId: 'contract-1' });
+
+      const response = await POST(request, { params });
+      expect(response.status).toBe(200);
+
+      // Verify that prisma.review.create received the contract's actual freelancer-id, NOT arbitrary-victim-user-id
+      expect(mockPrisma.review.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            reviewerId: 'client-id',
+            revieweeId: 'freelancer-id',
+          }),
+        }),
+      );
+    });
+
+    it('returns 200 when client submits a valid review on completed contract (DB)', async () => {
+      mockPrisma.contract.findUnique.mockResolvedValueOnce({
+        id: 'contract-1',
+        status: 'COMPLETED',
+        clientProfile: { userId: 'client-id' },
+        freelancerProfile: { userId: 'freelancer-id' },
+        participants: [
+          { userId: 'client-id', role: 'CLIENT' },
+          { userId: 'freelancer-id', role: 'FREELANCER' },
+        ],
+      });
+      mockPrisma.review.findFirst.mockResolvedValueOnce(null);
 
       mockPrisma.review.create.mockResolvedValueOnce({
         id: 'rev-created',

@@ -12,6 +12,9 @@ const environmentSchema = z.object({
   BETTER_AUTH_SECRET: z.string().default('devforge-dev-secret-change-in-production'),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  TRUST_PROXY: z.string().default('true'),
+  UPSTASH_REDIS_REST_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

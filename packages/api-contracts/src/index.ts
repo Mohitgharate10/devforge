@@ -650,9 +650,9 @@ export type AiSkillMatchResponse = z.infer<typeof aiSkillMatchResponseSchema>;
 // ─── Sprint 9: Trust, Reviews & Moderation Schemas ───────
 
 export const createReviewRequestSchema = z.object({
-  targetId: z.string().uuid(),
+  targetId: z.string().optional(),
   rating: z.number().int().min(1).max(5),
-  feedback: z.string().min(10).max(2000),
+  feedback: z.string().min(5).max(2000),
   qualityRating: z.number().int().min(1).max(5).optional(),
   communicationRating: z.number().int().min(1).max(5).optional(),
   deadlineRating: z.number().int().min(1).max(5).optional(),

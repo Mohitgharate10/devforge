@@ -45,7 +45,11 @@ interface WindowRecord {
 const memoryStore = new Map<string, WindowRecord>();
 
 export function isUpstashConfigured(): boolean {
-  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  return Boolean(
+    url && token && !url.includes('your-upstash-instance') && !url.includes('placeholder'),
+  );
 }
 
 export function getMemoryStoreSize(): number {
@@ -73,15 +77,28 @@ export function pruneExpiredKeys(now = Date.now()): void {
  * Resolves the client identifier for rate limiting.
  *
  * Proxy Trust Security:
- * Only trusts 'x-forwarded-for', 'x-real-ip', and 'cf-connecting-ip' when
- * process.env.TRUST_PROXY === 'true'. When TRUST_PROXY is false/unset, proxy
- * headers are untrusted (client-spoofable), so we fall back to authenticated
- * user ID ('user:<id>') or 'anonymous-client'.
+ * When TRUST_PROXY === 'true' or running on Vercel (process.env.VERCEL === '1' or VERCEL_ENV),
+ * we trust forwarded IP headers:
+ * - 'x-vercel-forwarded-for' (Vercel-injected client IP)
+ * - 'x-forwarded-for' (first hop)
+ * - 'x-real-ip'
+ * - 'cf-connecting-ip' (Cloudflare)
+ *
+ * Security Note:
+ * Never keys on client-supplied headers like 'x-user-id' to prevent callers
+ * from bypassing limits by rotating headers, and never aggregates all untrusted callers
+ * into a single shared bucket.
  */
 export function getClientIp(request: Request): string {
-  const trustProxy = process.env.TRUST_PROXY === 'true';
+  const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+  const trustProxy = process.env.TRUST_PROXY === 'true' || isVercel;
 
   if (trustProxy) {
+    const vercelIp = request.headers.get('x-vercel-forwarded-for');
+    if (vercelIp?.trim()) {
+      const firstIp = vercelIp.split(',')[0]?.trim();
+      if (firstIp) return firstIp;
+    }
     const forwardedFor = request.headers.get('x-forwarded-for');
     if (forwardedFor) {
       const firstIp = forwardedFor.split(',')[0]?.trim();
@@ -93,13 +110,8 @@ export function getClientIp(request: Request): string {
     if (cfIp?.trim()) return cfIp.trim();
   }
 
-  // When proxy is not trusted, fall back to authenticated user ID or 'anonymous-client'
-  const userId = request.headers.get('x-user-id');
-  if (userId?.trim()) {
-    return `user:${userId.trim()}`;
-  }
-
-  return 'anonymous-client';
+  // When proxy is not trusted and not on Vercel, fallback to default local address
+  return '127.0.0.1';
 }
 
 /**

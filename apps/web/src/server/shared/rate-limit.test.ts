@@ -27,7 +27,7 @@ describe('Rate Limiter', () => {
   });
 
   describe('getClientIp & Proxy Trust Security', () => {
-    it('trusts x-forwarded-for only when TRUST_PROXY === true', () => {
+    it('trusts x-forwarded-for when TRUST_PROXY === true', () => {
       vi.stubEnv('TRUST_PROXY', 'true');
       const request = new Request('http://localhost', {
         headers: { 'x-forwarded-for': '203.0.113.195, 70.41.3.18' },
@@ -35,7 +35,7 @@ describe('Rate Limiter', () => {
       expect(getClientIp(request)).toBe('203.0.113.195');
     });
 
-    it('trusts x-real-ip only when TRUST_PROXY === true', () => {
+    it('trusts x-real-ip when TRUST_PROXY === true', () => {
       vi.stubEnv('TRUST_PROXY', 'true');
       const request = new Request('http://localhost', {
         headers: { 'x-real-ip': '198.51.100.4' },
@@ -43,7 +43,7 @@ describe('Rate Limiter', () => {
       expect(getClientIp(request)).toBe('198.51.100.4');
     });
 
-    it('trusts cf-connecting-ip only when TRUST_PROXY === true', () => {
+    it('trusts cf-connecting-ip when TRUST_PROXY === true', () => {
       vi.stubEnv('TRUST_PROXY', 'true');
       const request = new Request('http://localhost', {
         headers: { 'cf-connecting-ip': '192.0.2.1' },
@@ -51,24 +51,44 @@ describe('Rate Limiter', () => {
       expect(getClientIp(request)).toBe('192.0.2.1');
     });
 
-    it('ignores proxy headers and keys on x-user-id when TRUST_PROXY is false/unset', () => {
+    it('trusts x-vercel-forwarded-for when on Vercel', () => {
+      vi.stubEnv('VERCEL', '1');
+      const request = new Request('http://localhost', {
+        headers: { 'x-vercel-forwarded-for': '198.51.100.99, 70.41.3.18' },
+      });
+      expect(getClientIp(request)).toBe('198.51.100.99');
+    });
+
+    it('trusts proxy headers automatically on Vercel even if TRUST_PROXY is unset', () => {
+      vi.stubEnv('VERCEL', '1');
+      const request = new Request('http://localhost', {
+        headers: { 'x-forwarded-for': '203.0.113.195' },
+      });
+      expect(getClientIp(request)).toBe('203.0.113.195');
+    });
+
+    it('does NOT key on x-user-id header even if provided (prevents attacker spoofing / evasion)', () => {
+      vi.stubEnv('TRUST_PROXY', 'true');
+      const request = new Request('http://localhost', {
+        headers: {
+          'x-forwarded-for': '203.0.113.195',
+          'x-user-id': 'spoofed_attacker_id_123',
+        },
+      });
+      expect(getClientIp(request)).toBe('203.0.113.195');
+      expect(getClientIp(request)).not.toContain('spoofed_attacker_id_123');
+    });
+
+    it('falls back to 127.0.0.1 when TRUST_PROXY is false/unset and does not use x-user-id', () => {
       vi.stubEnv('TRUST_PROXY', 'false');
       const request = new Request('http://localhost', {
         headers: {
           'x-forwarded-for': '203.0.113.195',
-          'x-real-ip': '198.51.100.4',
-          'x-user-id': 'usr_authenticated_123',
+          'x-user-id': 'spoofed_id',
         },
       });
-      expect(getClientIp(request)).toBe('user:usr_authenticated_123');
-    });
-
-    it('falls back to anonymous-client when TRUST_PROXY is false and no user ID exists', () => {
-      vi.stubEnv('TRUST_PROXY', 'false');
-      const request = new Request('http://localhost', {
-        headers: { 'x-forwarded-for': '203.0.113.195' },
-      });
-      expect(getClientIp(request)).toBe('anonymous-client');
+      expect(getClientIp(request)).toBe('127.0.0.1');
+      expect(getClientIp(request)).not.toContain('spoofed_id');
     });
   });
 
