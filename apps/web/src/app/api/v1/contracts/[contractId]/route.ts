@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@devforge/database';
+import { DomainError } from '@devforge/domain';
+import type { ApiErrorCode } from '@devforge/api-contracts';
 import { success, failure } from '@/server/shared/http/api-response';
+import { requireSession } from '@/server/auth/middleware';
 import { demoStore } from '@/server/engagement/demo-data';
 
 export async function GET(
@@ -10,7 +13,25 @@ export async function GET(
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
   const { contractId } = await params;
 
+  let actor;
   try {
+    actor = await requireSession(request.headers);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return failure(
+        { code: error.code as ApiErrorCode, message: error.message, status: error.statusCode },
+        requestId,
+      );
+    }
+    return failure(
+      { code: 'UNAUTHENTICATED', message: 'Authentication required.', status: 401 },
+      requestId,
+    );
+  }
+
+  try {
+    const isAdmin = actor.roles.includes('admin');
+
     try {
       const contract = await prisma.contract.findUnique({
         where: { id: contractId },
@@ -30,6 +51,26 @@ export async function GET(
       });
 
       if (contract) {
+        const isParty =
+          isAdmin ||
+          contract.clientProfile?.userId === actor.userId ||
+          contract.freelancerProfile?.userId === actor.userId ||
+          (contract.participants?.some(
+            (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+          ) ??
+            false);
+
+        if (!isParty) {
+          return failure(
+            {
+              code: 'FORBIDDEN',
+              message: 'You must be a party to this contract or an admin to view it.',
+              status: 403,
+            },
+            requestId,
+          );
+        }
+
         return success(
           {
             id: contract.id,
@@ -101,6 +142,25 @@ export async function GET(
     const demo = demoStore.getContractById(contractId);
     if (!demo) {
       return failure({ code: 'NOT_FOUND', message: 'Contract not found.', status: 404 }, requestId);
+    }
+
+    const isParty =
+      isAdmin ||
+      demo.client.userId === actor.userId ||
+      demo.freelancer.userId === actor.userId ||
+      demo.participants.some(
+        (p) => p.userId === actor.userId && (p.role === 'CLIENT' || p.role === 'FREELANCER'),
+      );
+
+    if (!isParty) {
+      return failure(
+        {
+          code: 'FORBIDDEN',
+          message: 'You must be a party to this contract or an admin to view it.',
+          status: 403,
+        },
+        requestId,
+      );
     }
 
     return success(

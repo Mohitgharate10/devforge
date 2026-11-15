@@ -7,7 +7,7 @@ import { requireSession } from '@/server/auth/middleware';
 import { enforceRateLimit, AI_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const rateLimitResponse = enforceRateLimit(request, AI_RATE_LIMIT);
+  const rateLimitResponse = await enforceRateLimit(request, AI_RATE_LIMIT);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
