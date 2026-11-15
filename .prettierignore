@@ -9,3 +9,4 @@ pnpm-lock.yaml
 packages/contracts/artifacts/
 packages/contracts/cache/
 packages/contracts/typechain-types/
+**/next-env.d.ts
