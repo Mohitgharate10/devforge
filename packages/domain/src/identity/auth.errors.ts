@@ -59,9 +59,16 @@ export class AccountClosedError extends DomainError {
 }
 
 export class UnauthenticatedError extends DomainError {
-  constructor() {
-    super('Authentication required.', 'UNAUTHENTICATED', 401);
+  constructor(message = 'Authentication required.') {
+    super(message, 'UNAUTHENTICATED', 401);
     this.name = 'UnauthenticatedError';
+  }
+}
+
+export class UnauthorizedError extends UnauthenticatedError {
+  constructor(message = 'Authentication required.') {
+    super(message);
+    this.name = 'UnauthorizedError';
   }
 }
 

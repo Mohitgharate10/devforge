@@ -45,6 +45,16 @@ export async function GET(request: Request): Promise<NextResponse> {
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve notifications.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return success({ items: [], unreadCount: 0, total: 0, isLocalDemo: false }, requestId);
     }
 
     const demoItems = demoStore.getNotifications();

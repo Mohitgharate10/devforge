@@ -4,8 +4,14 @@ import { normalizeEmail } from '@devforge/domain';
 import { hash } from '@node-rs/argon2';
 import { success, failure } from '@/server/shared/http/api-response';
 import { createSession, serializeSessionCookie } from '@/server/auth/session';
+import { enforceRateLimit, AUTH_SIGN_UP_RATE_LIMIT } from '@/server/shared/rate-limit';
 
 export async function POST(request: Request): Promise<NextResponse> {
+  const rateLimitResponse = enforceRateLimit(request, AUTH_SIGN_UP_RATE_LIMIT);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
 
   try {

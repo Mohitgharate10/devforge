@@ -78,6 +78,23 @@ export async function POST(
         );
       }
       console.warn('Prisma delivery submission fell back or encountered error:', dbErr);
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to submit delivery in database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return failure(
+        { code: 'NOT_FOUND', message: 'Milestone not found.', status: 404 },
+        requestId,
+      );
     }
 
     const demoDelivery: DemoDelivery = {

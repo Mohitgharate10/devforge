@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title DevForgeEscrow
- * @notice Production-grade decentralized milestone escrow contract for DevForge marketplace.
- * Enforces non-custodial milestone deposits, client release authorizations, and arbitrator dispute mediation.
+ * @notice Testnet prototype milestone escrow contract for DevForge marketplace.
+ * Enforces milestone deposits with owner/arbitrator-controlled releases, refunds, and dispute mediation.
  */
 contract DevForgeEscrow is ReentrancyGuard, Ownable {
 

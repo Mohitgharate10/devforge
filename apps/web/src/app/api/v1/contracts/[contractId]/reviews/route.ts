@@ -40,6 +40,16 @@ export async function GET(
       }
     } catch {
       // Database offline - fallback to demo store
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to retrieve reviews.', status: 500 },
+          requestId,
+        );
+      }
+    }
+
+    if (process.env.DEMO_MODE !== 'true') {
+      return success([], requestId);
     }
 
     const demoReviews = demoStore.getReviews(contractId);
@@ -152,6 +162,12 @@ export async function POST(
         requestId,
       );
     } catch {
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          { code: 'INTERNAL_ERROR', message: 'Failed to create review in database.', status: 500 },
+          requestId,
+        );
+      }
       const demoRev = demoStore.addReview({
         id: `rev-${Date.now()}`,
         contractId,

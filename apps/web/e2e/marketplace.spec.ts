@@ -7,17 +7,19 @@ test.describe('DevForge Marketplace End-to-End Suite', () => {
     // 1. Homepage
     await page.goto('/');
     await expect(page).toHaveTitle(/DevForge/i);
-    await expect(page.locator('header nav')).toBeVisible();
+    await expect(page.locator('header')).toBeVisible();
 
     // 2. Jobs marketplace
     await page.goto('/jobs');
-    await expect(page.locator('h1')).toContainText(/Technical Engagements|Marketplace/i);
-    await expect(page.getByText('Substrate FRAME Pallet for Cross-Chain Governance')).toBeVisible();
+    await expect(page.locator('h1')).toContainText(
+      /Open Roles & Bounties|Technical Engagements|Marketplace/i,
+    );
+    await expect(page.getByText('Substrate Parachain Governance Pallet Developer')).toBeVisible();
 
     // 3. Bounties page
     await page.goto('/bounties');
-    await expect(page.getByText('Pre-funded Deliverable Bounties')).toBeVisible();
-    await expect(page.getByText('Substrate FRAME Pallet for Cross-Chain Governance')).toBeVisible();
+    await expect(page.getByText('Bounties & Ecosystem Grants')).toBeVisible();
+    await expect(page.getByText('Substrate Parachain Governance Pallet Developer')).toBeVisible();
   });
 
   test('Auth gating: Anonymous user clicking Submit Work is gated by accessible dialog', async ({

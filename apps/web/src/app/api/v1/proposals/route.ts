@@ -82,34 +82,46 @@ export async function GET(request: Request): Promise<NextResponse> {
       }
     } catch (err) {
       console.warn('Prisma proposal query skipped or errored:', err);
+      if (process.env.DEMO_MODE !== 'true') {
+        return failure(
+          {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to query proposals from database.',
+            status: 500,
+          },
+          requestId,
+        );
+      }
     }
 
-    // 2. Fetch in-memory / demo proposals from demoStore
-    const demoItems = demoStore.getProposals();
-    for (const p of demoItems) {
-      const matchesUser =
-        !actor ||
-        p.freelancerProfileId === actor.userId ||
-        p.freelancer?.userId === actor.userId ||
-        p.client?.userId === actor.userId ||
-        actor.roles.includes('admin') ||
-        itemsMap.size === 0; // If user has no proposals yet, keep demo proposals visible so dashboard is populated
+    if (process.env.DEMO_MODE === 'true') {
+      // 2. Fetch in-memory / demo proposals from demoStore
+      const demoItems = demoStore.getProposals();
+      for (const p of demoItems) {
+        const matchesUser =
+          !actor ||
+          p.freelancerProfileId === actor.userId ||
+          p.freelancer?.userId === actor.userId ||
+          p.client?.userId === actor.userId ||
+          actor.roles.includes('admin') ||
+          itemsMap.size === 0; // If user has no proposals yet, keep demo proposals visible so dashboard is populated
 
-      if (matchesUser) {
-        if (!itemsMap.has(p.id)) {
-          itemsMap.set(p.id, {
-            id: p.id,
-            jobId: p.jobId,
-            jobTitle: p.jobTitle,
-            freelancerProfileId: p.freelancerProfileId,
-            freelancer: p.freelancer,
-            coverLetter: p.coverLetter,
-            bidAmount: p.bidAmount,
-            currency: p.currency,
-            status: p.status as MergedProposalItem['status'],
-            createdAt: p.createdAt,
-            updatedAt: p.updatedAt,
-          });
+        if (matchesUser) {
+          if (!itemsMap.has(p.id)) {
+            itemsMap.set(p.id, {
+              id: p.id,
+              jobId: p.jobId,
+              jobTitle: p.jobTitle,
+              freelancerProfileId: p.freelancerProfileId,
+              freelancer: p.freelancer,
+              coverLetter: p.coverLetter,
+              bidAmount: p.bidAmount,
+              currency: p.currency,
+              status: p.status as MergedProposalItem['status'],
+              createdAt: p.createdAt,
+              updatedAt: p.updatedAt,
+            });
+          }
         }
       }
     }
