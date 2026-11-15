@@ -274,10 +274,12 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
         <div
           style={{
             display: 'inline-flex',
-            background: '#0D0D12',
+            background: 'rgba(255, 255, 255, 0.03)',
             padding: '0.3rem',
             borderRadius: '9999px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: 'var(--shadow-chamfer)',
+            backdropFilter: 'blur(12px)',
             gap: '0.25rem',
           }}
         >
@@ -298,8 +300,11 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
                   fontWeight: 700,
                   fontFamily: 'var(--font-mono)',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  transition: 'all 0.18s ease',
                   letterSpacing: '0.04em',
+                  boxShadow: isActive
+                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.35), 0 2px 10px rgba(230, 0, 122, 0.35)'
+                    : 'none',
                 }}
               >
                 {tab === 'ALL' ? 'ALL OPPORTUNITIES' : tab}
@@ -369,17 +374,12 @@ export function SuperteamBountiesHub({ isHomepage = false }: { isHomepage?: bool
         {filtered.map((bounty) => (
           <div
             key={bounty.id}
+            className="card-forge"
             style={{
-              background: '#0D0D12',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
               padding: '1.75rem',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-              position: 'relative',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
             }}
           >
             {/* Top Strip: Sponsor & Type Tag */}

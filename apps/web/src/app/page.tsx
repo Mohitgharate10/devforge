@@ -3,22 +3,53 @@ import { SuperteamBountiesHub } from '@/components/SuperteamBountiesHub';
 
 export default function HomePage() {
   return (
-    <main style={{ padding: '0 1.5rem', maxWidth: '82rem', margin: '0 auto' }}>
+    <main
+      className="forge-ambient-container"
+      style={{ padding: '0 1.5rem', maxWidth: '82rem', margin: '0 auto', position: 'relative' }}
+    >
+      <div className="forge-glow-beam" aria-hidden="true" />
+
       {/* ─── Hero Section ─────────────────────────────────── */}
-      <section className="hero-editorial" style={{ paddingTop: '5rem', paddingBottom: '3.5rem' }}>
-        <div className="hero-meta-strip">
-          <span>01 / MARKETPLACE</span>
-          <span>•</span>
-          <span>WEB3 TALENT & PROJECTS</span>
+      <section className="hero-editorial" style={{ paddingTop: '5.5rem', paddingBottom: '3.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1.75rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div className="forge-pill-badge" style={{ marginBottom: 0 }}>
+            <span
+              className="live-indicator"
+              style={{ background: '#00d2ef', boxShadow: '0 0 10px #00d2ef' }}
+            />
+            <span style={{ fontWeight: 600 }}>Milestone Escrow 2.0</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.25)' }}>·</span>
+            <span style={{ color: '#9496a1' }}>Ethereum Sepolia Testnet</span>
+          </div>
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            01 / MARKETPLACE PROTOCOL
+          </span>
         </div>
 
         <h1 className="hero-title">
-          Find Web3 specialists. <span className="highlight">Hire by milestone.</span>
+          Find Web3 specialists. <span className="forge-gradient-text">Hire by milestone.</span>
         </h1>
 
         <p className="hero-subtitle">
-          DevForge is a marketplace prototype for technical teams and independent Web3 builders.
-          Explore work, compare specialists, and follow milestone-based projects.
+          DevForge is a high-assurance marketplace prototype for Web3 protocols, smart contract
+          teams, and independent crypto builders. Define milestones, inspect code deliveries, and
+          follow verifiable projects.
         </p>
 
         <div className="hero-cta-container">
@@ -94,30 +125,21 @@ export default function HomePage() {
           }}
         >
           {/* Step 1 */}
-          <div
-            style={{
-              background: '#0D0D12',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '2.25rem 2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
-            }}
-          >
+          <div className="card-forge" style={{ padding: '2.25rem 2rem' }}>
             <div>
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '8px',
-                  background: 'rgba(230, 0, 122, 0.1)',
-                  border: '1px solid rgba(230, 0, 122, 0.25)',
-                  color: '#E6007A',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'rgba(0, 210, 239, 0.1)',
+                  border: '1px solid rgba(0, 210, 239, 0.3)',
+                  boxShadow:
+                    'inset 0 1px 0 0 rgba(0, 210, 239, 0.25), 0 0 16px -4px rgba(0, 210, 239, 0.2)',
+                  color: '#00d2ef',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -128,10 +150,11 @@ export default function HomePage() {
               </div>
               <h3
                 style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.25rem',
                   fontWeight: 700,
                   color: '#FFFFFF',
                   marginBottom: '0.75rem',
+                  letterSpacing: '-0.02em',
                 }}
               >
                 Agree on milestones
@@ -161,36 +184,27 @@ export default function HomePage() {
                 gap: '0.5rem',
               }}
             >
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00d2ef' }} />
               <span>Testnet only · no real funds</span>
             </div>
           </div>
 
           {/* Step 2 */}
-          <div
-            style={{
-              background: '#0D0D12',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '2.25rem 2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
-            }}
-          >
+          <div className="card-forge" style={{ padding: '2.25rem 2rem' }}>
             <div>
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '8px',
-                  background: 'rgba(230, 0, 122, 0.1)',
-                  border: '1px solid rgba(230, 0, 122, 0.25)',
-                  color: '#E6007A',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'rgba(129, 140, 248, 0.1)',
+                  border: '1px solid rgba(129, 140, 248, 0.3)',
+                  boxShadow:
+                    'inset 0 1px 0 0 rgba(129, 140, 248, 0.25), 0 0 16px -4px rgba(129, 140, 248, 0.2)',
+                  color: '#818cf8',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -201,10 +215,11 @@ export default function HomePage() {
               </div>
               <h3
                 style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.25rem',
                   fontWeight: 700,
                   color: '#FFFFFF',
                   marginBottom: '0.75rem',
+                  letterSpacing: '-0.02em',
                 }}
               >
                 Track the work
@@ -234,36 +249,27 @@ export default function HomePage() {
                 gap: '0.5rem',
               }}
             >
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8' }} />
               <span>Project workflow prototype</span>
             </div>
           </div>
 
           {/* Step 3 */}
-          <div
-            style={{
-              background: '#0D0D12',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '2.25rem 2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
-            }}
-          >
+          <div className="card-forge" style={{ padding: '2.25rem 2rem' }}>
             <div>
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '8px',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
                   background: 'rgba(230, 0, 122, 0.1)',
-                  border: '1px solid rgba(230, 0, 122, 0.25)',
-                  color: '#E6007A',
+                  border: '1px solid rgba(230, 0, 122, 0.3)',
+                  boxShadow:
+                    'inset 0 1px 0 0 rgba(230, 0, 122, 0.25), 0 0 16px -4px rgba(230, 0, 122, 0.2)',
+                  color: '#e6007a',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -274,10 +280,11 @@ export default function HomePage() {
               </div>
               <h3
                 style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.25rem',
                   fontWeight: 700,
                   color: '#FFFFFF',
                   marginBottom: '0.75rem',
+                  letterSpacing: '-0.02em',
                 }}
               >
                 Review before release
@@ -307,7 +314,7 @@ export default function HomePage() {
                 gap: '0.5rem',
               }}
             >
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E6007A' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#e6007a' }} />
               <Link href="/escrow" style={{ textDecoration: 'none', color: 'inherit' }}>
                 Read testnet details ↗
               </Link>

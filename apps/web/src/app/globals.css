@@ -1,24 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
-  --bg-pitch: #000000;
-  --bg-surface: #0a0a0c;
-  --bg-card: #111114;
-  --bg-card-hover: #18181c;
+  --bg-pitch: #030408;
+  --bg-canvas: #05060f;
+  --bg-surface: rgba(14, 16, 24, 0.7);
+  --bg-card: rgba(18, 20, 31, 0.75);
+  --bg-card-hover: rgba(26, 29, 46, 0.88);
   --border-hairline: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-glow: rgba(0, 210, 239, 0.3);
 
   --text-primary: #ffffff;
-  --text-secondary: #8e8e93;
-  --text-muted: #545458;
+  --text-secondary: #9496a1;
+  --text-muted: #5b5e6d;
 
   --accent-magenta: #e6007a;
-  --accent-cyan: #00e5ff;
+  --accent-cyan: #00d2ef;
+  --accent-indigo: #818cf8;
   --status-live: #00e676;
 
+  --shadow-chamfer: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 14px 44px -6px rgba(0, 0, 0, 0.7),
+    0 0 24px -4px rgba(0, 210, 239, 0.16);
+
   --font-display:
-    'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
 
@@ -34,10 +43,54 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   background-color: var(--bg-pitch);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 210, 239, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(129, 140, 248, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    32px 32px;
   color: var(--text-primary);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Forge Atmospheric Ambient Beam */
+.forge-ambient-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.forge-glow-beam {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1000px, 92vw);
+  height: 480px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 210, 239, 0.12) 0%,
+    rgba(129, 140, 248, 0.06) 45%,
+    transparent 70%
+  );
+  filter: blur(64px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.forge-gradient-text {
+  background: linear-gradient(135deg, #ffffff 40%, #00d2ef 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.forge-gradient-magenta {
+  background: linear-gradient(135deg, #ffffff 30%, #ff40a4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .mobile-only {
@@ -49,7 +102,7 @@ a {
   text-decoration: none;
 }
 
-/* Polkadot Header Navbar */
+/* Forge-Grade Navbar */
 .site-nav {
   position: sticky;
   top: 0;
@@ -57,37 +110,43 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 2.5rem;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(16px);
+  padding: 1.1rem 2.5rem;
+  background: rgba(4, 5, 11, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border-hairline);
+  box-shadow: inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
 }
 
 .brand-logo {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 700;
   letter-spacing: -0.04em;
 }
 
 .brand-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--accent-magenta);
-  box-shadow: 0 0 12px var(--accent-magenta);
+  box-shadow: 0 0 14px 2px var(--accent-magenta);
 }
 
 .nav-links {
   display: flex;
   align-items: center;
   gap: 2rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--text-secondary);
+}
+
+.nav-links a {
+  transition: color 0.18s ease;
 }
 
 .nav-links a:hover {
@@ -106,8 +165,11 @@ a {
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
   border-radius: 9999px;
-  border: 1px solid var(--border-hairline);
-  background: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: var(--shadow-chamfer);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -131,7 +193,7 @@ a {
   50% {
     transform: scale(1.2);
     opacity: 1;
-    box-shadow: 0 0 8px var(--status-live);
+    box-shadow: 0 0 10px var(--status-live);
   }
   100% {
     transform: scale(0.95);
@@ -139,46 +201,69 @@ a {
   }
 }
 
+/* ForgeUI High-Gloss Sheen Primary Button */
 .btn-pill-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.4rem;
+  gap: 0.5rem;
+  padding: 0.65rem 1.45rem;
   border-radius: 9999px;
-  background: var(--text-primary);
-  color: var(--bg-pitch);
+  background: #ffffff;
+  color: #05060f !important;
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: -0.02em;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   border: none;
   cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 8px 24px -4px rgba(255, 255, 255, 0.22);
 }
 
 .btn-pill-primary:hover {
-  background: #f0f0f2;
-  transform: translateY(-1px);
+  background: #ffffff;
+  transform: translateY(-1.5px);
+  box-shadow:
+    inset 0 1px 0 0 #ffffff,
+    0 4px 10px rgba(0, 0, 0, 0.35),
+    0 12px 30px -4px rgba(255, 255, 255, 0.35);
 }
 
+.btn-pill-primary:active {
+  transform: translateY(0);
+}
+
+/* ForgeUI Inset Chamfer Secondary Button */
 .btn-pill-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   padding: 0.65rem 1.4rem;
   border-radius: 9999px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
-  border: 1px solid var(--border-hairline);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-chamfer);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   font-weight: 500;
   font-size: 0.875rem;
   letter-spacing: -0.02em;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
 .btn-pill-secondary:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-surface);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 4px 16px -2px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Polkadot Editorial Hero Section */
@@ -186,27 +271,46 @@ a {
   padding: 6rem 2.5rem 5rem;
   max-width: 84rem;
   margin: 0 auto;
+  position: relative;
 }
 
 .hero-meta-strip {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   margin-bottom: 2rem;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
+/* Forge Badge */
+.forge-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-chamfer);
+  backdrop-filter: blur(14px);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #e4e4e7;
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+
 .hero-title {
-  font-size: clamp(3.2rem, 7.5vw, 6.5rem);
+  font-size: clamp(3.2rem, 7.5vw, 6.2rem);
   font-weight: 700;
-  line-height: 0.95;
+  line-height: 1;
   letter-spacing: -0.05em;
   max-width: 58rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .hero-title span.highlight {
@@ -218,7 +322,7 @@ a {
   line-height: 1.6;
   color: var(--text-secondary);
   max-width: 44rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2.75rem;
   letter-spacing: -0.01em;
 }
 
@@ -226,38 +330,51 @@ a {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  margin-bottom: 5rem;
+  margin-bottom: 4.5rem;
 }
 
-/* Polkadot Editorial Stats Rail */
+/* Forge Tactile Stats Rail */
 .stats-rail {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 1.5rem;
-  padding: 3rem 0;
-  border-top: 1px solid var(--border-hairline);
-  border-bottom: 1px solid var(--border-hairline);
+  gap: 1.25rem;
+  padding: 1.5rem 0;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .stat-number {
   font-family: var(--font-mono);
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   letter-spacing: -0.04em;
   color: var(--text-primary);
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   font-family: var(--font-mono);
 }
 
@@ -265,38 +382,68 @@ a {
 .skill-tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.65rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-hairline);
-  border-radius: 4px;
+  padding: 0.28rem 0.65rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   font-family: var(--font-mono);
   font-size: 0.725rem;
   color: var(--text-secondary);
   letter-spacing: -0.01em;
+  transition: all 0.15s ease;
+}
+
+.skill-tag:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .skill-tag.accent {
-  border-color: rgba(230, 0, 122, 0.4);
+  border-color: rgba(230, 0, 122, 0.35);
   color: #ff40a4;
-  background: rgba(230, 0, 122, 0.06);
+  background: rgba(230, 0, 122, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(230, 0, 122, 0.15);
 }
 
-/* Clean Card Layouts */
+.skill-tag.cyan {
+  border-color: rgba(0, 210, 239, 0.35);
+  color: #00d2ef;
+  background: rgba(0, 210, 239, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(0, 210, 239, 0.15);
+}
+
+/* Forge-Grade Card Layouts */
 .editorial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
   gap: 1.5rem;
 }
 
-.card-editorial {
+.card-editorial,
+.card-forge {
   background: var(--bg-surface);
   border: 1px solid var(--border-hairline);
-  border-radius: 12px;
-  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 1.85rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-editorial:hover,
+.card-forge:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2.5px);
 }
 
 .card-editorial:hover {

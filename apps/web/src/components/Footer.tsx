@@ -5,9 +5,10 @@ export function Footer() {
     <footer
       style={{
         borderTop: '1px solid var(--border-hairline)',
-        background: '#09090b',
+        background: 'var(--bg-canvas)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.04)',
         color: 'var(--text-secondary)',
-        padding: '4rem 1.5rem 2.5rem',
+        padding: '4.5rem 1.5rem 2.5rem',
         marginTop: '6rem',
       }}
     >

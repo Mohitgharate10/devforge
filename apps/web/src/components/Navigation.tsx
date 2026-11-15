@@ -106,6 +106,7 @@ export function Navigation() {
 
         <div className="nav-cta-group">
           <div className="status-pill desktop-only" title="Network status">
+            <span className="live-indicator" style={{ background: '#00e676' }} />
             <span>Sepolia testnet demo</span>
           </div>
 
